@@ -13,7 +13,16 @@ const AppState = {
   activeCategory: 'all',
   searchQuery: '',
   isOnline: navigator.onLine,
-  selectedProduct: null
+  selectedProduct: null,
+  user: {
+    name: 'Khách hàng GAERU',
+    phone: '',
+    email: '',
+    province: '',
+    address: ''
+  },
+  orders: [],
+  devices: []
 };
 
 // 1. Khởi động ứng dụng khi DOM sẵn sàng
@@ -28,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadProducts();
   await loadProvinces();
   loadCartFromStorage();
-  initScanner();
+  initAccount();
   initCareLookup();
   initCapacitor();
 });
@@ -580,7 +589,8 @@ function renderCart() {
 // ==================== TẢI TỈNH / THÀNH VIỆT NAM ====================
 async function loadProvinces() {
   const select = document.getElementById('order-province');
-  if (!select) return;
+  const profSelect = document.getElementById('profile-input-province');
+  if (!select && !profSelect) return;
 
   try {
     const res = await fetch('assets/data/vietnam-addresses.json');
@@ -588,16 +598,26 @@ async function loadProvinces() {
       const data = await res.json();
       if (data && data.provinces) {
         AppState.provinces = data.provinces;
-        select.innerHTML = '<option value="">Chọn tỉnh / thành phố nhận hàng</option>' + 
-          data.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+        const optionsHtml = data.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+        if (select) {
+          select.innerHTML = '<option value="">Chọn tỉnh / thành phố nhận hàng</option>' + optionsHtml;
+        }
+        if (profSelect) {
+          profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + optionsHtml;
+          if (AppState.user && AppState.user.province) profSelect.value = AppState.user.province;
+        }
       }
     }
   } catch (err) {
     console.warn('Lỗi tải danh mục tỉnh thành:', err);
     const defaultProvinces = ['Hà Nội', 'TP Hồ Chí Minh', 'Ninh Bình', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
-    select.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + 
-      defaultProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
+    const defHtml = defaultProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
+    if (select) select.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
+    if (profSelect) profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
   }
+
+  // Tự động điền dữ liệu người dùng vào checkout form nếu có
+  applyProfileToCheckoutForm();
 }
 
 // Xử lý gửi đơn hàng
@@ -645,13 +665,41 @@ async function handleCheckout(event) {
       }
     }
 
+    const orderCode = 'GAE' + Math.floor(100000 + Math.random() * 900000);
+    const orderTotal = AppState.cart.reduce((sum, item) => sum + (item.priceVnd * item.quantity), 0);
+    const itemSummary = AppState.cart.map(i => `${i.quantity}x ${i.name}`).join(', ');
+
+    // Lưu đơn hàng vào Lịch sử đơn hàng của Tab Tài khoản
+    const newOrder = {
+      code: orderCode,
+      date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      totalVnd: orderTotal,
+      itemSummary: itemSummary,
+      paymentMethod: paymentMethod,
+      statusClass: 'pending',
+      statusText: 'Chờ xác nhận'
+    };
+
+    AppState.orders.unshift(newOrder);
+    try {
+      localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
+    } catch (e) {}
+
+    // Tự động lưu hồ sơ nếu chưa có
+    if (!AppState.user.phone) {
+      AppState.user = { name, phone, email: `${phone}@customer.gaeru.com`, province, address };
+      try {
+        localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
+      } catch (e) {}
+    }
+    renderAccountView();
+
     AppState.cart = [];
     saveCartToStorage();
     renderCart();
 
-    const orderCode = 'GAE' + Math.floor(100000 + Math.random() * 900000);
-    alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn hàng: ${orderCode}\nKhách hàng: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐội ngũ GAERU sẽ gọi điện xác nhận và gửi chuyển phát nhanh tới bạn trong 24h!`);
-    switchTab('tab-home');
+    alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn hàng: ${orderCode}\nKhách hàng: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận trong 24h!`);
+    switchTab('tab-account');
 
   } catch (err) {
     alert('Lỗi đặt hàng: ' + err.message);
@@ -681,7 +729,7 @@ function initCareLookup() {
       resultCard.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">CHÍNH HÃNG</span>
-          <strong style="color:#fff;font-size:15px;">Thiết bị: GAERU G1 ULTRA</strong>
+          <strong style="color:var(--gaeru-text);font-size:15px;">Thiết bị: GAERU G1 ULTRA</strong>
         </div>
         <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Mã Serial: <code style="color:#38bdf8;">${code.toUpperCase()}</code></p>
         <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Thời hạn bảo hành: <strong>12 Tháng (1 Đổi 1)</strong></p>
@@ -699,101 +747,284 @@ function initCareLookup() {
       if (e.key === 'Enter') checkCare();
     });
   }
-
-  const btnScanShortcut = document.getElementById('btn-scan-qr-shortcut');
-  if (btnScanShortcut) {
-    btnScanShortcut.addEventListener('click', openScanner);
-  }
 }
 
-// ==================== TRÌNH QUÉT MÃ QR NATIVE ====================
-let videoStream = null;
-let scanInterval = null;
+// ==================== TÀI KHOẢN NGƯỜI DÙNG & HỒ SƠ ====================
+function initAccount() {
+  loadUserProfile();
+  loadOrderHistory();
+  loadRegisteredDevices();
+  renderAccountView();
 
-function initScanner() {
-  const btnOpen = document.getElementById('btn-open-scanner');
-  const btnClose = document.getElementById('btn-close-scanner');
-  const btnManual = document.getElementById('btn-manual-code');
+  // Nút mở modal sửa hồ sơ
+  const btnEdit = document.getElementById('btn-edit-profile');
+  if (btnEdit) btnEdit.addEventListener('click', openProfileModal);
 
-  if (btnOpen) btnOpen.addEventListener('click', openScanner);
-  if (btnClose) btnClose.addEventListener('click', closeScanner);
-  if (btnManual) {
-    btnManual.addEventListener('click', () => {
-      const code = prompt('Nhập số serial thiết bị GAERU (viết hoa trên hộp):');
-      if (code) handleScanResult(code.trim());
+  const addressMenuItem = document.getElementById('account-menu-address');
+  if (addressMenuItem) addressMenuItem.addEventListener('click', openProfileModal);
+
+  // Nút chuyển chế độ theme trong tab tài khoản
+  const btnAccountTheme = document.getElementById('btn-account-toggle-theme');
+  if (btnAccountTheme) {
+    btnAccountTheme.addEventListener('click', () => {
+      const btnHeaderToggle = document.getElementById('btn-theme-toggle');
+      if (btnHeaderToggle) btnHeaderToggle.click();
+      updateAccountThemeLabel();
     });
   }
-}
+  updateAccountThemeLabel();
 
-async function openScanner() {
-  const modal = document.getElementById('scanner-modal');
-  const qrBox = document.getElementById('qr-reader');
-  modal.classList.remove('hidden');
-
-  qrBox.innerHTML = '<video id="scanner-video" playsinline style="width:100%;height:100%;object-fit:cover;"></video><canvas id="scanner-canvas" style="display:none;"></canvas>';
-  const video = document.getElementById('scanner-video');
-  const canvas = document.getElementById('scanner-canvas');
-  const ctx = canvas.getContext('2d');
-
-  try {
-    videoStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false
+  // Nút đồng bộ dữ liệu với máy chủ web gaeru.com
+  const btnSync = document.getElementById('btn-sync-data-server');
+  if (btnSync) {
+    btnSync.addEventListener('click', async () => {
+      showToast('🔄 Đang kiểm tra & đồng bộ dữ liệu từ gaeru.com...');
+      await loadProducts();
+      showToast('✨ Dữ liệu sản phẩm & bài viết đã cập nhật mới nhất!');
     });
-    video.srcObject = videoStream;
-    await video.play();
+  }
 
-    scanInterval = setInterval(() => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Nút chuyển sang bảo hành Care+
+  const btnCare = document.getElementById('btn-goto-care');
+  const statBoxCare = document.getElementById('stat-box-care');
+  const btnPolicy = document.getElementById('btn-goto-policy');
+  if (btnCare) btnCare.addEventListener('click', () => switchTab('tab-care'));
+  if (statBoxCare) statBoxCare.addEventListener('click', () => switchTab('tab-care'));
+  if (btnPolicy) btnPolicy.addEventListener('click', () => switchTab('tab-care'));
 
-        if ('BarcodeDetector' in window) {
-          const detector = new BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13'] });
-          detector.detect(video).then(barcodes => {
-            if (barcodes && barcodes.length > 0) {
-              handleScanResult(barcodes[0].rawValue);
-            }
-          }).catch(() => {});
-        }
+  // Nút xem đơn hàng
+  const statBoxOrders = document.getElementById('stat-box-orders');
+  const linkOrders = document.getElementById('account-view-all-orders');
+  if (statBoxOrders) statBoxOrders.addEventListener('click', () => {
+    const ordersContainer = document.getElementById('account-orders-container');
+    if (ordersContainer) ordersContainer.scrollIntoView({ behavior: 'smooth' });
+  });
+  if (linkOrders) linkOrders.addEventListener('click', () => {
+    const ordersContainer = document.getElementById('account-orders-container');
+    if (ordersContainer) ordersContainer.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Nút đặt lại dữ liệu ứng dụng
+  const btnReset = document.getElementById('btn-reset-app-data');
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn đặt lại dữ liệu tạm (giỏ hàng, bộ nhớ đệm) của ứng dụng GAERU?')) {
+        localStorage.removeItem('gaeru_cart');
+        localStorage.removeItem('gaeru_order_history');
+        AppState.cart = [];
+        AppState.orders = [];
+        saveCartToStorage();
+        renderCart();
+        renderAccountView();
+        showToast('🧹 Đã xoá bộ nhớ tạm ứng dụng thành công!');
       }
-    }, 250);
-
-  } catch (err) {
-    console.warn('Không thể mở camera:', err);
-    const manual = prompt('Camera chưa được cấp quyền. Bạn có muốn nhập mã serial bằng tay không?');
-    if (manual) handleScanResult(manual.trim());
-    else closeScanner();
+    });
   }
 }
 
-function closeScanner() {
-  document.getElementById('scanner-modal').classList.add('hidden');
-  if (scanInterval) {
-    clearInterval(scanInterval);
-    scanInterval = null;
+function loadUserProfile() {
+  try {
+    const raw = localStorage.getItem('gaeru_user_profile');
+    if (raw) {
+      AppState.user = JSON.parse(raw);
+    } else {
+      AppState.user = {
+        name: 'Khách hàng GAERU',
+        phone: '',
+        email: '',
+        province: '',
+        address: ''
+      };
+    }
+  } catch (e) {
+    AppState.user = { name: 'Khách hàng GAERU', phone: '', email: '', province: '', address: '' };
   }
-  if (videoStream) {
-    videoStream.getTracks().forEach(t => t.stop());
-    videoStream = null;
-  }
-  document.getElementById('qr-reader').innerHTML = '';
 }
 
-function handleScanResult(code) {
-  closeScanner();
-  if (!code) return;
+function saveUserProfile(event) {
+  if (event) event.preventDefault();
 
-  if (navigator.vibrate) navigator.vibrate(100);
-  showToast(`🔍 Đã quét mã: ${code}`);
+  const name = document.getElementById('profile-input-name').value.trim();
+  const phone = document.getElementById('profile-input-phone').value.trim();
+  const email = document.getElementById('profile-input-email').value.trim();
+  const province = document.getElementById('profile-input-province').value;
+  const address = document.getElementById('profile-input-address').value.trim();
 
-  switchTab('tab-care');
-  const careInput = document.getElementById('care-serial-input');
-  if (careInput) {
-    careInput.value = code;
-    const btnCheck = document.getElementById('btn-check-care');
-    if (btnCheck) btnCheck.click();
+  if (!name || !phone) {
+    alert('Vui lòng nhập họ tên và số điện thoại.');
+    return;
+  }
+
+  AppState.user = { name, phone, email, province, address };
+  try {
+    localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
+  } catch (e) {}
+
+  applyProfileToCheckoutForm();
+  closeProfileModal();
+  renderAccountView();
+  showToast('✅ Đã lưu thông tin hồ sơ tài khoản!');
+}
+
+function applyProfileToCheckoutForm() {
+  const orderName = document.getElementById('order-name');
+  const orderPhone = document.getElementById('order-phone');
+  const orderProv = document.getElementById('order-province');
+  const orderAddr = document.getElementById('order-address');
+
+  if (AppState.user && AppState.user.name && AppState.user.name !== 'Khách hàng GAERU' && orderName && !orderName.value) {
+    orderName.value = AppState.user.name;
+  }
+  if (AppState.user && AppState.user.phone && orderPhone && !orderPhone.value) {
+    orderPhone.value = AppState.user.phone;
+  }
+  if (AppState.user && AppState.user.province && orderProv && !orderProv.value) {
+    orderProv.value = AppState.user.province;
+  }
+  if (AppState.user && AppState.user.address && orderAddr && !orderAddr.value) {
+    orderAddr.value = AppState.user.address;
+  }
+}
+
+function openProfileModal() {
+  const modal = document.getElementById('profile-modal');
+  if (!modal) return;
+
+  const provSelect = document.getElementById('profile-input-province');
+  if (provSelect && provSelect.options.length <= 1 && AppState.provinces.length > 0) {
+    provSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' +
+      AppState.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+  }
+
+  document.getElementById('profile-input-name').value = AppState.user.name === 'Khách hàng GAERU' ? '' : (AppState.user.name || '');
+  document.getElementById('profile-input-phone').value = AppState.user.phone || '';
+  document.getElementById('profile-input-email').value = AppState.user.email || '';
+  if (provSelect && AppState.user.province) provSelect.value = AppState.user.province;
+  document.getElementById('profile-input-address').value = AppState.user.address || '';
+
+  modal.classList.remove('hidden');
+}
+
+function closeProfileModal() {
+  const modal = document.getElementById('profile-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function loadOrderHistory() {
+  try {
+    const raw = localStorage.getItem('gaeru_order_history');
+    if (raw) {
+      AppState.orders = JSON.parse(raw);
+    } else {
+      AppState.orders = [];
+    }
+  } catch (e) {
+    AppState.orders = [];
+  }
+}
+
+function loadRegisteredDevices() {
+  AppState.devices = [
+    {
+      name: 'Micro Thu Âm GAERU G1 ULTRA',
+      serial: 'GAE-G1-982310',
+      daysLeft: 342
+    }
+  ];
+}
+
+function renderAccountView() {
+  const nameEl = document.getElementById('account-display-name');
+  const phoneEl = document.getElementById('account-display-phone');
+  const avatarEl = document.getElementById('account-avatar');
+  const addressSavedEl = document.getElementById('account-saved-address');
+  const orderCountEl = document.getElementById('account-order-count');
+  const deviceCountEl = document.getElementById('account-device-count');
+
+  const displayName = AppState.user.name || 'Khách hàng GAERU';
+  if (nameEl) nameEl.textContent = displayName;
+  if (phoneEl) phoneEl.textContent = AppState.user.phone ? `📱 ${AppState.user.phone}` : 'Chưa cập nhật số điện thoại';
+
+  if (avatarEl) {
+    const firstLetter = displayName.trim().charAt(0).toUpperCase() || 'G';
+    avatarEl.textContent = firstLetter;
+  }
+
+  if (addressSavedEl) {
+    if (AppState.user.address || AppState.user.province) {
+      addressSavedEl.textContent = `${AppState.user.address ? AppState.user.address + ', ' : ''}${AppState.user.province || ''}`;
+    } else {
+      addressSavedEl.textContent = 'Chạm để thiết lập địa chỉ mặc định';
+    }
+  }
+
+  if (orderCountEl) orderCountEl.textContent = AppState.orders.length;
+  if (deviceCountEl) deviceCountEl.textContent = AppState.devices.length;
+
+  renderAccountOrders();
+  renderAccountDevices();
+}
+
+function renderAccountOrders() {
+  const container = document.getElementById('account-orders-container');
+  if (!container) return;
+
+  if (!AppState.orders || AppState.orders.length === 0) {
+    container.innerHTML = `
+      <div class="empty-orders-box">
+        <span style="font-size:24px;">🛒</span>
+        <p>Bạn chưa có đơn hàng nào.</p>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;" onclick="switchTab('tab-products')">
+          Khám phá sản phẩm ngay
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = AppState.orders.map(order => `
+    <div class="order-card-mini">
+      <div class="order-header-row">
+        <span class="order-code">#${order.code}</span>
+        <span class="order-status-badge ${order.statusClass || 'shipping'}">${order.statusText || 'Đang giao hàng'}</span>
+      </div>
+      <div class="order-summary-row">
+        <span class="order-items-desc">${order.itemSummary || 'Thiết bị GAERU'}</span>
+        <span class="order-total-price">${formatVnd(order.totalVnd)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--gaeru-text-muted);display:flex;justify-content:space-between;margin-top:2px;">
+        <span>${order.date || 'Hôm nay'}</span>
+        <span>${order.paymentMethod === 'cod' ? 'Thanh toán COD' : 'Chuyển khoản VietQR'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAccountDevices() {
+  const container = document.getElementById('account-devices-container');
+  if (!container) return;
+
+  container.innerHTML = AppState.devices.map(device => `
+    <div class="device-card-item">
+      <div class="device-card-info">
+        <strong>${device.name}</strong>
+        <span>Serial: <code style="color:#38bdf8;">${device.serial}</code></span>
+      </div>
+      <span class="device-care-pill">Còn ${device.daysLeft} ngày</span>
+    </div>
+  `).join('');
+}
+
+function updateAccountThemeLabel() {
+  const label = document.getElementById('account-current-theme-label');
+  if (!label) return;
+  const pref = localStorage.getItem('gaeru_theme_preference');
+  if (pref === 'dark') {
+    label.textContent = '🌙 Chế độ Tối (Dark)';
+  } else if (pref === 'light') {
+    label.textContent = '☀️ Chế độ Sáng (Light)';
+  } else {
+    label.textContent = '📱 Tự động theo điện thoại';
   }
 }
 
@@ -826,14 +1057,14 @@ function initCapacitor() {
     let lastBack = 0;
     App.addListener('backButton', () => {
       const modal = document.getElementById('product-detail-modal');
-      const scanner = document.getElementById('scanner-modal');
+      const profileModal = document.getElementById('profile-modal');
 
-      if (!modal.classList.contains('hidden')) {
+      if (modal && !modal.classList.contains('hidden')) {
         closeProductDetail();
         return;
       }
-      if (!scanner.classList.contains('hidden')) {
-        closeScanner();
+      if (profileModal && !profileModal.classList.contains('hidden')) {
+        closeProfileModal();
         return;
       }
       if (AppState.currentTab !== 'tab-home') {

@@ -157,11 +157,8 @@
           <button id="btn-check-care" class="btn btn-primary">Tra cứu</button>
         </div>
         
-        <div class="care-quick-actions">
-          <button id="btn-scan-qr-shortcut" class="btn btn-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="8" height="8" x="8" y="8" rx="1"/></svg>
-            Quét mã QR trên hộp máy
-          </button>
+        <div class="care-quick-hints">
+          <span class="hint-text">💡 Tra cứu theo Số Serial trên thân máy hoặc Số điện thoại mua hàng</span>
         </div>
       </div>
 
@@ -288,14 +285,171 @@
       </div>
     </section>
 
-    <!-- TAB 5: WEB GAERU.COM EMBED (KHI CẦN XEM TRỰC TIẾP TRANG WEB) -->
-    <section id="tab-web" class="tab-pane">
-      <div class="web-bar">
-        <span>Đang kết nối: gaeru.com</span>
-        <button id="btn-reload-web" class="icon-btn-sm" title="Tải lại">🔄</button>
+    <!-- TAB 5: TÀI KHOẢN NGƯỜI DÙNG -->
+    <section id="tab-account" class="tab-pane">
+      <!-- Profile Header Card -->
+      <div class="account-profile-card">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="account-avatar">G</div>
+          <div class="profile-badge-icon">👑</div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name-row">
+            <h2 id="account-display-name">Khách hàng GAERU</h2>
+            <button id="btn-edit-profile" class="edit-pill-btn">Sửa hồ sơ</button>
+          </div>
+          <p id="account-display-phone" class="profile-phone">Chưa cập nhật số điện thoại</p>
+          <div class="membership-pill">
+            <span class="star-icon">★</span>
+            <span id="account-membership">Hội viên GAERU Creator Club</span>
+          </div>
+        </div>
       </div>
-      <div class="web-frame-container">
-        <iframe id="gaeru-web-frame" src="about:blank" title="GAERU Website"></iframe>
+
+      <!-- Quick Metrics Strip -->
+      <div class="account-stats-row">
+        <div class="stat-box" id="stat-box-orders">
+          <span class="stat-number" id="account-order-count">0</span>
+          <span class="stat-label">Đơn hàng</span>
+        </div>
+        <div class="stat-box" id="stat-box-care">
+          <span class="stat-number" id="account-device-count">1</span>
+          <span class="stat-label">Thiết bị Care+</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">2</span>
+          <span class="stat-label">Voucher GAERU</span>
+        </div>
+      </div>
+
+      <!-- Khung Đơn hàng của tôi -->
+      <div class="account-section-card">
+        <div class="section-card-header">
+          <h3>📦 Đơn hàng của tôi</h3>
+          <span class="link-muted" id="account-view-all-orders">Lịch sử đặt</span>
+        </div>
+        
+        <div id="account-orders-container" class="account-orders-list">
+          <!-- Render động từ JS -->
+        </div>
+      </div>
+
+      <!-- Khung Thiết bị & Bảo hành GAERU Care+ -->
+      <div class="account-section-card">
+        <div class="section-card-header">
+          <h3>🛡️ Thiết bị sở hữu & Bảo hành</h3>
+          <span class="link-muted" id="btn-goto-care">Tra cứu Care+</span>
+        </div>
+        <div class="registered-devices-list" id="account-devices-container">
+          <!-- Render động -->
+        </div>
+      </div>
+
+      <!-- Menu Cài đặt & Tiện ích ứng dụng -->
+      <div class="account-menu-card">
+        <h4 class="menu-group-title">Cài đặt ứng dụng</h4>
+
+        <div class="menu-item" id="account-menu-theme">
+          <div class="menu-item-left">
+            <span class="menu-icon">🌓</span>
+            <div class="menu-item-text">
+              <strong>Giao diện ứng dụng</strong>
+              <span id="account-current-theme-label">Tự động theo điện thoại</span>
+            </div>
+          </div>
+          <button id="btn-account-toggle-theme" class="chip-sm">Đổi chế độ</button>
+        </div>
+
+        <div class="menu-item" id="account-menu-address">
+          <div class="menu-item-left">
+            <span class="menu-icon">📍</span>
+            <div class="menu-item-text">
+              <strong>Địa chỉ nhận hàng mặc định</strong>
+              <span id="account-saved-address">Chưa thiết lập</span>
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+
+        <div class="menu-item">
+          <div class="menu-item-left">
+            <span class="menu-icon">🔔</span>
+            <div class="menu-item-text">
+              <strong>Thông báo khuyến mãi & đơn hàng</strong>
+              <span>Bật để nhận tin tức sản phẩm mới</span>
+            </div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-notifications" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="menu-item" id="btn-sync-data-server">
+          <div class="menu-item-left">
+            <span class="menu-icon">🔄</span>
+            <div class="menu-item-text">
+              <strong>Đồng bộ dữ liệu web gaeru.com</strong>
+              <span>Làm mới sản phẩm, thông số & bài viết</span>
+            </div>
+          </div>
+          <span class="chip-sm green">Đồng bộ</span>
+        </div>
+      </div>
+
+      <!-- Hỗ trợ & Thông tin GAERU -->
+      <div class="account-menu-card">
+        <h4 class="menu-group-title">Hỗ trợ & Thương hiệu</h4>
+
+        <a href="tel:0829191080" class="menu-item link-item">
+          <div class="menu-item-left">
+            <span class="menu-icon">📞</span>
+            <div class="menu-item-text">
+              <strong>Hotline hỗ trợ kỹ thuật</strong>
+              <span>082 919 1080 (8h30 - 21h00)</span>
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </a>
+
+        <a href="mailto:business@gaeru.com" class="menu-item link-item">
+          <div class="menu-item-left">
+            <span class="menu-icon">✉️</span>
+            <div class="menu-item-text">
+              <strong>Email hợp tác & Chăm sóc</strong>
+              <span>business@gaeru.com</span>
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </a>
+
+        <div class="menu-item" id="btn-goto-policy">
+          <div class="menu-item-left">
+            <span class="menu-icon">💎</span>
+            <div class="menu-item-text">
+              <strong>Chính sách GAERU Care+</strong>
+              <span>Bảo hành 1 đổi 1 trong 12 tháng</span>
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+
+        <div class="menu-item" id="btn-reset-app-data">
+          <div class="menu-item-left">
+            <span class="menu-icon text-red">🚪</span>
+            <div class="menu-item-text">
+              <strong class="text-red">Đặt lại dữ liệu tạm ứng dụng</strong>
+              <span>Xoá giỏ hàng và dữ liệu lưu cache</span>
+            </div>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+      </div>
+
+      <!-- Footer Version -->
+      <div class="account-app-footer">
+        <p class="brand-sub">GAERU Mobile App — Phiên bản 1.2.0 (Official)</p>
+        <p class="copyright">Bản quyền thiết bị quay chụp & thu âm GAERU</p>
       </div>
     </section>
 
@@ -348,21 +502,48 @@
     </div>
   </div>
 
-  <!-- MODAL: QUÉT MÃ QR NATIVE (SCANNER) -->
-  <div id="scanner-modal" class="scanner-modal hidden">
-    <div class="scanner-header">
-      <h3>Quét mã tem GAERU Care+</h3>
-      <button id="btn-close-scanner" class="btn-icon" aria-label="Đóng">✕</button>
-    </div>
-    <div class="scanner-body">
-      <div id="qr-reader" class="qr-reader-box"></div>
-      <div class="scanner-overlay">
-        <div class="scanner-target"></div>
-        <p class="scanner-hint">Hướng camera vào mã QR hoặc mã vạch trên hộp micro/gimbal GAERU</p>
-      </div>
-    </div>
-    <div class="scanner-footer">
-      <button id="btn-manual-code" class="btn btn-secondary">Nhập mã serial bằng tay</button>
+  <!-- MODAL: CẬP NHẬT HỒ SƠ TÀI KHOẢN (BOTTOM SHEET) -->
+  <div id="profile-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeProfileModal()"></div>
+    <div class="modal-content">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeProfileModal()">✕</button>
+
+      <h3 style="font-size:16px;font-weight:800;color:var(--gaeru-text);margin-bottom:4px;">Hồ sơ tài khoản GAERU</h3>
+      <p style="font-size:12px;color:var(--gaeru-text-muted);margin-bottom:14px;">Thông tin sẽ tự động điền sẵn khi bạn đặt hàng</p>
+
+      <form id="profile-form" onsubmit="saveUserProfile(event)">
+        <label class="form-group">
+          <span>Họ và tên *</span>
+          <input type="text" id="profile-input-name" required placeholder="Ví dụ: Nguyễn Văn A">
+        </label>
+
+        <label class="form-group">
+          <span>Số điện thoại *</span>
+          <input type="tel" id="profile-input-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}">
+        </label>
+
+        <label class="form-group">
+          <span>Email liên hệ</span>
+          <input type="email" id="profile-input-email" placeholder="Ví dụ: email@gmail.com">
+        </label>
+
+        <label class="form-group">
+          <span>Tỉnh / Thành phố mặc định</span>
+          <select id="profile-input-province">
+            <option value="">Chọn tỉnh / thành phố</option>
+          </select>
+        </label>
+
+        <label class="form-group">
+          <span>Địa chỉ nhận hàng chi tiết</span>
+          <input type="text" id="profile-input-address" placeholder="Ví dụ: 123 Đường Lê Lợi, Phường 1">
+        </label>
+
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;">
+          Lưu thông tin hồ sơ
+        </button>
+      </form>
     </div>
   </div>
 
@@ -379,12 +560,6 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
       <span>Sản phẩm</span>
     </button>
-    <button id="btn-open-scanner" class="nav-item nav-item-highlight">
-      <div class="scanner-icon-bubble">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect width="8" height="8" x="8" y="8" rx="1"/></svg>
-      </div>
-      <span>Quét mã</span>
-    </button>
     <button class="nav-item" data-tab="tab-care">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
       <span>Bảo hành</span>
@@ -395,6 +570,10 @@
         <span id="nav-cart-badge" class="nav-badge">0</span>
       </div>
       <span>Giỏ hàng</span>
+    </button>
+    <button class="nav-item" data-tab="tab-account">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Tài khoản</span>
     </button>
   </nav>
 
