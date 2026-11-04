@@ -6,6 +6,7 @@
   "main": "www/index.html",
   "scripts": {
     "dev": "node scripts/live-server.js",
+    "sync:data": "node scripts/sync-data.js",
     "build": "node scripts/build.js",
     "cap:sync": "cap sync",
     "cap:add:android": "cap add android",

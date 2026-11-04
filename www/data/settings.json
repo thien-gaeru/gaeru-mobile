@@ -1,0 +1,13 @@
+{
+  "shippingCarriers": [],
+  "shippingNote": "Phí vận chuyển được tính theo tỉnh/thành phố đã chọn.",
+  "shippingRates": {},
+  "paymentMethods": [
+    "cod"
+  ],
+  "cod": {
+    "maxAmountVnd": 50000000,
+    "instructions": "Thanh toán tiền mặt trực tiếp cho bưu tá khi nhận hàng."
+  },
+  "ordersEnabled": false
+}

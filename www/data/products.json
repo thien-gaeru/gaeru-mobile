@@ -1,0 +1,42 @@
+{
+  "products": [
+    {
+      "id": "aa66b973-5997-4b52-8b1c-ebca2230257a",
+      "slug": "sdfadf",
+      "name": "sdfádf",
+      "category": "audio",
+      "descriptor": "",
+      "description": "",
+      "cardTitle": "",
+      "cardSummary": "",
+      "imageUrl": "/api/catalog-images/5ac8f3c1-c5e0-4b7a-ad6b-f3ab9199cd28?v=webp-20261025",
+      "imageAlt": "",
+      "active": true,
+      "version": 1,
+      "deletedAt": null,
+      "sortOrder": 0,
+      "descriptionMedia": [],
+      "gallery": [
+        "/api/catalog-images/5ac8f3c1-c5e0-4b7a-ad6b-f3ab9199cd28?v=webp-20261025",
+        "/api/catalog-images/d1b46c08-52d2-4f6b-8688-f788d7829cbb?v=webp-20261025",
+        "/api/catalog-images/8994d8e7-0bc4-47eb-b368-adfcf875b959?v=webp-20261025",
+        "/api/catalog-images/0f6ff4fe-1ae7-467d-b2fa-b27ebc1b1843?v=webp-20261025"
+      ],
+      "optionGroups": [],
+      "variants": [
+        {
+          "id": "47667ace-b5aa-4304-b67e-510ca5c4b49e",
+          "sku": "SDFADF-01",
+          "name": "Phiên bản tiêu chuẩn",
+          "active": true,
+          "options": {},
+          "imageUrl": "",
+          "priceVnd": 5665165,
+          "stockQuantity": 10,
+          "originalPriceVnd": 5665165,
+          "promotion": null
+        }
+      ]
+    }
+  ]
+}
