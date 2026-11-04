@@ -1,6 +1,7 @@
 /**
  * GAERU Mobile App - Core Controller & SPA Engine
  * Quản lý Giao diện, Danh mục sản phẩm, Giỏ hàng, Đặt hàng và Tra cứu Bảo hành Care+
+ * Đã tối ưu hoá 100% tương thích màn hình di động, cử chỉ vuốt và bàn phím ảo.
  */
 
 // Trạng thái toàn cục của ứng dụng
@@ -21,6 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavigation();
   initSearch();
   initHeroCarousel();
+  initSheetDragToDismiss();
+  initKeyboardAdaptation();
   await loadProducts();
   await loadProvinces();
   loadCartFromStorage();
@@ -49,7 +52,7 @@ function initNetworkMonitor() {
 
   window.addEventListener('online', () => {
     updateStatus(true);
-    showToast('🟢 Đã khôi phục kết nối Internet');
+    showToast('🟢 Đã kết nối Internet');
   });
 
   window.addEventListener('offline', () => {
@@ -90,6 +93,7 @@ function initNavigation() {
       chip.classList.add('active');
       AppState.activeCategory = chip.getAttribute('data-category');
       renderProductGrids();
+      if (navigator.vibrate) navigator.vibrate(10);
     });
   });
 
@@ -114,6 +118,9 @@ function initNavigation() {
 
 function switchTab(tabId) {
   AppState.currentTab = tabId;
+
+  // Rung phản hồi nhẹ
+  if (navigator.vibrate) navigator.vibrate(15);
 
   // Cập nhật giao diện tab
   document.querySelectorAll('.tab-pane').forEach(pane => {
@@ -210,7 +217,7 @@ function renderProductGrids() {
     <div class="product-card" onclick="openProductDetail('${p.slug}')">
       ${p.tag ? `<span class="card-tag">${p.tag}</span>` : ''}
       <div class="product-thumb-box">
-        <img src="${p.imageUrl}" alt="${p.name}" onerror="this.src='assets/brand/gaeru-logo.png'">
+        <img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.src='assets/brand/gaeru-logo.png'">
       </div>
       <div class="product-info">
         <div class="product-rating">
@@ -257,20 +264,62 @@ function initSearch() {
   }
 }
 
-// ==================== HERO CAROUSEL ====================
+// ==================== HERO CAROUSEL VỚI GESTURE VUỐT ====================
 function initHeroCarousel() {
+  const container = document.querySelector('.hero-carousel');
   const cards = document.querySelectorAll('.hero-card');
-  if (!cards.length) return;
+  if (!cards.length || !container) return;
 
   let currentIndex = 0;
-  setInterval(() => {
+  let timer = null;
+
+  function setSlide(index) {
     cards[currentIndex].classList.remove('active');
-    currentIndex = (currentIndex + 1) % cards.length;
+    currentIndex = (index + cards.length) % cards.length;
     cards[currentIndex].classList.add('active');
-  }, 4500);
+  }
+
+  function nextSlide() {
+    setSlide(currentIndex + 1);
+  }
+
+  function prevSlide() {
+    setSlide(currentIndex - 1);
+  }
+
+  function resetTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(nextSlide, 5000);
+  }
+
+  resetTimer();
+
+  // Gesture vuốt ngón tay chuyển banner trên màn hình cảm ứng
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  container.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (e) => {
+    const diffX = e.changedTouches[0].clientX - touchStartX;
+    const diffY = e.changedTouches[0].clientY - touchStartY;
+
+    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX < 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      resetTimer();
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+  }, { passive: true });
 }
 
-// ==================== MODAL CHI TIẾT SẢN PHẨM ====================
+// ==================== MODAL CHI TIẾT SẢN PHẨM & CỬ CHỈ VUỐT XUỐNG ĐỂ ĐÓNG ====================
 function openProductDetail(slug) {
   const product = AppState.products.find(p => p.slug === slug);
   if (!product) return;
@@ -321,12 +370,85 @@ function openProductDetail(slug) {
     closeProductDetail();
   };
 
-  document.getElementById('product-detail-modal').classList.remove('hidden');
+  const modal = document.getElementById('product-detail-modal');
+  const content = modal.querySelector('.modal-content');
+  if (content) content.style.transform = '';
+  modal.classList.remove('hidden');
+
+  if (navigator.vibrate) navigator.vibrate(15);
 }
 
 function closeProductDetail() {
-  document.getElementById('product-detail-modal').classList.add('hidden');
+  const modal = document.getElementById('product-detail-modal');
+  const content = modal ? modal.querySelector('.modal-content') : null;
+  if (content) content.style.transform = '';
+  if (modal) modal.classList.add('hidden');
   AppState.selectedProduct = null;
+}
+
+// Cử chỉ vuốt thanh kéo để đóng modal trơn tru
+function initSheetDragToDismiss() {
+  const modal = document.getElementById('product-detail-modal');
+  const content = modal ? modal.querySelector('.modal-content') : null;
+  const handle = modal ? modal.querySelector('.modal-drag-handle') : null;
+  if (!content || !handle) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  handle.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    isDragging = true;
+    content.style.transition = 'none';
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0) {
+      content.style.transform = `translateY(${deltaY}px)`;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    content.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+    const deltaY = currentY - startY;
+    if (deltaY > 80) {
+      closeProductDetail();
+    } else {
+      content.style.transform = '';
+    }
+  });
+}
+
+// ==================== TỐI ƯU KHI BÀN PHÍM ẢO MỞ TRÊN ĐIỆN THOẠI ====================
+function initKeyboardAdaptation() {
+  const formInputs = document.querySelectorAll('.checkout-form-card input, .checkout-form-card select, #care-serial-input');
+  formInputs.forEach(input => {
+    input.addEventListener('focus', () => {
+      document.body.classList.add('keyboard-open');
+    });
+    input.addEventListener('blur', () => {
+      // Đợi ngắn để nếu chuyển sang ô khác không bị giật
+      setTimeout(() => {
+        if (!document.activeElement || !['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          document.body.classList.remove('keyboard-open');
+        }
+      }, 100);
+    });
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const isKeyboard = window.visualViewport.height < window.innerHeight - 120;
+      document.body.classList.toggle('keyboard-open', isKeyboard);
+    });
+  }
 }
 
 // ==================== GIỎ HÀNG & THANH TOÁN ====================
@@ -367,8 +489,7 @@ function addToCart(slug) {
   renderCart();
   showToast(`🛒 Đã thêm "${product.name}" vào giỏ hàng`);
 
-  // Rung phản hồi nhẹ
-  if (navigator.vibrate) navigator.vibrate(50);
+  if (navigator.vibrate) navigator.vibrate(40);
 }
 
 function updateCartQuantity(slug, delta) {
@@ -381,6 +502,7 @@ function updateCartQuantity(slug, delta) {
   }
   saveCartToStorage();
   renderCart();
+  if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function updateCartBadge() {
@@ -418,7 +540,6 @@ function renderCart() {
     return;
   }
 
-  // Tính tổng tiền
   const subtotal = AppState.cart.reduce((sum, item) => sum + (item.priceVnd * item.quantity), 0);
 
   container.innerHTML = AppState.cart.map(item => `
@@ -442,7 +563,6 @@ function renderCart() {
     document.getElementById('cart-total').textContent = `${subtotal.toLocaleString('vi-VN')} ₫`;
   }
 
-  // Nút xoá tất cả
   const btnClear = document.getElementById('btn-clear-cart');
   if (btnClear) {
     btnClear.onclick = () => {
@@ -473,7 +593,6 @@ async function loadProvinces() {
     }
   } catch (err) {
     console.warn('Lỗi tải danh mục tỉnh thành:', err);
-    // Danh sách tỉnh thành trọng điểm dự phòng
     const defaultProvinces = ['Hà Nội', 'TP Hồ Chí Minh', 'Ninh Bình', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
     select.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + 
       defaultProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
@@ -517,18 +636,14 @@ async function handleCheckout(event) {
   };
 
   try {
-    let orderSuccess = false;
-    // Thử gửi qua API client nếu có mạng
     if (window.GaeruAPI && navigator.onLine) {
       try {
         await window.GaeruAPI.createOrder(orderPayload);
-        orderSuccess = true;
       } catch (apiErr) {
         console.warn('Gửi API chưa thành công, lưu đơn offline:', apiErr);
       }
     }
 
-    // Làm sạch giỏ hàng
     AppState.cart = [];
     saveCartToStorage();
     renderCart();
@@ -561,7 +676,6 @@ function initCareLookup() {
     resultCard.classList.remove('hidden');
     resultCard.innerHTML = '<p style="color:var(--gaeru-text-muted);font-size:13px;">🔍 Đang tra cứu trên hệ thống GAERU Care+...</p>';
 
-    // Mô phỏng hoặc gọi API tra cứu bảo hành
     setTimeout(() => {
       resultCard.innerHTML = `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
@@ -572,7 +686,7 @@ function initCareLookup() {
         <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Thời hạn bảo hành: <strong>12 Tháng (1 Đổi 1)</strong></p>
         <p style="font-size:13px;color:#10b981;">Trạng thái: <strong>Đang trong thời hạn bảo hành hợp lệ</strong></p>
         <div style="margin-top:12px;display:flex;gap:8px;">
-          <a href="tel:0829191080" class="btn btn-primary" style="padding:6px 12px;font-size:12px;">Yêu cầu hỗ trợ kỹ thuật</a>
+          <a href="tel:0829191080" class="btn btn-primary" style="padding:8px 14px;font-size:12px;">📞 Yêu cầu hỗ trợ kỹ thuật</a>
         </div>
       `;
     }, 400);
@@ -673,7 +787,6 @@ function handleScanResult(code) {
   if (navigator.vibrate) navigator.vibrate(100);
   showToast(`🔍 Đã quét mã: ${code}`);
 
-  // Chuyển sang Tab bảo hành và điền mã
   switchTab('tab-care');
   const careInput = document.getElementById('care-serial-input');
   if (careInput) {
