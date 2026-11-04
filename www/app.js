@@ -241,9 +241,8 @@ function renderProductGrids() {
         </div>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
-        <button class="btn-card-add" onclick="addToCart('${p.slug}')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-          Thêm giỏ
+        <button class="btn-card-add" onclick="openInstantOrder('${p.slug}')">
+          Đặt mua ngay
         </button>
       </div>
     </div>
@@ -373,12 +372,14 @@ function openProductDetail(slug) {
     specsTable.parentElement.classList.add('hidden');
   }
 
-  // Nút thêm giỏ hàng trong modal
-  const btnAdd = document.getElementById('btn-detail-add-cart');
-  btnAdd.onclick = () => {
-    addToCart(product.slug);
-    closeProductDetail();
-  };
+  // Nút đặt mua ngay trong modal chi tiết
+  const btnBuyNow = document.getElementById('btn-detail-buy-now');
+  if (btnBuyNow) {
+    btnBuyNow.onclick = () => {
+      closeProductDetail();
+      openInstantOrder(product.slug);
+    };
+  }
 
   const modal = document.getElementById('product-detail-modal');
   const content = modal.querySelector('.modal-content');
@@ -590,7 +591,8 @@ function renderCart() {
 async function loadProvinces() {
   const select = document.getElementById('order-province');
   const profSelect = document.getElementById('profile-input-province');
-  if (!select && !profSelect) return;
+  const instantSelect = document.getElementById('instant-order-province');
+  if (!select && !profSelect && !instantSelect) return;
 
   try {
     const res = await fetch('assets/data/vietnam-addresses.json');
@@ -606,6 +608,10 @@ async function loadProvinces() {
           profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + optionsHtml;
           if (AppState.user && AppState.user.province) profSelect.value = AppState.user.province;
         }
+        if (instantSelect) {
+          instantSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + optionsHtml;
+          if (AppState.user && AppState.user.province) instantSelect.value = AppState.user.province;
+        }
       }
     }
   } catch (err) {
@@ -614,10 +620,151 @@ async function loadProvinces() {
     const defHtml = defaultProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
     if (select) select.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
     if (profSelect) profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
+    if (instantSelect) instantSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
   }
 
   // Tự động điền dữ liệu người dùng vào checkout form nếu có
   applyProfileToCheckoutForm();
+}
+
+// ==================== ĐẶT MUA NHANH TRỰC TIẾP (INSTANT CHECKOUT) ====================
+let instantOrderState = {
+  product: null,
+  quantity: 1
+};
+
+function openInstantOrder(slug) {
+  const product = AppState.products.find(p => p.slug === slug);
+  if (!product) return;
+
+  instantOrderState.product = product;
+  instantOrderState.quantity = 1;
+
+  const modal = document.getElementById('instant-order-modal');
+  if (!modal) return;
+
+  document.getElementById('instant-item-img').src = product.imageUrl;
+  document.getElementById('instant-item-name').textContent = product.name;
+  document.getElementById('instant-item-price').textContent = `${(product.priceVnd || 0).toLocaleString('vi-VN')} ₫`;
+  document.getElementById('instant-item-qty').textContent = '1';
+  updateInstantOrderTotal();
+
+  // Tự động điền dữ liệu hồ sơ nếu người dùng đã lưu
+  const nameInput = document.getElementById('instant-order-name');
+  const phoneInput = document.getElementById('instant-order-phone');
+  const provSelect = document.getElementById('instant-order-province');
+  const addrInput = document.getElementById('instant-order-address');
+
+  if (provSelect && provSelect.options.length <= 1 && AppState.provinces.length > 0) {
+    provSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' +
+      AppState.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+  }
+
+  if (nameInput) nameInput.value = (AppState.user.name && AppState.user.name !== 'Khách hàng GAERU') ? AppState.user.name : '';
+  if (phoneInput) phoneInput.value = AppState.user.phone || '';
+  if (provSelect && AppState.user.province) provSelect.value = AppState.user.province;
+  if (addrInput) addrInput.value = AppState.user.address || '';
+
+  closeProductDetail();
+  modal.classList.remove('hidden');
+}
+
+function closeInstantOrder() {
+  const modal = document.getElementById('instant-order-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function changeInstantQty(delta) {
+  const nextQty = instantOrderState.quantity + delta;
+  if (nextQty < 1 || nextQty > 99) return;
+  instantOrderState.quantity = nextQty;
+  document.getElementById('instant-item-qty').textContent = nextQty;
+  updateInstantOrderTotal();
+}
+
+function updateInstantOrderTotal() {
+  if (!instantOrderState.product) return;
+  const total = (instantOrderState.product.priceVnd || 0) * instantOrderState.quantity;
+  const totalEl = document.getElementById('instant-order-total');
+  if (totalEl) totalEl.textContent = `${total.toLocaleString('vi-VN')} ₫`;
+}
+
+async function handleInstantCheckout(event) {
+  if (event) event.preventDefault();
+
+  if (!instantOrderState.product) return;
+
+  const name = document.getElementById('instant-order-name').value.trim();
+  const phone = document.getElementById('instant-order-phone').value.trim();
+  const province = document.getElementById('instant-order-province').value;
+  const address = document.getElementById('instant-order-address').value.trim();
+  const paymentMethod = document.querySelector('input[name="instantPaymentMethod"]:checked')?.value || 'cod';
+
+  if (!name || !phone || !province || !address) {
+    alert('Vui lòng điền đầy đủ thông tin giao hàng.');
+    return;
+  }
+
+  const btnSubmit = document.getElementById('btn-submit-instant-order');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Đang xử lý đơn hàng...';
+  }
+
+  const orderCode = 'GAE' + Math.floor(100000 + Math.random() * 900000);
+  const totalVnd = (instantOrderState.product.priceVnd || 0) * instantOrderState.quantity;
+
+  const orderRecord = {
+    code: orderCode,
+    date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    totalVnd: totalVnd,
+    itemSummary: `${instantOrderState.quantity}x ${instantOrderState.product.name}`,
+    paymentMethod: paymentMethod,
+    statusClass: 'pending',
+    statusText: 'Chờ xác nhận'
+  };
+
+  try {
+    if (window.GaeruAPI && navigator.onLine) {
+      try {
+        await window.GaeruAPI.createOrder({
+          customer: { name, phone, email: `${phone}@customer.gaeru.com`, city: province, address: `${address}, ${province}` },
+          paymentMethod,
+          items: [{ slug: instantOrderState.product.slug, name: instantOrderState.product.name, quantity: instantOrderState.quantity, priceVnd: instantOrderState.product.priceVnd }]
+        });
+      } catch (e) {
+        console.warn('API error, saving offline:', e);
+      }
+    }
+
+    AppState.orders.unshift(orderRecord);
+    try {
+      localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
+    } catch (e) {}
+
+    // Tự động lưu hồ sơ nếu chưa có
+    if (!AppState.user.phone) {
+      AppState.user = { name, phone, email: `${phone}@customer.gaeru.com`, province, address };
+      try {
+        localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
+      } catch (e) {}
+    }
+
+    renderAccountView();
+    closeInstantOrder();
+
+    alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${orderCode}\nSản phẩm: ${instantOrderState.quantity}x ${instantOrderState.product.name}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ gọi điện xác nhận trong 24h!`);
+
+    switchTab('tab-account');
+
+  } catch (err) {
+    alert('Lỗi đặt hàng: ' + err.message);
+  } finally {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Xác nhận đặt hàng ngay';
+    }
+  }
 }
 
 // Xử lý gửi đơn hàng
@@ -1058,6 +1205,7 @@ function initCapacitor() {
     App.addListener('backButton', () => {
       const modal = document.getElementById('product-detail-modal');
       const profileModal = document.getElementById('profile-modal');
+      const instantModal = document.getElementById('instant-order-modal');
 
       if (modal && !modal.classList.contains('hidden')) {
         closeProductDetail();
@@ -1065,6 +1213,10 @@ function initCapacitor() {
       }
       if (profileModal && !profileModal.classList.contains('hidden')) {
         closeProfileModal();
+        return;
+      }
+      if (instantModal && !instantModal.classList.contains('hidden')) {
+        closeInstantOrder();
         return;
       }
       if (AppState.currentTab !== 'tab-home') {

@@ -31,12 +31,6 @@
           <span class="theme-icon-dark">🌙</span>
           <span class="theme-icon-light hidden">☀️</span>
         </button>
-
-        <!-- Nút giỏ hàng nhanh -->
-        <button id="btn-header-cart" class="icon-btn" aria-label="Giỏ hàng">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-          <span id="cart-badge" class="badge">0</span>
-        </button>
       </div>
     </div>
 
@@ -204,88 +198,7 @@
       </div>
     </section>
 
-    <!-- TAB 4: GIỎ HÀNG & ĐẶT HÀNG -->
-    <section id="tab-cart" class="tab-pane">
-      <div class="cart-header">
-        <h2>Giỏ hàng của bạn</h2>
-        <button id="btn-clear-cart" class="text-btn">Xoá tất cả</button>
-      </div>
-
-      <div id="cart-items-container" class="cart-items-list">
-        <!-- Render danh sách sản phẩm giỏ hàng -->
-      </div>
-
-      <!-- Khung tóm tắt và Form thanh toán -->
-      <div id="checkout-section" class="checkout-section hidden">
-        <div class="cart-summary-box">
-          <div class="summary-row">
-            <span>Tạm tính:</span>
-            <span id="cart-subtotal" class="price-val">0 ₫</span>
-          </div>
-          <div class="summary-row">
-            <span>Phí vận chuyển:</span>
-            <span class="free-shipping">Miễn phí toàn quốc</span>
-          </div>
-          <div class="summary-row total-row">
-            <span>Tổng cộng:</span>
-            <span id="cart-total" class="price-val highlight">0 ₫</span>
-          </div>
-        </div>
-
-        <div class="checkout-form-card">
-          <h3>Thông tin giao hàng</h3>
-          <form id="checkout-form" onsubmit="handleCheckout(event)">
-            <label class="form-group">
-              <span>Họ và tên người nhận *</span>
-              <input type="text" id="order-name" required placeholder="Ví dụ: Nguyễn Văn A">
-            </label>
-
-            <label class="form-group">
-              <span>Số điện thoại nhận hàng *</span>
-              <input type="tel" id="order-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}">
-            </label>
-
-            <label class="form-group">
-              <span>Tỉnh / Thành phố *</span>
-              <select id="order-province" required>
-                <option value="">Chọn tỉnh / thành phố</option>
-              </select>
-            </label>
-
-            <label class="form-group">
-              <span>Địa chỉ chi tiết (Số nhà, tên đường, phường/xã) *</span>
-              <input type="text" id="order-address" required placeholder="Ví dụ: 123 Đường Trần Phú, Phường 5">
-            </label>
-
-            <label class="form-group">
-              <span>Phương thức thanh toán</span>
-              <div class="payment-options">
-                <label class="payment-radio">
-                  <input type="radio" name="paymentMethod" value="cod" checked>
-                  <div class="radio-card">
-                    <strong>💵 Thanh toán khi nhận hàng (COD)</strong>
-                    <span>Kiểm tra hàng trước khi gửi tiền</span>
-                  </div>
-                </label>
-                <label class="payment-radio">
-                  <input type="radio" name="paymentMethod" value="bank_transfer">
-                  <div class="radio-card">
-                    <strong>🏦 Chuyển khoản VietQR nhanh</strong>
-                    <span>Quét mã QR thanh toán tức thì</span>
-                  </div>
-                </label>
-              </div>
-            </label>
-
-            <button type="submit" id="btn-submit-order" class="btn btn-primary btn-block">
-              Xác nhận Đặt hàng ngay
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 5: TÀI KHOẢN NGƯỜI DÙNG -->
+    <!-- TAB 4: TÀI KHOẢN NGƯỜI DÙNG -->
     <section id="tab-account" class="tab-pane">
       <!-- Profile Header Card -->
       <div class="account-profile-card">
@@ -492,13 +405,92 @@
       </div>
 
       <div class="detail-footer-actions">
-        <a href="tel:0829191080" class="btn btn-secondary btn-icon-only" title="Gọi tư vấn">
+        <a href="tel:0829191080" class="btn btn-secondary btn-icon-only" title="Gọi hotline tư vấn">
           📞
         </a>
-        <button id="btn-detail-add-cart" class="btn btn-primary btn-flex">
-          Thêm vào giỏ hàng
+        <button id="btn-detail-buy-now" class="btn btn-primary btn-flex">
+          Đặt mua ngay
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ĐẶT MUA NHANH (INSTANT ORDER) -->
+  <div id="instant-order-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeInstantOrder()"></div>
+    <div class="modal-content">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeInstantOrder()">✕</button>
+
+      <h3 style="font-size:16px;font-weight:800;color:var(--gaeru-text);margin-bottom:2px;">Đặt hàng trực tiếp</h3>
+      <p style="font-size:12px;color:var(--gaeru-text-muted);margin-bottom:12px;">Chính hãng GAERU • Giao nhanh toàn quốc • Kiểm tra trước khi trả tiền</p>
+
+      <!-- Tóm tắt thiết bị đang mua -->
+      <div class="instant-item-card">
+        <img id="instant-item-img" src="" alt="" class="instant-item-thumb">
+        <div class="instant-item-info">
+          <strong id="instant-item-name">Tên sản phẩm</strong>
+          <span id="instant-item-price" class="instant-item-price">0 ₫</span>
+        </div>
+        <div class="qty-control">
+          <button type="button" class="qty-btn" onclick="changeInstantQty(-1)">-</button>
+          <span id="instant-item-qty" class="qty-val">1</span>
+          <button type="button" class="qty-btn" onclick="changeInstantQty(1)">+</button>
+        </div>
+      </div>
+
+      <form id="instant-checkout-form" onsubmit="handleInstantCheckout(event)">
+        <label class="form-group">
+          <span>Họ và tên người nhận *</span>
+          <input type="text" id="instant-order-name" required placeholder="Ví dụ: Nguyễn Văn A">
+        </label>
+
+        <label class="form-group">
+          <span>Số điện thoại nhận hàng *</span>
+          <input type="tel" id="instant-order-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}">
+        </label>
+
+        <label class="form-group">
+          <span>Tỉnh / Thành phố *</span>
+          <select id="instant-order-province" required>
+            <option value="">Chọn tỉnh / thành phố</option>
+          </select>
+        </label>
+
+        <label class="form-group">
+          <span>Địa chỉ chi tiết (Số nhà, đường, phường/xã) *</span>
+          <input type="text" id="instant-order-address" required placeholder="Ví dụ: 123 Đường Lê Lợi, Phường 1">
+        </label>
+
+        <label class="form-group">
+          <span>Hình thức thanh toán</span>
+          <div class="payment-options">
+            <label class="payment-radio">
+              <input type="radio" name="instantPaymentMethod" value="cod" checked>
+              <div class="radio-card">
+                <strong>💵 Nhận hàng & Thanh toán (COD)</strong>
+                <span>Kiểm tra hàng trước khi thanh toán</span>
+              </div>
+            </label>
+            <label class="payment-radio">
+              <input type="radio" name="instantPaymentMethod" value="bank_transfer">
+              <div class="radio-card">
+                <strong>🏦 Chuyển khoản VietQR</strong>
+                <span>Quét mã QR thanh toán nhanh</span>
+              </div>
+            </label>
+          </div>
+        </label>
+
+        <div class="instant-total-row">
+          <span>Tổng thanh toán:</span>
+          <strong id="instant-order-total" class="instant-total-highlight">0 ₫</strong>
+        </div>
+
+        <button type="submit" id="btn-submit-instant-order" class="btn btn-primary btn-block" style="margin-top:10px;">
+          Xác nhận đặt hàng ngay
+        </button>
+      </form>
     </div>
   </div>
 
@@ -563,13 +555,6 @@
     <button class="nav-item" data-tab="tab-care">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
       <span>Bảo hành</span>
-    </button>
-    <button class="nav-item" data-tab="tab-cart">
-      <div class="nav-icon-wrap">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-        <span id="nav-cart-badge" class="nav-badge">0</span>
-      </div>
-      <span>Giỏ hàng</span>
     </button>
     <button class="nav-item" data-tab="tab-account">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>

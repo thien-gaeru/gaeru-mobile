@@ -1265,6 +1265,108 @@ body {
   flex-shrink: 0;
 }
 
+/* ==================== MODAL ĐẶT HÀNG NHANH (INSTANT ORDER) ==================== */
+.instant-item-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gaeru-subbox-bg);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.instant-item-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: var(--gaeru-thumb-bg);
+  flex-shrink: 0;
+}
+
+.instant-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.instant-item-info strong {
+  display: block;
+  font-size: 13px;
+  color: var(--gaeru-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.instant-item-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gaeru-blue);
+  margin-top: 2px;
+  display: block;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gaeru-input-bg);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 10px;
+  padding: 2px 4px;
+}
+
+.qty-btn {
+  background: transparent;
+  border: none;
+  color: var(--gaeru-text);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn:active {
+  background: rgba(125, 125, 125, 0.2);
+}
+
+.qty-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gaeru-text);
+  min-width: 16px;
+  text-align: center;
+}
+
+.instant-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--gaeru-subbox-bg);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 12px;
+}
+
+.instant-total-row span {
+  font-size: 13px;
+  color: var(--gaeru-text-muted);
+}
+
+.instant-total-highlight {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gaeru-blue);
+}
+
 /* ==================== TAB TÀI KHOẢN (ACCOUNT TAB) ==================== */
 .account-profile-card {
   background: var(--gaeru-card-bg);
