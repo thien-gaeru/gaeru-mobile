@@ -71,28 +71,114 @@ if (fs.existsSync(storiesFile)) {
 
     // Tạo danh sách sản phẩm chuẩn với đường dẫn ảnh local
     const offlineProducts = rawStories.map((item, index) => {
-      // Ưu tiên ảnh local webp nếu có
       let localImage = item.imageUrl;
-      if (item.slug === 'gaeru-g1-ultra') localImage = 'assets/products/g1-ultra-clean.webp';
-      else if (item.slug === 'gaeru-p01') localImage = 'assets/products/p01.webp';
-      else if (item.slug === 'gaeru-k9') localImage = 'assets/products/k9.webp';
-      else if (item.slug === 'gaeru-m3') localImage = 'assets/products/m3.webp';
+      let specs = {};
+      let tag = 'Chính hãng';
+      let originalPriceVnd = 1850000;
+      let priceVnd = 1490000;
+
+      if (item.slug === 'gaeru-g1-ultra') {
+        localImage = 'assets/products/g1-ultra-clean.webp';
+        tag = 'Bán chạy nhất';
+        priceVnd = 1490000;
+        originalPriceVnd = 1850000;
+        specs = {
+          "Dải tần số": "2.4GHz",
+          "Khoảng cách truyền": "Tối đa ~30m",
+          "Thời lượng pin": "5 - 8 giờ liên tục",
+          "Hộp sạc": "Dung lượng 300mAh, sạc nhanh Type-C",
+          "Tính năng": "Lọc ồn thông minh, Reverb sound card, Bluetooth"
+        };
+      } else if (item.slug === 'gaeru-p01') {
+        localImage = 'assets/products/p01.webp';
+        tag = 'AI Theo dõi 360°';
+        priceVnd = 690000;
+        originalPriceVnd = 890000;
+        specs = {
+          "Góc xoay": "360 độ ngang / 315 độ gập",
+          "Tốc độ xoay": "Tối đa 8.2 vòng/phút",
+          "Dung lượng pin": "1200mAh (6 - 8 giờ)",
+          "Khoảng cách theo dõi": "1 - 3 mét",
+          "Trọng lượng": "220g siêu gọn nhẹ"
+        };
+      }
 
       return {
         id: `gaeru-prod-${index + 1}`,
         slug: item.slug,
         name: item.name,
         category: item.slug.includes('p01') ? 'gimbal' : 'audio',
+        tag,
+        rating: 4.9,
+        reviews: 120,
         descriptor: item.description ? item.description.split('\n')[0] : 'Thiết bị sáng tạo nội dung chính hãng GAERU',
         description: item.description || '',
+        specs,
         imageUrl: localImage,
         imageAlt: item.imageAlt || item.name,
         gallery: [localImage],
         active: true,
         sortOrder: index,
-        priceVnd: item.slug === 'gaeru-g1-ultra' ? 1490000 : (item.slug === 'gaeru-p01' ? 690000 : 850000)
+        priceVnd,
+        originalPriceVnd
       };
     });
+
+    // Bổ sung GAERU M3 và GAERU K9 nếu chưa có trong stories
+    if (!offlineProducts.some(p => p.slug === 'gaeru-m3')) {
+      offlineProducts.push({
+        id: 'gaeru-prod-3',
+        slug: 'gaeru-m3',
+        name: 'GAERU M3',
+        category: 'audio',
+        tag: 'Khử ồn chuyên sâu',
+        rating: 4.9,
+        reviews: 76,
+        descriptor: 'Micro không dây thu âm chuẩn phòng thu, hộp sạc tiện dụng.',
+        description: 'Micro cài áo GAERU M3 tích hợp chip xử lý âm thanh DSP giảm nhiễu thời gian thực. Hộp sạc thông minh bảo vệ và nạp năng lượng nhanh cho thiết bị khi tác nghiệp ngoài trời.',
+        specs: {
+          "Dải tần số": "2.4GHz Digital",
+          "Độ trễ": "Cực thấp < 15ms",
+          "Thời lượng sử dụng": "Lên tới 10 giờ với hộp sạc",
+          "Cổng kết nối": "Type-C / Lightning tương thích rộng rãi",
+          "Tính năng": "Khử tiếng ồn gió, độ nhạy cao"
+        },
+        imageUrl: 'assets/products/m3.webp',
+        imageAlt: 'Micro thu âm GAERU M3',
+        gallery: ['assets/products/m3.webp'],
+        active: true,
+        sortOrder: 2,
+        priceVnd: 850000,
+        originalPriceVnd: 1100000
+      });
+    }
+
+    if (!offlineProducts.some(p => p.slug === 'gaeru-k9')) {
+      offlineProducts.push({
+        id: 'gaeru-prod-4',
+        slug: 'gaeru-k9',
+        name: 'GAERU K9',
+        category: 'audio',
+        tag: 'Nhỏ gọn tiện ích',
+        rating: 4.7,
+        reviews: 150,
+        descriptor: 'Micro thu âm cài áo mini cắm là nhận, chuyên dụng cho Livestream & TikTok.',
+        description: 'Micro thu âm không dây GAERU K9 siêu nhỏ gọn, chỉ cần cắm đầu thu vào điện thoại là có thể thu âm ngay lập tức mà không cần kết nối bluetooth phức tạp.',
+        specs: {
+          "Kết nối": "Plug & Play không cần app",
+          "Tương thích": "iPhone & Android",
+          "Thời lượng pin": "4 - 5 giờ liên tục",
+          "Khối lượng": "Chỉ 15g cực nhẹ"
+        },
+        imageUrl: 'assets/products/k9.webp',
+        imageAlt: 'Micro không dây GAERU K9',
+        gallery: ['assets/products/k9.webp'],
+        active: true,
+        sortOrder: 3,
+        priceVnd: 350000,
+        originalPriceVnd: 450000
+      });
+    }
 
     const catalogPath = path.join(destDataDir, 'products.json');
     fs.writeFileSync(catalogPath, JSON.stringify({ products: offlineProducts }, null, 2), 'utf-8');
