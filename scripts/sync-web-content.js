@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB_DIR = process.env.GAERU_WEB_PATH || path.resolve(__dirname, '..', '..', 'gaeru');
+const WEB_DIR = process.env.GAERU_WEB_PATH || process.env.WEB_SOURCE_DIR || path.resolve(__dirname, '..', '..', 'gaeru');
 const MOBILE_DIR = path.resolve(__dirname, '..');
 const WWW_DIR = path.join(MOBILE_DIR, 'www');
 

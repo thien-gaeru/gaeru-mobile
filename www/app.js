@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initAccount();
   initCareLookup();
   initCapacitor();
+  initRealtimeSync();
 });
 
 // ==================== TRẠNG THÁI MẠNG (ONLINE / OFFLINE) ====================
@@ -925,9 +926,21 @@ function initAccount() {
   const btnSync = document.getElementById('btn-sync-data-server');
   if (btnSync) {
     btnSync.addEventListener('click', async () => {
-      showToast('🔄 Đang kiểm tra & đồng bộ dữ liệu từ gaeru.com...');
-      await loadProducts();
-      showToast('✨ Dữ liệu sản phẩm & bài viết đã cập nhật mới nhất!');
+      showToast('🔄 Đang đồng bộ dữ liệu thời gian thực từ gaeru.com...');
+      try {
+        if (window.GaeruAPI && window.GaeruAPI.syncNow) {
+          const fresh = await window.GaeruAPI.syncNow();
+          if (fresh.products && fresh.products.length > 0) {
+            AppState.products = fresh.products;
+            renderProductGrids();
+          }
+        } else {
+          await loadProducts();
+        }
+        showToast('✨ Dữ liệu sản phẩm, giá bán & cấu hình đã đồng bộ mới nhất!');
+      } catch (err) {
+        showToast('⚠️ Không thể kết nối tới máy chủ gaeru.com: ' + (err.message || 'Mạng bận'));
+      }
     });
   }
 
@@ -1188,6 +1201,24 @@ function showToast(message) {
   toastTimer = setTimeout(() => {
     toast.classList.add('hidden');
   }, 2400);
+}
+
+// ==================== LẮNG NGHE KẾT NỐI REALTIME VỚI GAERU.COM ====================
+function initRealtimeSync() {
+  if (!window.GaeruAPI || !window.GaeruAPI.subscribeRealtimeUpdates) return;
+
+  window.GaeruAPI.subscribeRealtimeUpdates((event) => {
+    if (!event) return;
+
+    if (event.type === 'connected') {
+      console.log('[Realtime] Đã kết nối kênh trực tiếp với gaeru.com');
+    } else if (event.type === 'product_change' || event.type === 'inventory_change') {
+      showToast('⚡ GAERU vừa cập nhật sản phẩm mới từ gaeru.com!');
+      loadProducts();
+    } else if (event.type === 'notification' && event.message) {
+      showToast(`📢 ${event.message}`);
+    }
+  });
 }
 
 // ==================== TÍCH HỢP CAPACITOR NATIVE ====================

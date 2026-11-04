@@ -1,0 +1,54 @@
+name: Real-time Sync with gaeru.com
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Tự động kiểm tra và đồng bộ định kỳ mỗi 6 tiếng
+  repository_dispatch:
+    types: [gaeru_web_updated] # Webhook kích hoạt ngay khi web gaeru.com có commit mới
+  workflow_dispatch: # Cho phép kích hoạt thủ công từ giao diện GitHub
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GAERU Mobile Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout GAERU Web Source Repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'thien-gaeru/gaeru'
+          path: 'gaeru-web-source'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Mobile Dependencies
+        run: npm ci
+
+      - name: Run Full Sync Script
+        env:
+          WEB_SOURCE_DIR: ./gaeru-web-source
+        run: |
+          node scripts/sync-web-content.js
+          npm run build
+          npm run cap:sync
+
+      - name: Commit and Push Changes If Updated
+        run: |
+          git config user.name "GAERU Bot"
+          git config user.email "346227991+thien-gaeru@users.noreply.github.com"
+          git status
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "chore(sync): tu dong dong bo noi dung & asset moi nhat tu gaeru.com [skip ci]"
+            git push origin main
+          else
+            echo "No changes detected. Mobile app is 100% up to date with gaeru.com."
+          fi
