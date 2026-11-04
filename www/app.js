@@ -14,6 +14,7 @@ const AppState = {
   searchQuery: '',
   isOnline: navigator.onLine,
   selectedProduct: null,
+  selectedVariant: null,
   user: {
     name: 'Khách hàng GAERU',
     phone: '',
@@ -156,20 +157,106 @@ function switchTab(tabId) {
   }
 }
 
-// ==================== TẢI & HIỂN THỊ SẢN PHẨM ====================
-async function loadProducts() {
-  try {
-    if (window.GaeruAPI) {
-      const data = await window.GaeruAPI.getProducts().catch(() => []);
-      if (data && data.length > 0) {
-        AppState.products = data;
+// ==================== CHUẨN HOÁ & HIỂN THỊ SẢN PHẨM ====================
+function normalizeProduct(raw) {
+  if (!raw) return null;
+
+  // 1. Chuẩn hoá hình ảnh
+  let imageUrl = raw.imageUrl || '';
+  if (imageUrl.startsWith('/')) {
+    imageUrl = `https://gaeru.com${imageUrl}`;
+  } else if (!imageUrl && raw.gallery && raw.gallery.length > 0) {
+    imageUrl = raw.gallery[0].startsWith('/') ? `https://gaeru.com${raw.gallery[0]}` : raw.gallery[0];
+  }
+  if (!imageUrl) {
+    imageUrl = 'assets/brand/gaeru-logo.png';
+  }
+
+  // 2. Chuẩn hoá các biến thể (variants)
+  const variants = Array.isArray(raw.variants) ? raw.variants.map(v => ({
+    id: v.id,
+    sku: v.sku || '',
+    name: v.name || 'Tiêu chuẩn',
+    priceVnd: Number(v.priceVnd || v.price_vnd || 0),
+    originalPriceVnd: Number(v.originalPriceVnd || v.original_price_vnd || v.priceVnd || 0),
+    stockQuantity: typeof v.stockQuantity === 'number' ? v.stockQuantity : (v.stock_quantity ?? 100),
+    active: v.active !== false,
+    options: v.options || {},
+    imageUrl: v.imageUrl ? (v.imageUrl.startsWith('/') ? `https://gaeru.com${v.imageUrl}` : v.imageUrl) : imageUrl
+  })) : [];
+
+  // 3. Chuẩn hoá giá: nếu sản phẩm chưa có giá trực tiếp, lấy từ biến thể
+  let priceVnd = Number(raw.priceVnd || 0);
+  let originalPriceVnd = Number(raw.originalPriceVnd || 0);
+  if (!priceVnd && variants.length > 0) {
+    const prices = variants.map(v => v.priceVnd).filter(p => p > 0);
+    if (prices.length > 0) {
+      priceVnd = Math.min(...prices);
+      const matched = variants.find(v => v.priceVnd === priceVnd);
+      if (matched && matched.originalPriceVnd) originalPriceVnd = matched.originalPriceVnd;
+    }
+  }
+
+  // 4. Chuẩn hoá thông số kỹ thuật (specs)
+  let specs = raw.specs;
+  if (!specs || typeof specs !== 'object' || Object.keys(specs).length === 0) {
+    specs = {};
+    if (raw.description) {
+      const lines = raw.description.split('\n').map(l => l.trim()).filter(Boolean);
+      lines.forEach(line => {
+        if (line.includes(':') && !line.includes('http')) {
+          const parts = line.split(':');
+          const k = parts[0].trim();
+          const v = parts.slice(1).join(':').trim();
+          if (k.length <= 30 && v.length <= 100) {
+            specs[k] = v;
+          }
+        }
+      });
+      if (Object.keys(specs).length === 0 && raw.description.includes('Thông số')) {
+        const idx = raw.description.indexOf('Thông số');
+        const specPart = raw.description.slice(idx);
+        const specLines = specPart.split('\n').map(l => l.trim()).filter(Boolean);
+        if (specLines[1]) specs['Cấu hình'] = specLines[1];
+        if (specLines[2]) specs['Pin & Nguồn'] = specLines[2];
+        if (specLines[3]) specs['Kích thước'] = specLines[3];
       }
     }
-    if (!AppState.products || AppState.products.length === 0) {
+  }
+
+  return {
+    id: raw.id,
+    slug: raw.slug,
+    name: raw.name,
+    category: raw.category || 'audio',
+    tag: raw.tag || (raw.slug === 'gaeru-m3' ? 'BÁN CHẠY NHẤT' : (raw.slug === 'gaeru-g1-ultra' ? 'FLAGSHIP' : '')),
+    rating: raw.rating || 4.9,
+    reviews: raw.reviews || (raw.slug === 'gaeru-m3' ? 142 : 88),
+    descriptor: raw.descriptor || '',
+    description: raw.description || '',
+    imageUrl,
+    gallery: Array.isArray(raw.gallery) ? raw.gallery.map(g => g.startsWith('/') ? `https://gaeru.com${g}` : g) : [imageUrl],
+    priceVnd,
+    originalPriceVnd,
+    variants,
+    specs,
+    active: raw.active !== false,
+    sortOrder: raw.sortOrder || 0
+  };
+}
+
+async function loadProducts() {
+  try {
+    let rawList = [];
+    if (window.GaeruAPI) {
+      rawList = await window.GaeruAPI.getProducts().catch(() => []);
+    }
+    if (!rawList || rawList.length === 0) {
       const res = await fetch('data/products.json');
       const json = await res.json();
-      AppState.products = json.products || [];
+      rawList = json.products || [];
     }
+    AppState.products = (rawList || []).map(normalizeProduct).filter(Boolean);
   } catch (err) {
     console.warn('Lỗi tải sản phẩm, dùng dữ liệu dự phòng:', err);
   }
@@ -224,7 +311,10 @@ function renderProductGrids() {
     </div>
   `;
 
-  const cardsHtml = items.map(p => `
+  const cardsHtml = items.map(p => {
+    const hasVariants = p.variants && p.variants.length > 1;
+    const priceText = (p.priceVnd || 0).toLocaleString('vi-VN') + ' ₫';
+    return `
     <div class="product-card" onclick="openProductDetail('${p.slug}')">
       ${p.tag ? `<span class="card-tag">${p.tag}</span>` : ''}
       <div class="product-thumb-box">
@@ -236,9 +326,10 @@ function renderProductGrids() {
           <span class="product-rating-count">(${p.reviews || 99})</span>
         </div>
         <div class="product-title">${p.name}</div>
+        ${hasVariants ? `<div style="font-size:11px;color:var(--gaeru-blue);font-weight:600;margin-bottom:2px;">${p.variants.length} phân loại kết nối</div>` : ''}
         <div class="product-price-box">
-          <span class="price-main">${(p.priceVnd || 0).toLocaleString('vi-VN')} ₫</span>
-          ${p.originalPriceVnd ? `<span class="price-sub">${p.originalPriceVnd.toLocaleString('vi-VN')} ₫</span>` : ''}
+          <span class="price-main">${hasVariants ? 'Từ ' : ''}${priceText}</span>
+          ${p.originalPriceVnd && p.originalPriceVnd > p.priceVnd ? `<span class="price-sub">${p.originalPriceVnd.toLocaleString('vi-VN')} ₫</span>` : ''}
         </div>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
@@ -247,7 +338,8 @@ function renderProductGrids() {
         </button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   if (homeGrid) homeGrid.innerHTML = items.length ? cardsHtml : emptyHtml;
   if (catalogGrid) catalogGrid.innerHTML = items.length ? cardsHtml : emptyHtml;
@@ -335,14 +427,18 @@ function openProductDetail(slug) {
   if (!product) return;
 
   AppState.selectedProduct = product;
+  AppState.selectedVariant = (product.variants && product.variants.length > 0) ? product.variants[0] : null;
 
-  document.getElementById('detail-img').src = product.imageUrl;
+  document.getElementById('detail-img').src = AppState.selectedVariant?.imageUrl || product.imageUrl;
   document.getElementById('detail-name').textContent = product.name;
-  document.getElementById('detail-price').textContent = `${(product.priceVnd || 0).toLocaleString('vi-VN')} ₫`;
   
+  const currentPrice = AppState.selectedVariant?.priceVnd || product.priceVnd || 0;
+  document.getElementById('detail-price').textContent = `${currentPrice.toLocaleString('vi-VN')} ₫`;
+  
+  const currentOldPrice = AppState.selectedVariant?.originalPriceVnd || product.originalPriceVnd || 0;
   const oldPriceEl = document.getElementById('detail-old-price');
-  if (product.originalPriceVnd) {
-    oldPriceEl.textContent = `${product.originalPriceVnd.toLocaleString('vi-VN')} ₫`;
+  if (currentOldPrice && currentOldPrice > currentPrice) {
+    oldPriceEl.textContent = `${currentOldPrice.toLocaleString('vi-VN')} ₫`;
     oldPriceEl.classList.remove('hidden');
   } else {
     oldPriceEl.classList.add('hidden');
@@ -358,6 +454,9 @@ function openProductDetail(slug) {
 
   document.getElementById('detail-descriptor').textContent = product.descriptor || '';
   document.getElementById('detail-description').textContent = product.description || '';
+
+  // Render các biến thể nếu có
+  renderDetailVariants(product);
 
   // Render bảng thông số
   const specsTable = document.getElementById('detail-specs-table');
@@ -377,8 +476,9 @@ function openProductDetail(slug) {
   const btnBuyNow = document.getElementById('btn-detail-buy-now');
   if (btnBuyNow) {
     btnBuyNow.onclick = () => {
+      const vId = AppState.selectedVariant?.id;
       closeProductDetail();
-      openInstantOrder(product.slug);
+      openInstantOrder(product.slug, vId);
     };
   }
 
@@ -390,12 +490,82 @@ function openProductDetail(slug) {
   if (navigator.vibrate) navigator.vibrate(15);
 }
 
+function renderDetailVariants(product) {
+  const container = document.getElementById('detail-variants-container');
+  const chipsGrid = document.getElementById('detail-variants-chips');
+  const badge = document.getElementById('detail-selected-variant-name');
+
+  if (!container || !chipsGrid) return;
+
+  if (!product.variants || product.variants.length <= 1) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  if (badge && AppState.selectedVariant) {
+    badge.textContent = AppState.selectedVariant.name;
+  }
+
+  chipsGrid.innerHTML = product.variants.map(v => {
+    const isSelected = AppState.selectedVariant && AppState.selectedVariant.id === v.id;
+    const isOutOfStock = v.stockQuantity === 0;
+    const diff = v.priceVnd !== product.priceVnd ? ` (${v.priceVnd.toLocaleString('vi-VN')} ₫)` : '';
+    return `
+      <button type="button" 
+        class="variant-chip ${isSelected ? 'active' : ''} ${isOutOfStock ? 'disabled' : ''}" 
+        onclick="selectDetailVariant('${v.id}')"
+        ${isOutOfStock ? 'disabled title="Phiên bản tạm hết hàng"' : ''}>
+        <span>${v.name}${isOutOfStock ? ' (Hết hàng)' : ''}</span>
+        ${diff ? `<span class="variant-chip-price">${diff}</span>` : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+function selectDetailVariant(variantId) {
+  if (!AppState.selectedProduct || !AppState.selectedProduct.variants) return;
+  const variant = AppState.selectedProduct.variants.find(v => v.id === variantId);
+  if (!variant || variant.stockQuantity === 0) return;
+
+  AppState.selectedVariant = variant;
+
+  const badge = document.getElementById('detail-selected-variant-name');
+  if (badge) badge.textContent = variant.name;
+
+  const priceEl = document.getElementById('detail-price');
+  if (priceEl) priceEl.textContent = `${variant.priceVnd.toLocaleString('vi-VN')} ₫`;
+
+  const oldPriceEl = document.getElementById('detail-old-price');
+  if (oldPriceEl) {
+    if (variant.originalPriceVnd && variant.originalPriceVnd > variant.priceVnd) {
+      oldPriceEl.textContent = `${variant.originalPriceVnd.toLocaleString('vi-VN')} ₫`;
+      oldPriceEl.classList.remove('hidden');
+    } else {
+      oldPriceEl.classList.add('hidden');
+    }
+  }
+
+  if (variant.imageUrl) {
+    const img = document.getElementById('detail-img');
+    if (img) img.src = variant.imageUrl;
+  }
+
+  // Cập nhật lại giao diện các chip
+  document.querySelectorAll('#detail-variants-chips .variant-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(variantId));
+  });
+
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
 function closeProductDetail() {
   const modal = document.getElementById('product-detail-modal');
   const content = modal ? modal.querySelector('.modal-content') : null;
   if (content) content.style.transform = '';
   if (modal) modal.classList.add('hidden');
   AppState.selectedProduct = null;
+  AppState.selectedVariant = null;
 }
 
 // Cử chỉ vuốt thanh kéo để đóng modal trơn tru
@@ -631,24 +801,49 @@ async function loadProvinces() {
 // ==================== ĐẶT MUA NHANH TRỰC TIẾP (INSTANT CHECKOUT) ====================
 let instantOrderState = {
   product: null,
+  variant: null,
   quantity: 1
 };
 
-function openInstantOrder(slug) {
+function openInstantOrder(slug, variantId) {
   const product = AppState.products.find(p => p.slug === slug);
   if (!product) return;
 
+  let selectedVar = null;
+  if (variantId && product.variants) {
+    selectedVar = product.variants.find(v => v.id === variantId);
+  }
+  if (!selectedVar && product.variants && product.variants.length > 0) {
+    selectedVar = product.variants.find(v => v.stockQuantity > 0) || product.variants[0];
+  }
+
   instantOrderState.product = product;
+  instantOrderState.variant = selectedVar;
   instantOrderState.quantity = 1;
 
   const modal = document.getElementById('instant-order-modal');
   if (!modal) return;
 
-  document.getElementById('instant-item-img').src = product.imageUrl;
+  document.getElementById('instant-item-img').src = selectedVar?.imageUrl || product.imageUrl;
   document.getElementById('instant-item-name').textContent = product.name;
-  document.getElementById('instant-item-price').textContent = `${(product.priceVnd || 0).toLocaleString('vi-VN')} ₫`;
+  
+  const varLabel = document.getElementById('instant-item-variant');
+  if (varLabel) {
+    if (selectedVar && product.variants && product.variants.length > 1) {
+      varLabel.textContent = `Phiên bản: ${selectedVar.name}`;
+      varLabel.classList.remove('hidden');
+    } else {
+      varLabel.classList.add('hidden');
+    }
+  }
+
+  const currentPrice = selectedVar?.priceVnd || product.priceVnd || 0;
+  document.getElementById('instant-item-price').textContent = `${currentPrice.toLocaleString('vi-VN')} ₫`;
   document.getElementById('instant-item-qty').textContent = '1';
   updateInstantOrderTotal();
+
+  // Render bộ chọn phiên bản nhanh trong Instant Order
+  renderInstantVariants(product, selectedVar);
 
   // Tự động điền dữ liệu hồ sơ nếu người dùng đã lưu
   const nameInput = document.getElementById('instant-order-name');
@@ -670,6 +865,57 @@ function openInstantOrder(slug) {
   modal.classList.remove('hidden');
 }
 
+function renderInstantVariants(product, selectedVar) {
+  const container = document.getElementById('instant-variants-container');
+  const chipsWrap = document.getElementById('instant-variants-chips');
+  if (!container || !chipsWrap) return;
+
+  if (!product.variants || product.variants.length <= 1) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  chipsWrap.innerHTML = product.variants.map(v => {
+    const isSelected = selectedVar && selectedVar.id === v.id;
+    const isOutOfStock = v.stockQuantity === 0;
+    return `
+      <button type="button" 
+        class="instant-var-pill ${isSelected ? 'active' : ''} ${isOutOfStock ? 'disabled' : ''}"
+        onclick="selectInstantVariant('${v.id}')"
+        ${isOutOfStock ? 'disabled title="Hết hàng"' : ''}>
+        ${v.name}${isOutOfStock ? ' (Hết)' : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+function selectInstantVariant(variantId) {
+  if (!instantOrderState.product || !instantOrderState.product.variants) return;
+  const variant = instantOrderState.product.variants.find(v => v.id === variantId);
+  if (!variant || variant.stockQuantity === 0) return;
+
+  instantOrderState.variant = variant;
+
+  const varLabel = document.getElementById('instant-item-variant');
+  if (varLabel) varLabel.textContent = `Phiên bản: ${variant.name}`;
+
+  const priceEl = document.getElementById('instant-item-price');
+  if (priceEl) priceEl.textContent = `${variant.priceVnd.toLocaleString('vi-VN')} ₫`;
+
+  if (variant.imageUrl) {
+    const img = document.getElementById('instant-item-img');
+    if (img) img.src = variant.imageUrl;
+  }
+
+  document.querySelectorAll('#instant-variants-chips .instant-var-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(variantId));
+  });
+
+  updateInstantOrderTotal();
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
 function closeInstantOrder() {
   const modal = document.getElementById('instant-order-modal');
   if (modal) modal.classList.add('hidden');
@@ -685,14 +931,14 @@ function changeInstantQty(delta) {
 
 function updateInstantOrderTotal() {
   if (!instantOrderState.product) return;
-  const total = (instantOrderState.product.priceVnd || 0) * instantOrderState.quantity;
+  const unitPrice = instantOrderState.variant?.priceVnd || instantOrderState.product.priceVnd || 0;
+  const total = unitPrice * instantOrderState.quantity;
   const totalEl = document.getElementById('instant-order-total');
   if (totalEl) totalEl.textContent = `${total.toLocaleString('vi-VN')} ₫`;
 }
 
 async function handleInstantCheckout(event) {
   if (event) event.preventDefault();
-
   if (!instantOrderState.product) return;
 
   const name = document.getElementById('instant-order-name').value.trim();
@@ -709,63 +955,82 @@ async function handleInstantCheckout(event) {
   const btnSubmit = document.getElementById('btn-submit-instant-order');
   if (btnSubmit) {
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Đang xử lý đơn hàng...';
+    btnSubmit.textContent = 'Đang gửi đơn hàng lên hệ thống...';
   }
 
-  const orderCode = 'GAE' + Math.floor(100000 + Math.random() * 900000);
-  const totalVnd = (instantOrderState.product.priceVnd || 0) * instantOrderState.quantity;
+  const unitPrice = instantOrderState.variant?.priceVnd || instantOrderState.product.priceVnd || 0;
+  const totalVnd = unitPrice * instantOrderState.quantity;
+  const variantName = instantOrderState.variant?.name ? ` (${instantOrderState.variant.name})` : '';
+  const itemSummary = `${instantOrderState.quantity}x ${instantOrderState.product.name}${variantName}`;
 
-  const orderRecord = {
-    code: orderCode,
-    date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-    totalVnd: totalVnd,
-    itemSummary: `${instantOrderState.quantity}x ${instantOrderState.product.name}`,
-    paymentMethod: paymentMethod,
-    statusClass: 'pending',
-    statusText: 'Chờ xác nhận'
-  };
+  let createdOrderNumber = 'GAE' + Math.floor(100000 + Math.random() * 900000);
+  let isLiveCreated = false;
 
+  // Gửi trực tiếp lên backend GAERU
   try {
     if (window.GaeruAPI && navigator.onLine) {
-      try {
-        await window.GaeruAPI.createOrder({
-          customer: { name, phone, email: `${phone}@customer.gaeru.com`, city: province, address: `${address}, ${province}` },
-          paymentMethod,
-          items: [{ slug: instantOrderState.product.slug, name: instantOrderState.product.name, quantity: instantOrderState.quantity, priceVnd: instantOrderState.product.priceVnd }]
-        });
-      } catch (e) {
-        console.warn('API error, saving offline:', e);
+      const orderPayload = {
+        customer: {
+          name,
+          email: AppState.user.email || `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`,
+          phone,
+          address: `${address}, ${province}`,
+          city: province,
+          note: `Đặt qua GAERU Mobile App${variantName ? ' - ' + variantName : ''}`
+        },
+        paymentMethod: paymentMethod === 'cod' ? 'cod' : 'bank_transfer',
+        items: [
+          {
+            variantId: instantOrderState.variant?.id || instantOrderState.product.variants?.[0]?.id,
+            quantity: instantOrderState.quantity
+          }
+        ]
+      };
+
+      const result = await window.GaeruAPI.createOrder(orderPayload);
+      if (result && (result.orderNumber || result.order?.orderNumber)) {
+        createdOrderNumber = result.orderNumber || result.order.orderNumber;
+        isLiveCreated = true;
       }
     }
-
-    AppState.orders.unshift(orderRecord);
-    try {
-      localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
-    } catch (e) {}
-
-    // Tự động lưu hồ sơ nếu chưa có
-    if (!AppState.user.phone) {
-      AppState.user = { name, phone, email: `${phone}@customer.gaeru.com`, province, address };
-      try {
-        localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
-      } catch (e) {}
-    }
-
-    renderAccountView();
-    closeInstantOrder();
-
-    alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${orderCode}\nSản phẩm: ${instantOrderState.quantity}x ${instantOrderState.product.name}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ gọi điện xác nhận trong 24h!`);
-
-    switchTab('tab-account');
-
-  } catch (err) {
-    alert('Lỗi đặt hàng: ' + err.message);
-  } finally {
-    if (btnSubmit) {
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Xác nhận đặt hàng ngay';
-    }
+  } catch (apiErr) {
+    console.warn('[ORDER] Gửi API máy chủ chưa thành công, lưu đơn offline:', apiErr.message);
   }
+
+  const orderRecord = {
+    code: createdOrderNumber,
+    date: new Date().toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    totalVnd: totalVnd,
+    itemSummary: itemSummary,
+    paymentMethod: paymentMethod,
+    statusClass: isLiveCreated ? 'confirmed' : 'pending',
+    statusText: isLiveCreated ? 'Đã tiếp nhận (Realtime)' : 'Chờ xác nhận'
+  };
+
+  AppState.orders.unshift(orderRecord);
+  try {
+    localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
+  } catch (e) {}
+
+  // Tự động lưu hồ sơ nếu chưa có
+  if (!AppState.user.phone) {
+    AppState.user = { name, phone, email: `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`, province, address };
+    try {
+      localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
+    } catch (e) {}
+  }
+
+  renderAccountView();
+  closeInstantOrder();
+
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Xác nhận đặt hàng ngay';
+  }
+
+  alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${createdOrderNumber}\nSản phẩm: ${itemSummary}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận và giao hàng nhanh chóng!`);
+
+  switchTab('tab-account');
 }
 
 // Xử lý gửi đơn hàng

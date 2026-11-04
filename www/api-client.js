@@ -82,24 +82,52 @@ const GaeruAPI = (function () {
     },
 
     /**
+     * Lấy mã bảo mật CSRF Token từ máy chủ gaeru.com
+     */
+    async getCsrfToken() {
+      try {
+        const res = await fetch(`${BASE_URL}/api/csrf`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(4000)
+        });
+        if (res.ok) {
+          const json = await res.json();
+          return json.csrfToken;
+        }
+      } catch (e) {
+        console.warn('[API] Không thể lấy CSRF Token:', e.message);
+      }
+      return null;
+    },
+
+    /**
      * Gửi đơn đặt hàng trực tiếp từ app lên máy chủ gaeru.com
      */
     async createOrder(orderPayload) {
-      const response = await fetch(`${BASE_URL}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(orderPayload)
-      });
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.message || `Lỗi tạo đơn hàng (HTTP ${response.status})`);
+      const csrf = await this.getCsrfToken();
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
       }
 
-      return await response.json();
+      const response = await fetch(`${BASE_URL}/api/orders`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(orderPayload),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      const resJson = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(resJson.error || resJson.message || `Lỗi đặt hàng (HTTP ${response.status})`);
+      }
+
+      return resJson;
     },
 
     /**

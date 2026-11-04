@@ -390,6 +390,17 @@
 
           <p id="detail-descriptor" class="detail-descriptor"></p>
 
+          <!-- KHỐI CHỌN PHÂN LOẠI / BIẾN THỂ SẢN PHẨM -->
+          <div id="detail-variants-container" class="detail-variants-section hidden">
+            <div class="variants-header">
+              <span class="variants-title">Phân loại / Kết nối:</span>
+              <strong id="detail-selected-variant-name" class="variants-selected-badge"></strong>
+            </div>
+            <div id="detail-variants-chips" class="variants-chip-grid">
+              <!-- Render động các biến thể từ API gaeru.com -->
+            </div>
+          </div>
+
           <div class="detail-specs-box">
             <h4>Thông số kỹ thuật</h4>
             <div id="detail-specs-table" class="specs-table">
@@ -430,12 +441,21 @@
         <img id="instant-item-img" src="" alt="" class="instant-item-thumb">
         <div class="instant-item-info">
           <strong id="instant-item-name">Tên sản phẩm</strong>
+          <span id="instant-item-variant" class="instant-item-variant"></span>
           <span id="instant-item-price" class="instant-item-price">0 ₫</span>
         </div>
         <div class="qty-control">
           <button type="button" class="qty-btn" onclick="changeInstantQty(-1)">-</button>
           <span id="instant-item-qty" class="qty-val">1</span>
           <button type="button" class="qty-btn" onclick="changeInstantQty(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Lựa chọn phiên bản trong modal đặt mua -->
+      <div id="instant-variants-container" class="instant-variants-section hidden">
+        <span class="instant-variants-label">Chọn phiên bản:</span>
+        <div id="instant-variants-chips" class="instant-variants-chips">
+          <!-- Render động danh sách biến thể -->
         </div>
       </div>
 

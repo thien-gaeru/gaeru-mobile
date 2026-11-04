@@ -1909,6 +1909,149 @@ body.keyboard-open .bottom-nav {
   display: none !important;
 }
 
+/* ==================== PHÂN LOẠI & BIẾN THỂ SẢN PHẨM (VARIANTS) ==================== */
+.detail-variants-section {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  background: var(--gaeru-surface-hover);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.variants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.variants-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gaeru-text-muted);
+}
+
+.variants-selected-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gaeru-blue);
+  background: rgba(0, 113, 227, 0.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.variants-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.variant-chip {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--gaeru-border);
+  background: var(--gaeru-surface);
+  color: var(--gaeru-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.variant-chip:active {
+  transform: scale(0.96);
+}
+
+.variant-chip.active {
+  border-color: var(--gaeru-blue);
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--gaeru-blue);
+  font-weight: 700;
+}
+
+.variant-chip.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.variant-chip-price {
+  font-size: 11px;
+  color: var(--gaeru-text-muted);
+  font-weight: 500;
+}
+
+.variant-chip.active .variant-chip-price {
+  color: var(--gaeru-blue);
+  font-weight: 600;
+}
+
+/* Biến thể trong modal Đặt Mua Nhanh (Instant Order) */
+.instant-item-variant {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gaeru-blue);
+  margin-top: 1px;
+  margin-bottom: 2px;
+}
+
+.instant-variants-section {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: var(--gaeru-surface-hover);
+  border-radius: 10px;
+  border: 1px solid var(--gaeru-border);
+}
+
+.instant-variants-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gaeru-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.instant-variants-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.instant-var-pill {
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--gaeru-surface);
+  border: 1px solid var(--gaeru-border);
+  color: var(--gaeru-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.instant-var-pill.active {
+  background: var(--gaeru-blue);
+  color: #ffffff;
+  border-color: var(--gaeru-blue);
+  font-weight: 700;
+}
+
+.instant-var-pill.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .hidden {
   display: none !important;
 }

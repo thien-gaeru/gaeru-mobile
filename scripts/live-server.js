@@ -48,14 +48,16 @@ try {
   console.warn('[WATCHER] Không thể watch tự động:', e.message);
 }
 
-// Determine target backend (check if local 3000 is alive)
+// Xác định backend: Mặc định kết nối thật tới https://gaeru.com
 async function getBackendUrl() {
-  try {
-    const res = await fetch(LOCAL_BACKEND, { method: 'HEAD', signal: AbortSignal.timeout(1000) });
-    if (res.ok || res.status === 200 || res.status === 302) {
-      return LOCAL_BACKEND;
-    }
-  } catch (e) {}
+  if (process.env.USE_LOCAL_BACKEND === 'true' || process.env.USE_LOCAL_BACKEND === '1') {
+    try {
+      const res = await fetch(LOCAL_BACKEND, { method: 'HEAD', signal: AbortSignal.timeout(1000) });
+      if (res.ok || res.status === 200 || res.status === 302) {
+        return LOCAL_BACKEND;
+      }
+    } catch (e) {}
+  }
   return PROD_BACKEND;
 }
 
@@ -75,10 +77,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2. Proxy endpoint: cho phép nhúng website gaeru.com / localhost:3000 trong iframe mà không bị X-Frame-Options chặn
-  if (pathname.startsWith('/proxy')) {
+  // 2. Proxy endpoint: kết nối API và nhúng web thật gaeru.com mà không bị CORS / X-Frame-Options
+  if (pathname.startsWith('/proxy') || pathname.startsWith('/api/') || pathname.startsWith('/catalog-images/')) {
     const backend = await getBackendUrl();
-    const targetPath = pathname.replace(/^\/proxy/, '') || '/';
+    const targetPath = pathname.startsWith('/proxy') ? (pathname.replace(/^\/proxy/, '') || '/') : pathname;
     const targetUrl = new URL(targetPath + reqUrl.search, backend);
 
     try {
@@ -89,17 +91,28 @@ const server = http.createServer(async (req, res) => {
       delete fetchHeaders['sec-fetch-mode'];
       delete fetchHeaders['sec-fetch-site'];
 
+      let reqBody = undefined;
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        const chunks = [];
+        for await (const chunk of req) {
+          chunks.push(chunk);
+        }
+        if (chunks.length > 0) {
+          reqBody = Buffer.concat(chunks);
+        }
+      }
+
       const response = await fetch(targetUrl.href, {
         method: req.method,
         headers: fetchHeaders,
+        body: reqBody,
         redirect: 'follow',
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(12000)
       });
 
       const resHeaders = {};
       response.headers.forEach((value, key) => {
         const lowerKey = key.toLowerCase();
-        // Xoá các header chặn iframe và CSP
         if (
           lowerKey !== 'x-frame-options' &&
           lowerKey !== 'content-security-policy' &&
@@ -114,7 +127,6 @@ const server = http.createServer(async (req, res) => {
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('text/html')) {
         let html = await response.text();
-        // Thêm base tag để các asset tương đối nạp từ backend
         const baseTag = `<base href="${backend}/">`;
         if (html.includes('<head>')) {
           html = html.replace('<head>', `<head>${baseTag}`);
@@ -133,8 +145,8 @@ const server = http.createServer(async (req, res) => {
         res.end(Buffer.from(arrayBuffer));
       }
     } catch (err) {
-      res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(`<h2>Không thể kết nối máy chủ backend GAERU</h2><p>${err.message}</p>`);
+      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'Không thể kết nối máy chủ backend GAERU', detail: err.message }));
     }
     return;
   }

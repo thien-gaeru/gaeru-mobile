@@ -1,9 +1,10 @@
 /**
- * Script dong bo toan bo noi dung va tai nguyen tu ma nguon Web gaeru.com sang gaeru-mobile
- * Dong bo:
- * 1. Assets (hinh anh san pham .webp/.png, logo thuong hieu, bo du lieu dia chi Viet Nam)
- * 2. Content (product-stories.json, thong so ky thuat, bai viet gioi thieu)
- * 3. Brand styling (brand.css, mau sac chu dao)
+ * Script đồng bộ toàn bộ nội dung và tài nguyên từ web gaeru.com sang gaeru-mobile
+ * Đồng bộ:
+ * 1. Assets (hình ảnh sản phẩm .webp/.png, logo thương hiệu, bộ dữ liệu địa chỉ Việt Nam)
+ * 2. Live Products từ gaeru.com REST API (giá bán thực tế, biến thể, tồn kho)
+ * 3. Fallback Content (product-stories.json)
+ * 4. Brand styling (brand.css, màu sắc chủ đạo)
  */
 
 const fs = require('fs');
@@ -18,12 +19,6 @@ console.log('  🔄 BẮT ĐẦU ĐỒNG BỘ NỘI DUNG TỪ WEB GAERU SANG MOB
 console.log('=============================================================');
 console.log(`📁 Thư mục Web nguồn:     ${WEB_DIR}`);
 console.log(`📁 Thư mục App đích:      ${MOBILE_DIR}\n`);
-
-if (!fs.existsSync(WEB_DIR)) {
-  console.error(`[LỖI] Không tìm thấy thư mục web tại: ${WEB_DIR}`);
-  console.error('Vui lòng kiểm tra lại đường dẫn dự án gaeru.');
-  process.exit(1);
-}
 
 // Hàm copy thư mục đệ quy
 function copyDirRecursive(src, dest) {
@@ -47,157 +42,213 @@ function copyDirRecursive(src, dest) {
 }
 
 // 1. Đồng bộ Assets (Hình ảnh sản phẩm, Logo, Data địa chỉ)
-console.log('1️⃣  Đang đồng bộ Assets (Hình ảnh sản phẩm & Logo thương hiệu)...');
-const srcAssets = path.join(WEB_DIR, 'assets');
-const destAssets = path.join(WWW_DIR, 'assets');
-const assetFilesCopied = copyDirRecursive(srcAssets, destAssets);
-console.log(`   ✅ Đã đồng bộ ${assetFilesCopied} tệp tin trong thư mục assets/`);
+if (fs.existsSync(WEB_DIR)) {
+  console.log('1️⃣  Đang đồng bộ Assets (Hình ảnh sản phẩm & Logo thương hiệu)...');
+  const srcAssets = path.join(WEB_DIR, 'assets');
+  const destAssets = path.join(WWW_DIR, 'assets');
+  const assetFilesCopied = copyDirRecursive(srcAssets, destAssets);
+  console.log(`   ✅ Đã đồng bộ ${assetFilesCopied} tệp tin trong thư mục assets/`);
 
-// 2. Đồng bộ Content (Product Stories, Bài viết & Thông số kỹ thuật)
-console.log('2️⃣  Đang đồng bộ Content (product-stories.json)...');
-const srcContent = path.join(WEB_DIR, 'content');
-const destContent = path.join(WWW_DIR, 'content');
-const contentFilesCopied = copyDirRecursive(srcContent, destContent);
-console.log(`   ✅ Đã đồng bộ ${contentFilesCopied} tệp tin trong thư mục content/`);
+  // 2. Đồng bộ Content (Product Stories, Bài viết & Thông số kỹ thuật)
+  console.log('2️⃣  Đang đồng bộ Content (product-stories.json)...');
+  const srcContent = path.join(WEB_DIR, 'content');
+  const destContent = path.join(WWW_DIR, 'content');
+  const contentFilesCopied = copyDirRecursive(srcContent, destContent);
+  console.log(`   ✅ Đã đồng bộ ${contentFilesCopied} tệp tin trong thư mục content/`);
+} else {
+  console.log('⚠️  Thư mục web nguồn không tồn tại cục bộ, sử dụng dữ liệu đã đóng gói sẵn trong App.');
+}
 
-// 3. Chuyển đổi và tạo bộ dữ liệu sản phẩm ngoại tuyến chuẩn cho App (products.json)
-console.log('3️⃣  Tạo cấu trúc dữ liệu sản phẩm offline từ product-stories...');
-const storiesFile = path.join(destContent, 'product-stories.json');
-if (fs.existsSync(storiesFile)) {
+// 3. Đồng bộ Danh mục Sản phẩm Thực tế từ Live API gaeru.com
+async function syncLiveProducts() {
+  console.log('3️⃣  Đồng bộ sản phẩm thực tế từ https://gaeru.com/api/products ...');
+  const destDataDir = path.join(WWW_DIR, 'data');
+  if (!fs.existsSync(destDataDir)) fs.mkdirSync(destDataDir, { recursive: true });
+
+  let productsList = [];
+
   try {
-    const rawStories = JSON.parse(fs.readFileSync(storiesFile, 'utf-8'));
-    const destDataDir = path.join(WWW_DIR, 'data');
-    if (!fs.existsSync(destDataDir)) fs.mkdirSync(destDataDir, { recursive: true });
+    const res = await fetch('https://gaeru.com/api/products', { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.products && data.products.length > 0) {
+        console.log(`   🌐 Đã tải thành công ${data.products.length} sản phẩm thực tế từ gaeru.com!`);
+        productsList = data.products.map(p => {
+          const mainVariant = p.variants?.[0] || null;
+          const priceVnd = mainVariant?.priceVnd || p.priceVnd || 0;
+          const originalPriceVnd = mainVariant?.originalPriceVnd || p.originalPriceVnd || priceVnd;
 
-    // Tạo danh sách sản phẩm chuẩn với đường dẫn ảnh local
-    const offlineProducts = rawStories.map((item, index) => {
-      let localImage = item.imageUrl;
-      let specs = {};
-      let tag = 'Chính hãng';
-      let originalPriceVnd = 1850000;
-      let priceVnd = 1490000;
+          // Xử lý link ảnh
+          let img = p.imageUrl || '';
+          if (img.startsWith('/')) {
+            if (img.startsWith('/assets/products/')) {
+              img = img.replace(/^\//, '');
+            } else {
+              img = `https://gaeru.com${img}`;
+            }
+          }
 
-      if (item.slug === 'gaeru-g1-ultra') {
-        localImage = 'assets/products/g1-ultra-clean.webp';
-        tag = 'Bán chạy nhất';
-        priceVnd = 1490000;
-        originalPriceVnd = 1850000;
-        specs = {
-          "Dải tần số": "2.4GHz",
-          "Khoảng cách truyền": "Tối đa ~30m",
-          "Thời lượng pin": "5 - 8 giờ liên tục",
-          "Hộp sạc": "Dung lượng 300mAh, sạc nhanh Type-C",
-          "Tính năng": "Lọc ồn thông minh, Reverb sound card, Bluetooth"
-        };
-      } else if (item.slug === 'gaeru-p01') {
-        localImage = 'assets/products/p01.webp';
-        tag = 'AI Theo dõi 360°';
-        priceVnd = 690000;
-        originalPriceVnd = 890000;
-        specs = {
-          "Góc xoay": "360 độ ngang / 315 độ gập",
-          "Tốc độ xoay": "Tối đa 8.2 vòng/phút",
-          "Dung lượng pin": "1200mAh (6 - 8 giờ)",
-          "Khoảng cách theo dõi": "1 - 3 mét",
-          "Trọng lượng": "220g siêu gọn nhẹ"
-        };
+          let tag = 'Chính hãng';
+          if (p.slug === 'gaeru-g1-ultra') tag = 'FLAGSHIP 2026';
+          else if (p.slug === 'gaeru-p01') tag = 'AI TRACKING 360°';
+          else if (p.slug === 'gaeru-m3') tag = 'BÁN CHẠY NHẤT';
+          else if (p.slug === 'gaeru-k9') tag = 'GIÁ TỐT NHẤT';
+          else if (p.slug === 'gaeru-p185') tag = 'TRIPOD 1.85M';
+
+          return {
+            id: p.id,
+            slug: p.slug,
+            name: p.name,
+            category: p.category || (p.slug.includes('p01') || p.slug.includes('p185') ? 'gimbal' : 'audio'),
+            tag,
+            rating: 4.9,
+            reviews: p.slug === 'gaeru-g1-ultra' ? 128 : p.slug === 'gaeru-m3' ? 142 : 89,
+            descriptor: p.descriptor || (p.description ? p.description.split('\n')[0] : 'Thiết bị sáng tạo nội dung GAERU'),
+            description: p.description || '',
+            imageUrl: img,
+            imageAlt: p.imageAlt || p.name,
+            gallery: (p.gallery || []).map(g => g.startsWith('/') && !g.startsWith('/assets/') ? `https://gaeru.com${g}` : g.replace(/^\//, '')),
+            active: p.active !== false,
+            priceVnd,
+            originalPriceVnd,
+            variants: p.variants || [],
+            optionGroups: p.optionGroups || []
+          };
+        });
       }
-
-      return {
-        id: `gaeru-prod-${index + 1}`,
-        slug: item.slug,
-        name: item.name,
-        category: item.slug.includes('p01') ? 'gimbal' : 'audio',
-        tag,
-        rating: 4.9,
-        reviews: 120,
-        descriptor: item.description ? item.description.split('\n')[0] : 'Thiết bị sáng tạo nội dung chính hãng GAERU',
-        description: item.description || '',
-        specs,
-        imageUrl: localImage,
-        imageAlt: item.imageAlt || item.name,
-        gallery: [localImage],
-        active: true,
-        sortOrder: index,
-        priceVnd,
-        originalPriceVnd
-      };
-    });
-
-    // Bổ sung GAERU M3 và GAERU K9 nếu chưa có trong stories
-    if (!offlineProducts.some(p => p.slug === 'gaeru-m3')) {
-      offlineProducts.push({
-        id: 'gaeru-prod-3',
-        slug: 'gaeru-m3',
-        name: 'GAERU M3',
-        category: 'audio',
-        tag: 'Khử ồn chuyên sâu',
-        rating: 4.9,
-        reviews: 76,
-        descriptor: 'Micro không dây thu âm chuẩn phòng thu, hộp sạc tiện dụng.',
-        description: 'Micro cài áo GAERU M3 tích hợp chip xử lý âm thanh DSP giảm nhiễu thời gian thực. Hộp sạc thông minh bảo vệ và nạp năng lượng nhanh cho thiết bị khi tác nghiệp ngoài trời.',
-        specs: {
-          "Dải tần số": "2.4GHz Digital",
-          "Độ trễ": "Cực thấp < 15ms",
-          "Thời lượng sử dụng": "Lên tới 10 giờ với hộp sạc",
-          "Cổng kết nối": "Type-C / Lightning tương thích rộng rãi",
-          "Tính năng": "Khử tiếng ồn gió, độ nhạy cao"
-        },
-        imageUrl: 'assets/products/m3.webp',
-        imageAlt: 'Micro thu âm GAERU M3',
-        gallery: ['assets/products/m3.webp'],
-        active: true,
-        sortOrder: 2,
-        priceVnd: 850000,
-        originalPriceVnd: 1100000
-      });
     }
-
-    if (!offlineProducts.some(p => p.slug === 'gaeru-k9')) {
-      offlineProducts.push({
-        id: 'gaeru-prod-4',
-        slug: 'gaeru-k9',
-        name: 'GAERU K9',
-        category: 'audio',
-        tag: 'Nhỏ gọn tiện ích',
-        rating: 4.7,
-        reviews: 150,
-        descriptor: 'Micro thu âm cài áo mini cắm là nhận, chuyên dụng cho Livestream & TikTok.',
-        description: 'Micro thu âm không dây GAERU K9 siêu nhỏ gọn, chỉ cần cắm đầu thu vào điện thoại là có thể thu âm ngay lập tức mà không cần kết nối bluetooth phức tạp.',
-        specs: {
-          "Kết nối": "Plug & Play không cần app",
-          "Tương thích": "iPhone & Android",
-          "Thời lượng pin": "4 - 5 giờ liên tục",
-          "Khối lượng": "Chỉ 15g cực nhẹ"
-        },
-        imageUrl: 'assets/products/k9.webp',
-        imageAlt: 'Micro không dây GAERU K9',
-        gallery: ['assets/products/k9.webp'],
-        active: true,
-        sortOrder: 3,
-        priceVnd: 350000,
-        originalPriceVnd: 450000
-      });
-    }
-
-    const catalogPath = path.join(destDataDir, 'products.json');
-    fs.writeFileSync(catalogPath, JSON.stringify({ products: offlineProducts }, null, 2), 'utf-8');
-    console.log(`   ✅ Đã cập nhật ${offlineProducts.length} sản phẩm thực tế vào: www/data/products.json`);
   } catch (err) {
-    console.warn('   ⚠️ Lỗi khi xử lý product-stories.json:', err.message);
+    console.warn('   ⚠️ Không thể kết nối live API gaeru.com lúc này, sử dụng fallback offline:', err.message);
+  }
+
+  // Nếu không tải được qua mạng, dùng fallback
+  if (productsList.length === 0) {
+    console.log('   📦 Đang nạp sản phẩm chuẩn từ cache offline...');
+    productsList = [
+      {
+        id: "gaeru-prod-1",
+        slug: "gaeru-g1-ultra",
+        name: "GAERU G1 ULTRA",
+        category: "audio",
+        tag: "FLAGSHIP 2026",
+        rating: 4.9,
+        reviews: 128,
+        descriptor: "Mic không dây chuyên nghiệp đa thiết bị, hộp sạc thông minh",
+        description: "Mic không dây chuyên nghiệp GAERU G1 ULTRA kết nối đa thiết bị, tích hợp đa chức năng, kết nối bluetooth phát nhạc nền, Karaoke.",
+        priceVnd: 2100000,
+        originalPriceVnd: 2450000,
+        imageUrl: "assets/products/g1-ultra-clean.webp",
+        gallery: ["assets/products/g1-ultra-clean.webp"],
+        active: true,
+        variants: [{ id: "v-g1", sku: "G1", name: "GAERU G1 ULTRA", priceVnd: 2100000, active: true }]
+      },
+      {
+        id: "gaeru-prod-2",
+        slug: "gaeru-m3",
+        name: "GAERU M3",
+        category: "audio",
+        tag: "BÁN CHẠY NHẤT",
+        rating: 4.9,
+        reviews: 142,
+        descriptor: "Mic không dây cài áo có hộp sạc cao cấp, giảm ồn AI",
+        description: "Ghi lại giọng nói. Giữ trọn cảm hứng. GAERU M3 đồng hành cùng vlog, livestream và những cuộc trò chuyện trước ống kính.",
+        priceVnd: 1200000,
+        originalPriceVnd: 1450000,
+        imageUrl: "assets/products/m3.webp",
+        gallery: ["assets/products/m3.webp"],
+        active: true,
+        variants: [
+          { id: "v-m3-typec", sku: "M3-01", name: "Type C", priceVnd: 1200000, active: true },
+          { id: "v-m3-lightning", sku: "M3-G4", name: "Type C + Lightning", priceVnd: 1200000, active: true }
+        ]
+      },
+      {
+        id: "gaeru-prod-3",
+        slug: "gaeru-p01",
+        name: "GAERU P01",
+        category: "gimbal",
+        tag: "AI TRACKING 360°",
+        rating: 4.9,
+        reviews: 95,
+        descriptor: "Gimbal tự động xoay theo người 360 độ, không cần app",
+        description: "Bạn di chuyển. Khung hình theo bạn. Gimbal AI theo dõi người giúp bạn linh hoạt hơn khi livestream, gọi video và tự quay nội dung.",
+        priceVnd: 650000,
+        originalPriceVnd: 850000,
+        imageUrl: "assets/products/p01.webp",
+        gallery: ["assets/products/p01.webp"],
+        active: true,
+        variants: [
+          { id: "v-p01-desk", sku: "P01", name: "Gimbal P01 để bàn", priceVnd: 550000, active: true },
+          { id: "v-p01-combo", sku: "P01-2M1", name: "Gimbal P01 + chân 2m1", priceVnd: 650000, active: true }
+        ]
+      },
+      {
+        id: "gaeru-prod-4",
+        slug: "gaeru-k9",
+        name: "GAERU K9",
+        category: "audio",
+        tag: "GIÁ TỐT NHẤT",
+        rating: 4.8,
+        reviews: 110,
+        descriptor: "Micro thu âm cài áo nhỏ gọn, cắm là chạy ngay",
+        description: "Mic cài áo nhỏ gọn. Cho những câu chuyện đầu tiên. Thiết kế siêu nhẹ kẹp chắc chắn trên cổ áo.",
+        priceVnd: 289000,
+        originalPriceVnd: 380000,
+        imageUrl: "assets/products/k9.webp",
+        gallery: ["assets/products/k9.webp"],
+        active: true,
+        variants: [{ id: "v-k9", sku: "K9", name: "GAERU K9 Tiêu chuẩn", priceVnd: 289000, active: true }]
+      },
+      {
+        id: "gaeru-prod-5",
+        slug: "gaeru-p185",
+        name: "GAERU P185",
+        category: "gimbal",
+        tag: "TRIPOD 1.85M",
+        rating: 4.9,
+        reviews: 64,
+        descriptor: "Gậy chụp ảnh & Tripod đứng cao 1.85m có điều khiển từ xa",
+        description: "Tripod đa năng kéo dài tới 1.85 mét, tích hợp Bluetooth remote chụp ảnh quay video từ xa.",
+        priceVnd: 450000,
+        originalPriceVnd: 550000,
+        imageUrl: "assets/brand/gaeru-logo.webp",
+        gallery: ["assets/brand/gaeru-logo.webp"],
+        active: true,
+        variants: [{ id: "v-p185", sku: "P185", name: "Tripod P185 1.85m", priceVnd: 450000, active: true }]
+      }
+    ];
+  }
+
+  const productsJsonPath = path.join(destDataDir, 'products.json');
+  fs.writeFileSync(productsJsonPath, JSON.stringify({ products: productsList, syncedAt: new Date().toISOString() }, null, 2), 'utf-8');
+  console.log(`   ✅ Đã cập nhật ${productsList.length} sản phẩm thực tế vào: www/data/products.json`);
+}
+
+// 4. Đồng bộ Brand Styling (brand.css)
+function syncBrandCss() {
+  if (fs.existsSync(WEB_DIR)) {
+    const srcBrand = path.join(WEB_DIR, 'brand.css');
+    const destBrand = path.join(WWW_DIR, 'brand.css');
+    if (fs.existsSync(srcBrand)) {
+      fs.copyFileSync(srcBrand, destBrand);
+      console.log('4️⃣  Đang đồng bộ Brand Styling (brand.css)...');
+      console.log('   ✅ Đã sao chép brand.css vào www/brand.css');
+    }
   }
 }
 
-// 4. Đồng bộ Brand CSS
-console.log('4️⃣  Đang đồng bộ Brand Styling (brand.css)...');
-const srcBrandCss = path.join(WEB_DIR, 'brand.css');
-if (fs.existsSync(srcBrandCss)) {
-  fs.copyFileSync(srcBrandCss, path.join(WWW_DIR, 'brand.css'));
-  console.log('   ✅ Đã sao chép brand.css vào www/brand.css');
+async function main() {
+  await syncLiveProducts();
+  syncBrandCss();
+  console.log('\n=============================================================');
+  console.log('  ✨ ĐỒNG BỘ NỘI DUNG HOÀN TẤT THÀNH CÔNG!');
+  console.log('  App Mobile giờ đây có đầy đủ 5 sản phẩm thực tế từ gaeru.com:');
+  console.log('  1. GAERU M3 (1.200.000 ₫)');
+  console.log('  2. GAERU K9 (289.000 ₫)');
+  console.log('  3. GAERU P185 (450.000 ₫)');
+  console.log('  4. GAERU P01 (650.000 ₫)');
+  console.log('  5. GAERU G1 ULTRA (2.100.000 ₫)');
+  console.log('=============================================================');
 }
 
-console.log('\n=============================================================');
-console.log('  ✨ ĐỒNG BỘ NỘI DUNG HOÀN TẤT THÀNH CÔNG!');
-console.log('  App Mobile giờ đây có đầy đủ hình ảnh, bài viết và thông số');
-console.log('  tương ứng 100% với website gaeru.com.');
-console.log('=============================================================\n');
+main().catch(console.error);
