@@ -18,6 +18,7 @@ const AppState = {
 
 // 1. Khởi động ứng dụng khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
+  initThemeDetection();
   initNetworkMonitor();
   initNavigation();
   initSearch();
@@ -817,7 +818,8 @@ function initCapacitor() {
   const { App, StatusBar, PushNotifications } = window.Capacitor.Plugins;
 
   if (StatusBar) {
-    StatusBar.setBackgroundColor({ color: '#0b0f19' }).catch(() => {});
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    updateNativeStatusBar(isDark);
   }
 
   if (App) {
@@ -853,5 +855,112 @@ function initCapacitor() {
     PushNotifications.requestPermissions().then(res => {
       if (res.receive === 'granted') PushNotifications.register();
     });
+  }
+}
+
+// ==================== TỰ ĐỘNG TƯƠNG THÍCH THEME (DARK / LIGHT / THEO ĐIỆN THOẠI) ====================
+function initThemeDetection() {
+  const metaThemeColor = document.getElementById('meta-theme-color');
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
+  const iconDark = btnThemeToggle ? btnThemeToggle.querySelector('.theme-icon-dark') : null;
+  const iconLight = btnThemeToggle ? btnThemeToggle.querySelector('.theme-icon-light') : null;
+  const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function getEffectiveTheme() {
+    const saved = localStorage.getItem('gaeru_theme_preference');
+    if (saved === 'dark' || saved === 'light') {
+      return saved;
+    }
+    // Mặc định tự động nhận diện theo hệ thống điện thoại của người dùng
+    if (mediaQuery && mediaQuery.matches) {
+      return 'dark';
+    } else if (mediaQuery && !mediaQuery.matches) {
+      return 'light';
+    }
+    return 'dark'; // Fallback tiêu chuẩn
+  }
+
+  function applyTheme(theme, isManual = false) {
+    const isDark = theme === 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // Cập nhật thẻ meta theme-color cho thanh trạng thái webview di động
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', isDark ? '#0b0f19' : '#f5f5f7');
+    }
+
+    // Cập nhật icon trên nút bấm chuyển đổi
+    if (iconDark && iconLight) {
+      if (isDark) {
+        // Đang tối -> biểu tượng Mặt trời sẵn sàng bấm chuyển sang sáng
+        iconDark.classList.add('hidden');
+        iconLight.classList.remove('hidden');
+      } else {
+        // Đang sáng -> biểu tượng Mặt trăng sẵn sàng bấm chuyển sang tối
+        iconLight.classList.add('hidden');
+        iconDark.classList.remove('hidden');
+      }
+    }
+
+    // Cập nhật thanh trạng thái StatusBar của điện thoại (Capacitor Native)
+    updateNativeStatusBar(isDark);
+
+    if (isManual && navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+  }
+
+  // 1. Áp dụng ngay lúc mở app
+  const initialTheme = getEffectiveTheme();
+  applyTheme(initialTheme, false);
+
+  // 2. Lắng nghe sự kiện hệ điều hành điện thoại thay đổi giao diện theo thời gian thực
+  if (mediaQuery) {
+    const handleSystemThemeChange = (e) => {
+      // Nếu người dùng chưa gán tùy chọn thủ công, tự động đồng bộ theo điện thoại
+      const saved = localStorage.getItem('gaeru_theme_preference');
+      if (!saved) {
+        applyTheme(e.matches ? 'dark' : 'light', false);
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleSystemThemeChange);
+    }
+  }
+
+  // 3. Cho phép người dùng chuyển đổi thủ công khi chạm vào nút trên top-bar
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener('click', () => {
+      const activeTheme = document.documentElement.getAttribute('data-theme') || (mediaQuery && mediaQuery.matches ? 'dark' : 'light');
+      const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+
+      localStorage.setItem('gaeru_theme_preference', nextTheme);
+      applyTheme(nextTheme, true);
+      showToast(nextTheme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng');
+    });
+  }
+}
+
+function updateNativeStatusBar(isDark) {
+  if (!window.Capacitor || !window.Capacitor.Plugins) return;
+  const { StatusBar } = window.Capacitor.Plugins;
+  if (!StatusBar) return;
+
+  const bgColor = isDark ? '#0b0f19' : '#ffffff';
+  // Capacitor StatusBar: Style.Dark (chữ sáng cho nền tối), Style.Light (chữ tối cho nền sáng)
+  const statusBarStyle = isDark ? 'DARK' : 'LIGHT';
+
+  try {
+    if (StatusBar.setBackgroundColor) {
+      StatusBar.setBackgroundColor({ color: bgColor }).catch(() => {});
+    }
+    if (StatusBar.setStyle) {
+      StatusBar.setStyle({ style: statusBarStyle }).catch(() => {});
+    }
+  } catch (err) {
+    // Ignore webview mode
   }
 }

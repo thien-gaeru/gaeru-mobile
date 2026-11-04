@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0f19">
+  <meta name="theme-color" content="#0b0f19" id="meta-theme-color">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>GAERU — Thiết bị quay chụp & Thu âm</title>
@@ -25,6 +25,12 @@
           <span class="network-dot"></span>
           <span class="network-text">Trực tuyến</span>
         </div>
+
+        <!-- Nút chuyển đổi Giao diện Sáng / Tối (Tự động theo điện thoại) -->
+        <button id="btn-theme-toggle" class="icon-btn" aria-label="Giao diện Sáng/Tối" title="Đổi giao diện">
+          <span class="theme-icon-dark">🌙</span>
+          <span class="theme-icon-light hidden">☀️</span>
+        </button>
 
         <!-- Nút giỏ hàng nhanh -->
         <button id="btn-header-cart" class="icon-btn" aria-label="Giỏ hàng">

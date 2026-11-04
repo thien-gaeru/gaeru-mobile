@@ -1,4 +1,6 @@
+/* ==================== HỆ THỐNG BIẾN MÀU THEME (DARK / LIGHT THEME) ==================== */
 :root {
+  /* Mặc định Theme Tối (Dark Theme - Sang trọng) */
   --gaeru-bg: #0b0f19;
   --gaeru-card-bg: #151b28;
   --gaeru-card-hover: #1c2436;
@@ -9,8 +11,79 @@
   --gaeru-text-muted: #94a3b8;
   --gaeru-border: rgba(255, 255, 255, 0.08);
   --gaeru-border-light: rgba(255, 255, 255, 0.15);
+  --gaeru-header-bg: rgba(11, 15, 25, 0.94);
+  --gaeru-bottom-nav-bg: rgba(11, 15, 25, 0.96);
+  --gaeru-input-bg: rgba(255, 255, 255, 0.06);
+  --gaeru-subbox-bg: rgba(0, 0, 0, 0.25);
+  --gaeru-hero-bg: radial-gradient(circle at 85% 20%, #1e293b, #0f172a 75%);
+  --gaeru-hero-title: #ffffff;
+  --gaeru-hero-text: #94a3b8;
+  --gaeru-brand-gradient: linear-gradient(135deg, #ffffff, #94a3b8);
+  --gaeru-thumb-bg: radial-gradient(circle, rgba(255, 255, 255, 0.04), transparent 70%);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* TỰ ĐỘNG THEO ĐIỆN THOẠI KHI Ở CHẾ ĐỘ SÁNG (LIGHT MODE) */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --gaeru-bg: #f5f5f7;
+    --gaeru-card-bg: #ffffff;
+    --gaeru-card-hover: #f1f5f9;
+    --gaeru-text: #0f172a;
+    --gaeru-text-muted: #64748b;
+    --gaeru-border: rgba(0, 0, 0, 0.08);
+    --gaeru-border-light: rgba(0, 0, 0, 0.15);
+    --gaeru-header-bg: rgba(255, 255, 255, 0.92);
+    --gaeru-bottom-nav-bg: rgba(255, 255, 255, 0.95);
+    --gaeru-input-bg: rgba(0, 0, 0, 0.04);
+    --gaeru-subbox-bg: #f8fafc;
+    --gaeru-hero-bg: radial-gradient(circle at 85% 20%, #ffffff, #e2e8f0 85%);
+    --gaeru-hero-title: #0f172a;
+    --gaeru-hero-text: #475569;
+    --gaeru-brand-gradient: linear-gradient(135deg, #0f172a, #475569);
+    --gaeru-thumb-bg: radial-gradient(circle, rgba(0, 0, 0, 0.03), transparent 70%);
+  }
+}
+
+/* ÁP DỤNG TRỰC TIẾP KHI GÁN data-theme="light" */
+:root[data-theme="light"] {
+  --gaeru-bg: #f5f5f7;
+  --gaeru-card-bg: #ffffff;
+  --gaeru-card-hover: #f1f5f9;
+  --gaeru-text: #0f172a;
+  --gaeru-text-muted: #64748b;
+  --gaeru-border: rgba(0, 0, 0, 0.08);
+  --gaeru-border-light: rgba(0, 0, 0, 0.15);
+  --gaeru-header-bg: rgba(255, 255, 255, 0.92);
+  --gaeru-bottom-nav-bg: rgba(255, 255, 255, 0.95);
+  --gaeru-input-bg: rgba(0, 0, 0, 0.04);
+  --gaeru-subbox-bg: #f8fafc;
+  --gaeru-hero-bg: radial-gradient(circle at 85% 20%, #ffffff, #e2e8f0 85%);
+  --gaeru-hero-title: #0f172a;
+  --gaeru-hero-text: #475569;
+  --gaeru-brand-gradient: linear-gradient(135deg, #0f172a, #475569);
+  --gaeru-thumb-bg: radial-gradient(circle, rgba(0, 0, 0, 0.03), transparent 70%);
+}
+
+/* ÁP DỤNG TRỰC TIẾP KHI GÁN data-theme="dark" */
+:root[data-theme="dark"] {
+  --gaeru-bg: #0b0f19;
+  --gaeru-card-bg: #151b28;
+  --gaeru-card-hover: #1c2436;
+  --gaeru-text: #f5f5f7;
+  --gaeru-text-muted: #94a3b8;
+  --gaeru-border: rgba(255, 255, 255, 0.08);
+  --gaeru-border-light: rgba(255, 255, 255, 0.15);
+  --gaeru-header-bg: rgba(11, 15, 25, 0.94);
+  --gaeru-bottom-nav-bg: rgba(11, 15, 25, 0.96);
+  --gaeru-input-bg: rgba(255, 255, 255, 0.06);
+  --gaeru-subbox-bg: rgba(0, 0, 0, 0.25);
+  --gaeru-hero-bg: radial-gradient(circle at 85% 20%, #1e293b, #0f172a 75%);
+  --gaeru-hero-title: #ffffff;
+  --gaeru-hero-text: #94a3b8;
+  --gaeru-brand-gradient: linear-gradient(135deg, #ffffff, #94a3b8);
+  --gaeru-thumb-bg: radial-gradient(circle, rgba(255, 255, 255, 0.04), transparent 70%);
 }
 
 /* ==================== CƠ BẢN & CHỐNG LỖI CẢM ỨNG DI ĐỘNG ==================== */
@@ -24,7 +97,7 @@
 body, html {
   width: 100%;
   height: 100%;
-  height: 100dvh; /* Dynamic Viewport Height chuẩn cho iOS & Android */
+  height: 100dvh;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: var(--gaeru-bg);
@@ -35,30 +108,29 @@ body, html {
   user-select: none;
   -webkit-touch-callout: none;
   overscroll-behavior: none;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Cho phép bôi đen/copy chữ trên các ô nhập liệu và bảng thông số */
 input, textarea, select, .detail-specs-box, .care-result-card {
   -webkit-user-select: auto;
   user-select: auto;
 }
 
-/* Khung cấu trúc App Shell (Flexbox 100dvh) */
 body {
   display: flex;
   flex-direction: column;
 }
 
-/* ==================== APP HEADER TỐI ƯU TAI THỎ / DYNAMIC ISLAND ==================== */
+/* ==================== APP HEADER ==================== */
 .app-header {
   flex-shrink: 0;
-  background: rgba(11, 15, 25, 0.94);
+  background: var(--gaeru-header-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--gaeru-border);
   padding-top: max(8px, var(--safe-top));
   z-index: 100;
-  transition: transform 0.2s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .header-top {
@@ -92,7 +164,7 @@ body {
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 1.5px;
-  background: linear-gradient(135deg, #ffffff, #94a3b8);
+  background: var(--gaeru-brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -100,7 +172,7 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .network-pill {
@@ -112,7 +184,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   border: 1px solid var(--gaeru-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--gaeru-input-bg);
 }
 
 .network-dot {
@@ -144,24 +216,26 @@ body {
   background: transparent;
   border: none;
   color: var(--gaeru-text);
-  min-width: 44px; /* Chuẩn tiếp xúc ngón tay Apple HIG */
-  min-height: 44px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  font-size: 17px;
+  transition: transform 0.15s ease, background-color 0.2s ease;
 }
 
 .icon-btn:active {
   transform: scale(0.9);
+  background: var(--gaeru-input-bg);
 }
 
 .badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 2px;
+  right: 2px;
   background-color: #ef4444;
   color: #ffffff;
   font-size: 10px;
@@ -184,20 +258,20 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--gaeru-input-bg);
   border: 1px solid var(--gaeru-border);
   border-radius: 12px;
   padding: 8px 12px;
   color: var(--gaeru-text-muted);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* ĐẶC BIỆT: Font 16px để Safari iOS không tự động phóng to màn hình khi bấm vào */
 .search-input-box input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
-  color: #ffffff;
+  color: var(--gaeru-text);
   font-size: 16px;
   line-height: 1.4;
 }
@@ -208,8 +282,8 @@ body {
 }
 
 .clear-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: rgba(125, 125, 125, 0.25);
+  color: var(--gaeru-text);
   border: none;
   border-radius: 50%;
   width: 20px;
@@ -226,7 +300,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* Cuộn quán tính mượt mà trên iPhone */
+  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
   touch-action: pan-y;
@@ -247,20 +321,20 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==================== HERO CAROUSEL VỚI GESTURE VUỐT ==================== */
+/* ==================== HERO CAROUSEL ==================== */
 .hero-carousel {
   position: relative;
   width: 100%;
   border-radius: 20px;
   overflow: hidden;
   margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   touch-action: pan-y pinch-zoom;
 }
 
 .hero-card {
   display: none;
-  background: radial-gradient(circle at 85% 20%, #1e293b, #0f172a 75%);
+  background: var(--gaeru-hero-bg);
   border: 1px solid var(--gaeru-border-light);
   border-radius: 20px;
   padding: 18px 16px;
@@ -284,26 +358,26 @@ body {
 .hero-badge {
   display: inline-block;
   background: var(--gaeru-blue-glow);
-  color: #38bdf8;
+  color: #0284c7;
   font-size: 10px;
   font-weight: 800;
   padding: 3px 8px;
   border-radius: 12px;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(2, 132, 199, 0.3);
 }
 
 .hero-content h2 {
   font-size: 19px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--gaeru-hero-title);
   margin-bottom: 4px;
 }
 
 .hero-content p {
   font-size: 11px;
-  color: var(--gaeru-text-muted);
+  color: var(--gaeru-hero-text);
   line-height: 1.4;
   margin-bottom: 8px;
 }
@@ -311,7 +385,7 @@ body {
 .hero-price {
   font-size: 15px;
   font-weight: 800;
-  color: #38bdf8;
+  color: var(--gaeru-blue);
   margin-bottom: 10px;
 }
 
@@ -358,28 +432,7 @@ body {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.6));
-}
-
-/* Dots chuyển slide */
-.carousel-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.carousel-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.2);
-  transition: all 0.25s ease;
-}
-
-.carousel-dot.active {
-  width: 18px;
-  background: var(--gaeru-blue);
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.25));
 }
 
 /* ==================== CATEGORY CHIPS ==================== */
@@ -399,7 +452,7 @@ body {
 
 .chip {
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--gaeru-input-bg);
   border: 1px solid var(--gaeru-border);
   color: var(--gaeru-text-muted);
   border-radius: 20px;
@@ -422,7 +475,7 @@ body {
   box-shadow: 0 3px 10px var(--gaeru-blue-glow);
 }
 
-/* ==================== LƯỚI SẢN PHẨM TỐI ƯU MÀN HÌNH NHỎ & LỚN ==================== */
+/* ==================== LƯỚI SẢN PHẨM ==================== */
 .section-title-wrap {
   margin: 10px 0 12px;
 }
@@ -430,7 +483,7 @@ body {
 .section-title-wrap h3 {
   font-size: 17px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--gaeru-text);
 }
 
 .section-subtitle {
@@ -456,7 +509,8 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, background-color 0.25s ease, border-color 0.15s ease;
 }
 
 .product-card:active {
@@ -486,7 +540,8 @@ body {
   align-items: center;
   justify-content: center;
   margin-bottom: 8px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.04), transparent 70%);
+  background: var(--gaeru-thumb-bg);
+  border-radius: 12px;
 }
 
 .product-thumb-box img {
@@ -505,7 +560,7 @@ body {
 .product-title {
   font-size: 13px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--gaeru-text);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -514,7 +569,7 @@ body {
 
 .product-rating {
   font-size: 11px;
-  color: #fbbf24;
+  color: #f59e0b;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -535,7 +590,7 @@ body {
 .price-main {
   font-size: 14px;
   font-weight: 800;
-  color: #38bdf8;
+  color: var(--gaeru-blue);
 }
 
 .price-sub {
@@ -552,9 +607,9 @@ body {
 
 .btn-card-add {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--gaeru-input-bg);
   border: 1px solid var(--gaeru-border);
-  color: #ffffff;
+  color: var(--gaeru-text);
   border-radius: 10px;
   padding: 8px 6px;
   font-size: 12px;
@@ -570,6 +625,7 @@ body {
 
 .btn-card-add:active {
   background: var(--gaeru-blue);
+  color: #ffffff;
   transform: scale(0.96);
 }
 
@@ -596,7 +652,7 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--gaeru-input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,7 +667,7 @@ body {
 
 .promise-text strong {
   font-size: 13px;
-  color: #ffffff;
+  color: var(--gaeru-text);
 }
 
 .promise-text span, .promise-text a {
@@ -621,18 +677,19 @@ body {
 }
 
 .promise-text a {
-  color: #38bdf8;
+  color: var(--gaeru-blue);
   font-weight: 600;
 }
 
 /* ==================== CARE+ TAB ==================== */
 .care-hero-card {
-  background: linear-gradient(145deg, #162033, #0b1120);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: var(--gaeru-card-bg);
+  border: 1px solid var(--gaeru-border-light);
   border-radius: 20px;
   padding: 18px;
   margin-bottom: 16px;
   text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
 .care-badge {
@@ -650,7 +707,7 @@ body {
 .care-hero-card h2 {
   font-size: 20px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--gaeru-text);
   line-height: 1.3;
   margin-bottom: 6px;
 }
@@ -670,12 +727,12 @@ body {
 
 .care-search-box input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--gaeru-input-bg);
   border: 1px solid var(--gaeru-border-light);
   border-radius: 12px;
   padding: 10px 12px;
-  color: #ffffff;
-  font-size: 16px; /* 16px ngăn chặn iOS zoom */
+  color: var(--gaeru-text);
+  font-size: 16px;
   outline: none;
 }
 
@@ -703,7 +760,7 @@ body {
 .care-steps-card h3, .care-contact-box h3 {
   font-size: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--gaeru-text);
   margin-bottom: 12px;
 }
 
@@ -717,7 +774,7 @@ body {
   font-size: 15px;
   font-weight: 900;
   color: var(--gaeru-blue);
-  background: rgba(0, 113, 227, 0.15);
+  background: var(--gaeru-blue-glow);
   width: 30px;
   height: 30px;
   border-radius: 8px;
@@ -730,7 +787,7 @@ body {
 .step-item strong {
   display: block;
   font-size: 13px;
-  color: #ffffff;
+  color: var(--gaeru-text);
   margin-bottom: 2px;
 }
 
@@ -747,7 +804,7 @@ body {
   margin-top: 10px;
 }
 
-/* ==================== GIỎ HÀNG & FORM ĐẶT HÀNG TỐI ƯU BÀN PHÍM ẢO ==================== */
+/* ==================== GIỎ HÀNG & FORM ĐẶT HÀNG ==================== */
 .cart-header {
   display: flex;
   justify-content: space-between;
@@ -784,6 +841,7 @@ body {
   display: flex;
   gap: 10px;
   align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 .cart-item-thumb {
@@ -791,7 +849,7 @@ body {
   height: 56px;
   border-radius: 10px;
   object-fit: cover;
-  background: #0f172a;
+  background: var(--gaeru-input-bg);
   flex-shrink: 0;
 }
 
@@ -803,7 +861,7 @@ body {
 .cart-item-title {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--gaeru-text);
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -813,14 +871,15 @@ body {
 .cart-item-price {
   font-size: 13px;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--gaeru-blue);
 }
 
 .cart-stepper {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--gaeru-input-bg);
+  border: 1px solid var(--gaeru-border);
   border-radius: 10px;
   padding: 4px;
 }
@@ -828,10 +887,10 @@ body {
 .step-btn {
   background: transparent;
   border: none;
-  color: #ffffff;
+  color: var(--gaeru-text);
   font-size: 18px;
   font-weight: 700;
-  width: 32px; /* Tối thiểu cho ngón tay */
+  width: 32px;
   height: 32px;
   cursor: pointer;
   display: flex;
@@ -841,7 +900,7 @@ body {
 }
 
 .step-btn:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(125, 125, 125, 0.15);
 }
 
 .step-count {
@@ -849,6 +908,7 @@ body {
   font-weight: 700;
   min-width: 20px;
   text-align: center;
+  color: var(--gaeru-text);
 }
 
 .cart-empty {
@@ -888,13 +948,13 @@ body {
   padding-top: 8px;
   margin-top: 6px;
   margin-bottom: 0;
-  color: #ffffff;
+  color: var(--gaeru-text);
   font-size: 15px;
   font-weight: 700;
 }
 
 .total-row .highlight {
-  color: #38bdf8;
+  color: var(--gaeru-blue);
   font-size: 17px;
 }
 
@@ -909,6 +969,7 @@ body {
 .checkout-form-card h3 {
   font-size: 15px;
   font-weight: 700;
+  color: var(--gaeru-text);
   margin-bottom: 12px;
 }
 
@@ -926,12 +987,12 @@ body {
 }
 
 .form-group input, .form-group select {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--gaeru-input-bg);
   border: 1px solid var(--gaeru-border);
   border-radius: 10px;
   padding: 11px 12px;
-  color: #ffffff;
-  font-size: 16px; /* 16px ngăn tự phóng to trên iPhone */
+  color: var(--gaeru-text);
+  font-size: 16px;
   outline: none;
   min-height: 44px;
   transition: border-color 0.2s ease;
@@ -956,7 +1017,7 @@ body {
   border: 1px solid var(--gaeru-border);
   border-radius: 12px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--gaeru-input-bg);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -966,7 +1027,7 @@ body {
 
 .radio-card strong {
   font-size: 13px;
-  color: #ffffff;
+  color: var(--gaeru-text);
 }
 
 .radio-card span {
@@ -1007,8 +1068,8 @@ body {
 }
 
 .btn-secondary {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background-color: var(--gaeru-input-bg);
+  color: var(--gaeru-text);
   border: 1px solid var(--gaeru-border);
 }
 
@@ -1016,7 +1077,7 @@ body {
   width: 100%;
 }
 
-/* ==================== BOTTOM SHEET MODAL (VUỐT XUỐNG ĐỂ ĐÓNG) ==================== */
+/* ==================== BOTTOM SHEET MODAL ==================== */
 .modal-sheet {
   position: fixed;
   top: 0;
@@ -1039,7 +1100,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
@@ -1058,6 +1119,7 @@ body {
   display: flex;
   flex-direction: column;
   touch-action: pan-y;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
 }
 
 @keyframes slideUp {
@@ -1069,7 +1131,7 @@ body {
   width: 44px;
   height: 5px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(125, 125, 125, 0.4);
   margin: 0 auto 12px;
   cursor: grab;
 }
@@ -1078,9 +1140,9 @@ body {
   position: absolute;
   top: 14px;
   right: 14px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--gaeru-input-bg);
   border: none;
-  color: #fff;
+  color: var(--gaeru-text);
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -1097,7 +1159,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 70%);
+  background: var(--gaeru-thumb-bg);
   border-radius: 16px;
   margin-bottom: 14px;
 }
@@ -1117,12 +1179,12 @@ body {
 .product-tag {
   align-self: flex-start;
   background: var(--gaeru-blue-glow);
-  color: #38bdf8;
+  color: var(--gaeru-blue);
   font-size: 10px;
   font-weight: 700;
   padding: 3px 9px;
   border-radius: 10px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(0, 113, 227, 0.3);
 }
 
 .detail-price-row {
@@ -1134,7 +1196,7 @@ body {
 .detail-price {
   font-size: 20px;
   font-weight: 800;
-  color: #38bdf8;
+  color: var(--gaeru-blue);
 }
 
 .detail-descriptor {
@@ -1145,7 +1207,7 @@ body {
 
 .detail-specs-box, .detail-desc-box {
   margin-top: 10px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--gaeru-subbox-bg);
   border: 1px solid var(--gaeru-border);
   border-radius: 12px;
   padding: 12px;
@@ -1154,7 +1216,7 @@ body {
 .detail-specs-box h4, .detail-desc-box h4 {
   font-size: 13px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--gaeru-text);
   margin-bottom: 8px;
 }
 
@@ -1175,7 +1237,7 @@ body {
 }
 
 .spec-val {
-  color: #ffffff;
+  color: var(--gaeru-text);
   font-weight: 500;
   text-align: right;
 }
@@ -1227,7 +1289,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 18px;
-  border-bottom: 1px solid var(--gaeru-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .scanner-body {
@@ -1308,13 +1371,13 @@ body {
   background: rgba(15, 23, 42, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--gaeru-border-light);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   padding: 9px 16px;
   border-radius: 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   z-index: 3000;
   display: flex;
   align-items: center;
@@ -1335,7 +1398,7 @@ body {
 /* ==================== THANH ĐIỀU HƯỚNG DƯỚI CÙNG (BOTTOM NAVIGATION) ==================== */
 .bottom-nav {
   flex-shrink: 0;
-  background: rgba(11, 15, 25, 0.96);
+  background: var(--gaeru-bottom-nav-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--gaeru-border);
@@ -1346,6 +1409,7 @@ body {
   padding-top: 6px;
   min-height: 56px;
   z-index: 1000;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .nav-item {
