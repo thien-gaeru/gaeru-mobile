@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>GAERU — Thiết bị quay chụp & Thu âm</title>
+  <link rel="stylesheet" href="brand.css">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -21,7 +22,7 @@
     <iframe id="main-frame" src="https://gaeru.com" title="GAERU Store" frameborder="0" allow="camera; microphone; geolocation; payment"></iframe>
   </div>
 
-  <!-- Màn hình ngoại tuyến (Offline Screen) -->
+  <!-- Màn hình ngoại tuyến (Offline Screen) tích hợp dữ liệu đồng bộ -->
   <div id="offline-screen" class="offline-screen hidden">
     <div class="offline-content">
       <div class="offline-logo">
@@ -31,7 +32,7 @@
         <span class="offline-dot"></span> Ngoại tuyến
       </div>
       <h2>Chưa có kết nối Internet</h2>
-      <p>Ứng dụng GAERU cần kết nối mạng để hiển thị sản phẩm và đơn hàng. Vui lòng kiểm tra lại kết nối Wi-Fi hoặc dữ liệu di động (4G/5G).</p>
+      <p>Bạn vẫn có thể xem danh mục thiết bị đã đồng bộ bên dưới hoặc gọi hotline để được hỗ trợ trực tiếp.</p>
       
       <div class="offline-actions">
         <button id="btn-retry" class="btn btn-primary">
@@ -40,8 +41,16 @@
         </button>
         <a href="tel:0829191080" class="btn btn-secondary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          Gọi Hotline GAERU: 082 919 1080
+          Gọi Hotline: 082 919 1080
         </a>
+      </div>
+
+      <!-- Danh sách sản phẩm thực tế đồng bộ từ web gaeru.com -->
+      <div class="offline-products-section">
+        <h3>Thiết bị GAERU (Đã lưu offline)</h3>
+        <div id="offline-products-grid" class="offline-products-grid">
+          <!-- Render tự động qua JavaScript -->
+        </div>
       </div>
 
       <div class="offline-info">
@@ -93,6 +102,7 @@
   </nav>
 
   <!-- Script ứng dụng -->
+  <script src="api-client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

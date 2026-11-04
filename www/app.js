@@ -39,6 +39,7 @@
       }
     } else {
       offlineScreen.classList.remove('hidden');
+      renderOfflineProducts();
     }
   }
 
@@ -54,7 +55,7 @@
       })
       .catch(() => {
         setNetworkStatus(false);
-        alert('Vẫn chưa có kết nối Internet. Vui lòng kiểm tra lại đường truyền mạng.');
+        alert('Vẫn chưa có kết nối Internet. Bạn có thể xem danh mục sản phẩm đã lưu bên dưới hoặc gọi hotline.');
       })
       .finally(() => {
         loadingBar.classList.remove('active');
@@ -176,7 +177,7 @@
       loadPage(code);
     } else {
       // Nếu là mã Serial / Bảo hành, điều hướng thẳng vào trang kích hoạt/tra cứu GAERU Care+
-      const careUrl = `${GAERU_BASE_URL}/care.html?serial=${encodeURIComponent(code)}#warranty-activation`;
+      let careUrl = `${GAERU_BASE_URL}/care.html?serial=${encodeURIComponent(code)}#warranty-activation`;
       loadPage(careUrl);
     }
   }
@@ -239,7 +240,6 @@
       // Nhận Token thiết bị gửi về server GAERU
       PushNotifications.addListener('registration', token => {
         console.log('FCM / APNs Token:', token.value);
-        // Lưu token hoặc gửi lên gaeru.com qua API
         try {
           fetch(`${GAERU_BASE_URL}/api/mobile/register-token`, {
             method: 'POST',
@@ -261,6 +261,45 @@
     }
   }
 
+  // 6. Hiển thị danh mục sản phẩm đã đồng bộ từ web khi ngoại tuyến
+  async function renderOfflineProducts() {
+    const grid = document.getElementById('offline-products-grid');
+    if (!grid) return;
+
+    try {
+      let products = [];
+      if (window.GaeruAPI) {
+        products = await window.GaeruAPI.getProducts().catch(() => []);
+      }
+      if (!products || products.length === 0) {
+        const res = await fetch('data/products.json');
+        const json = await res.json();
+        products = json.products || [];
+      }
+
+      if (products.length > 0) {
+        grid.innerHTML = products.map(p => `
+          <div class="offline-product-card">
+            <img class="offline-product-thumb" src="${p.imageUrl}" alt="${p.name}" onerror="this.src='assets/brand/gaeru-logo.png'">
+            <div class="offline-product-info">
+              <div class="offline-product-title">${p.name}</div>
+              <div class="offline-product-desc">${p.descriptor || p.description || ''}</div>
+              <div class="offline-product-meta">
+                <span class="offline-product-price">${(p.priceVnd || 0).toLocaleString('vi-VN')} ₫</span>
+                <a href="tel:0829191080" class="btn-sm-order">Gọi đặt hàng</a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        grid.innerHTML = '<p style="font-size:12px;color:var(--gaeru-text-muted);">Đang kết nối danh mục thiết bị...</p>';
+      }
+    } catch (e) {
+      console.warn('Lỗi hiển thị sản phẩm offline:', e);
+    }
+  }
+
   // Khởi động
+  renderOfflineProducts();
   setNetworkStatus(navigator.onLine);
 })();
