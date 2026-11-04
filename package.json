@@ -1,0 +1,34 @@
+{
+  "name": "gaeru-mobile",
+  "version": "1.0.0",
+  "description": "Ứng dụng di động GAERU Store & GAERU Care+ kết nối trực tiếp với website gaeru.com",
+  "private": true,
+  "main": "www/index.html",
+  "scripts": {
+    "dev": "node scripts/live-server.js",
+    "build": "node scripts/build.js",
+    "cap:sync": "cap sync",
+    "cap:add:android": "cap add android",
+    "cap:add:ios": "cap add ios",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "cap:run:android": "cap run android",
+    "cap:run:ios": "cap run ios",
+    "generate:keystore": "powershell -ExecutionPolicy Bypass -File scripts/generate-keystore.ps1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/camera": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  },
+  "devDependencies": {
+    "html5-qrcode": "^2.3.8"
+  }
+}

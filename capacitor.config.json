@@ -1,0 +1,38 @@
+{
+  "appId": "com.gaeru.store",
+  "appName": "GAERU",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "gaeru.com",
+      "*.gaeru.com",
+      "sandbox.vnpayment.vn",
+      "vnpayment.vn",
+      "*.vnpay.vn",
+      "checkout.momo.vn",
+      "*.momo.vn",
+      "*.shopee.vn",
+      "*.tiktok.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#0b0f19",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0b0f19"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}

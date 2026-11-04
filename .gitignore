@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.DS_Store
+Thumbs.db
+*.log
+
+# Keystore & Secrets (Bảo mật - Không commit khoá ký)
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# Android build outputs
+android/.gradle/
+android/app/build/
+android/build/
+android/.idea/
+android/*.iml
+
+# iOS build outputs
+ios/App/Pods/
+ios/App/build/
+ios/App/.symlinks/
+*.xcworkspace
+*.xcuserdatad
