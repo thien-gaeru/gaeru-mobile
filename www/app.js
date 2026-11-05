@@ -60,6 +60,50 @@ const SafeStorage = {
   }
 };
 
+// Định nghĩa tài nguyên hình ảnh cutout chuẩn hoá cho 5 sản phẩm của GAERU (Đồng bộ từ web gaeru.com)
+const CANONICAL_PRODUCT_ASSETS = {
+  'gaeru-m3': 'assets/products/m3-home-cutout.webp',
+  'gaeru-k9': 'assets/products/k9.webp',
+  'gaeru-p01': 'assets/products/p01.webp',
+  'gaeru-p185': 'assets/products/p185-cutout-1cc9dfde9fa3.webp',
+  'gaeru-g1-ultra': 'assets/products/g1-ultra-clean.webp'
+};
+
+const SECONDARY_FALLBACKS = {
+  'gaeru-m3': 'assets/products/m3.webp',
+  'gaeru-k9': 'assets/products/k9.webp',
+  'gaeru-p01': 'assets/products/p01.webp',
+  'gaeru-p185': 'assets/products/p185-cutout-1cc9dfde9fa3.webp',
+  'gaeru-g1-ultra': 'assets/products/g1-ultra-874bf1d3db77.webp'
+};
+
+// Trình xử lý hình ảnh sản phẩm: Luôn nạp ảnh sản phẩm cutout thật, KHÔNG BAO GIỜ fallback về logo chữ GAERU
+function handleProductCardImgError(imgEl, slug) {
+  if (!imgEl) return;
+  imgEl.onerror = null;
+  const canonicalPath = CANONICAL_PRODUCT_ASSETS[slug];
+  const secondaryPath = SECONDARY_FALLBACKS[slug];
+  const currentSrc = imgEl.getAttribute('src') || '';
+
+  // Ưu tiên nạp từ bundled images (Base64) nếu có trong môi trường standalone simulator
+  if (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__) {
+    if (canonicalPath && window.__BUNDLED_IMAGE_ASSETS__[canonicalPath] && currentSrc !== window.__BUNDLED_IMAGE_ASSETS__[canonicalPath]) {
+      imgEl.src = window.__BUNDLED_IMAGE_ASSETS__[canonicalPath];
+      return;
+    }
+    if (secondaryPath && window.__BUNDLED_IMAGE_ASSETS__[secondaryPath] && currentSrc !== window.__BUNDLED_IMAGE_ASSETS__[secondaryPath]) {
+      imgEl.src = window.__BUNDLED_IMAGE_ASSETS__[secondaryPath];
+      return;
+    }
+  }
+
+  if (canonicalPath && !currentSrc.endsWith(canonicalPath)) {
+    imgEl.src = canonicalPath;
+  } else if (secondaryPath && !currentSrc.endsWith(secondaryPath)) {
+    imgEl.src = secondaryPath;
+  }
+}
+
 // Trình xử lý hình ảnh dự phòng không lỗi (Fallback Image Handler)
 function handleImageError(imgEl, title = 'GAERU') {
   if (!imgEl) return;
@@ -219,34 +263,46 @@ function switchTab(tabId) {
 // ==================== CHUẨN HOÁ & HIỂN THỊ SẢN PHẨM ====================
 function normalizeProduct(raw) {
   if (!raw) return null;
+  const slug = raw.slug || '';
+  const canonicalImg = CANONICAL_PRODUCT_ASSETS[slug] || '';
+  const secondaryImg = SECONDARY_FALLBACKS[slug] || '';
 
-  // 1. Chuẩn hoá hình ảnh
-  let imageUrl = raw.imageUrl || raw.image_url || '';
-
-  // Ưu tiên nạp hình ảnh đóng gói sẵn trong App (Base64) để hiển thị tức thì không phụ thuộc mạng
+  // 1. Chuẩn hoá hình ảnh: Ưu tiên ảnh đóng gói Base64 hoặc tệp cutout chuẩn của sản phẩm
+  let imageUrl = '';
   if (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__) {
-    if (raw.slug === 'gaeru-m3' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/m3.webp']) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/m3.webp'];
-    } else if (raw.slug === 'gaeru-g1-ultra' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/g1-ultra-clean.webp']) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/g1-ultra-clean.webp'];
-    } else if (raw.slug === 'gaeru-k9' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp']) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp'];
-    } else if (raw.slug === 'gaeru-p01' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/p01.webp']) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/p01.webp'];
-    } else if (raw.slug === 'gaeru-p185' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp']) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp'];
-    } else if (window.__BUNDLED_IMAGE_ASSETS__[imageUrl]) {
-      imageUrl = window.__BUNDLED_IMAGE_ASSETS__[imageUrl];
+    if (canonicalImg && window.__BUNDLED_IMAGE_ASSETS__[canonicalImg]) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__[canonicalImg];
+    } else if (secondaryImg && window.__BUNDLED_IMAGE_ASSETS__[secondaryImg]) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__[secondaryImg];
+    } else if (raw.imageUrl && window.__BUNDLED_IMAGE_ASSETS__[raw.imageUrl]) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__[raw.imageUrl];
     }
   }
 
-  if (imageUrl && imageUrl.startsWith('/')) {
-    imageUrl = `https://gaeru.com${imageUrl}`;
-  } else if (!imageUrl && raw.gallery && raw.gallery.length > 0) {
-    imageUrl = raw.gallery[0].startsWith('/') ? `https://gaeru.com${raw.gallery[0]}` : raw.gallery[0];
-  }
   if (!imageUrl) {
-    imageUrl = (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__ && window.__BUNDLED_IMAGE_ASSETS__['assets/brand/gaeru-logo.png']) || 'assets/brand/gaeru-logo.png';
+    if (canonicalImg) {
+      imageUrl = canonicalImg;
+    } else if (raw.imageUrl && !raw.imageUrl.includes('/api/catalog-images/')) {
+      imageUrl = raw.imageUrl.startsWith('/') ? raw.imageUrl.replace(/^\//, '') : raw.imageUrl;
+    } else if (secondaryImg) {
+      imageUrl = secondaryImg;
+    } else {
+      imageUrl = 'assets/brand/gaeru-logo.webp';
+    }
+  }
+
+  // Gallery: Chuẩn hoá và chuyển sang Base64 nếu có trong bundled assets
+  let gallery = [];
+  if (Array.isArray(raw.gallery) && raw.gallery.length > 0) {
+    gallery = raw.gallery.map(g => {
+      const cleanPath = (typeof g === 'string') ? (g.startsWith('/') ? g.replace(/^\//, '') : g) : '';
+      if (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__ && window.__BUNDLED_IMAGE_ASSETS__[cleanPath]) {
+        return window.__BUNDLED_IMAGE_ASSETS__[cleanPath];
+      }
+      return cleanPath;
+    });
+  } else {
+    gallery = [imageUrl];
   }
 
   // 2. Chuẩn hoá các biến thể (variants)
@@ -259,7 +315,7 @@ function normalizeProduct(raw) {
     stockQuantity: typeof v.stockQuantity === 'number' ? v.stockQuantity : (v.stock_quantity ?? 100),
     active: v.active !== false,
     options: v.options || {},
-    imageUrl: v.imageUrl ? (v.imageUrl.startsWith('/') ? `https://gaeru.com${v.imageUrl}` : v.imageUrl) : imageUrl
+    imageUrl: v.imageUrl ? (v.imageUrl.startsWith('/') ? v.imageUrl.replace(/^\//, '') : v.imageUrl) : imageUrl
   })) : [];
 
   // 3. Chuẩn hoá giá: nếu sản phẩm chưa có giá trực tiếp, lấy từ biến thể
@@ -275,30 +331,19 @@ function normalizeProduct(raw) {
   }
 
   // 4. Chuẩn hoá thông số kỹ thuật (specs)
-  let specs = raw.specs;
-  if (!specs || typeof specs !== 'object' || Object.keys(specs).length === 0) {
-    specs = {};
-    if (raw.description) {
-      const lines = raw.description.split('\n').map(l => l.trim()).filter(Boolean);
-      lines.forEach(line => {
-        if (line.includes(':') && !line.includes('http')) {
-          const parts = line.split(':');
-          const k = parts[0].trim();
-          const v = parts.slice(1).join(':').trim();
-          if (k.length <= 30 && v.length <= 100) {
-            specs[k] = v;
-          }
+  let specs = (raw.specs && typeof raw.specs === 'object' && Object.keys(raw.specs).length > 0) ? raw.specs : {};
+  if (Object.keys(specs).length === 0 && raw.description) {
+    const lines = raw.description.split('\n').map(l => l.trim()).filter(Boolean);
+    lines.forEach(line => {
+      if (line.includes(':') && !line.includes('http')) {
+        const parts = line.split(':');
+        const k = parts[0].trim();
+        const v = parts.slice(1).join(':').trim();
+        if (k.length <= 30 && v.length <= 100) {
+          specs[k] = v;
         }
-      });
-      if (Object.keys(specs).length === 0 && raw.description.includes('Thông số')) {
-        const idx = raw.description.indexOf('Thông số');
-        const specPart = raw.description.slice(idx);
-        const specLines = specPart.split('\n').map(l => l.trim()).filter(Boolean);
-        if (specLines[1]) specs['Cấu hình'] = specLines[1];
-        if (specLines[2]) specs['Pin & Nguồn'] = specLines[2];
-        if (specLines[3]) specs['Kích thước'] = specLines[3];
       }
-    }
+    });
   }
 
   return {
@@ -306,13 +351,15 @@ function normalizeProduct(raw) {
     slug: raw.slug,
     name: raw.name,
     category: raw.category || 'audio',
-    tag: raw.tag || (raw.slug === 'gaeru-m3' ? 'BÁN CHẠY NHẤT' : (raw.slug === 'gaeru-g1-ultra' ? 'FLAGSHIP' : '')),
+    tag: raw.tag || (raw.slug === 'gaeru-m3' ? 'BÁN CHẠY NHẤT' : (raw.slug === 'gaeru-g1-ultra' ? 'FLAGSHIP 2026' : (raw.slug === 'gaeru-p01' ? 'AI TRACKING 360°' : (raw.slug === 'gaeru-p185' ? 'TRIPOD 1.85M' : 'GIÁ TỐT NHẤT')))),
     rating: raw.rating || 4.9,
-    reviews: raw.reviews || (raw.slug === 'gaeru-m3' ? 142 : 88),
+    reviews: raw.reviews || (raw.slug === 'gaeru-m3' ? 142 : (raw.slug === 'gaeru-g1-ultra' ? 128 : 88)),
     descriptor: raw.descriptor || '',
     description: raw.description || '',
     imageUrl,
-    gallery: Array.isArray(raw.gallery) ? raw.gallery.map(g => g.startsWith('/') ? `https://gaeru.com${g}` : g) : [imageUrl],
+    gallery,
+    highlights: Array.isArray(raw.highlights) ? raw.highlights : [],
+    boxContents: Array.isArray(raw.boxContents) ? raw.boxContents : [],
     priceVnd,
     originalPriceVnd,
     variants,
@@ -590,7 +637,7 @@ function renderProductGrids() {
     <div class="product-card" onclick="openProductDetail('${p.slug}')">
       ${p.tag ? `<span class="card-tag">${p.tag}</span>` : ''}
       <div class="product-thumb-box">
-        <img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.src='assets/brand/gaeru-logo.png'">
+        <img src="${p.imageUrl}" alt="${p.name}" loading="lazy" decoding="async" onerror="handleProductCardImgError(this, '${p.slug}')">
       </div>
       <div class="product-info">
         <div class="product-rating">
@@ -792,6 +839,9 @@ function renderGallery() {
   const currentUrl = galleryState.images[galleryState.currentIndex] || galleryState.images[0];
   if (imgEl) {
     imgEl.style.opacity = '0.35';
+    imgEl.onerror = function() {
+      handleProductCardImgError(this, AppState.selectedProduct?.slug || '');
+    };
     setTimeout(() => {
       imgEl.src = currentUrl;
       imgEl.style.opacity = '1';
@@ -803,9 +853,10 @@ function renderGallery() {
   }
 
   if (thumbsWrap) {
+    const slug = AppState.selectedProduct?.slug || '';
     thumbsWrap.innerHTML = galleryState.images.map((url, idx) => `
       <div class="detail-thumb-item ${idx === galleryState.currentIndex ? 'active' : ''}" onclick="selectGalleryThumbnail(${idx})">
-        <img src="${url}" alt="Ảnh ${idx + 1}" loading="lazy" onerror="this.src='assets/brand/gaeru-logo.png'">
+        <img src="${url}" alt="Ảnh ${idx + 1}" loading="lazy" onerror="handleProductCardImgError(this, '${slug}')">
       </div>
     `).join('');
   }
@@ -871,19 +922,37 @@ function openProductDetail(slug) {
   document.getElementById('detail-descriptor').textContent = product.descriptor || '';
   document.getElementById('detail-description').textContent = product.description || '';
 
-  // Trích xuất "Bộ sản phẩm bao gồm" từ mô tả sản phẩm
+  // Render các điểm nổi bật (Highlights) chuẩn từ web gaeru.com
+  const hlContainer = document.getElementById('detail-highlights');
+  if (hlContainer) {
+    if (Array.isArray(product.highlights) && product.highlights.length > 0) {
+      hlContainer.innerHTML = product.highlights.map(hl => `
+        <div class="highlight-pill">
+          <strong>${hl.title}</strong>
+          <span>${hl.desc}</span>
+        </div>
+      `).join('');
+      hlContainer.classList.remove('hidden');
+    } else {
+      hlContainer.classList.add('hidden');
+    }
+  }
+
+  // Trích xuất hoặc lấy danh sách "Bộ sản phẩm bao gồm"
   const boxSection = document.getElementById('detail-box-contents');
   const boxList = document.getElementById('detail-box-list');
   if (boxSection && boxList) {
-    let items = [];
-    if (product.description && product.description.includes('Bộ sản phẩm bao gồm:')) {
-      const parts = product.description.split('Bộ sản phẩm bao gồm:')[1];
-      const itemsLine = parts.split('\n')[0];
-      items = itemsLine.split(',').map(s => s.trim()).filter(Boolean);
-    } else if (product.description && product.description.includes('Bộ Sản Phẩm Bao Gồm:')) {
-      const parts = product.description.split('Bộ Sản Phẩm Bao Gồm:')[1];
-      const lines = parts.split('\n').slice(0, 6).map(s => s.replace(/^\d+\s*[xX]\s*|^-\s*/, '').trim()).filter(Boolean);
-      items = lines.filter(l => !l.includes('lưu ý') && !l.includes('THAY ĐỔI'));
+    let items = Array.isArray(product.boxContents) && product.boxContents.length > 0 ? product.boxContents : [];
+    if (items.length === 0 && product.description) {
+      if (product.description.includes('Bộ sản phẩm bao gồm:')) {
+        const parts = product.description.split('Bộ sản phẩm bao gồm:')[1];
+        const itemsLine = parts.split('\n')[0];
+        items = itemsLine.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (product.description.includes('Bộ Sản Phẩm Bao Gồm:')) {
+        const parts = product.description.split('Bộ Sản Phẩm Bao Gồm:')[1];
+        const lines = parts.split('\n').slice(0, 8).map(s => s.replace(/^\d+\s*[xX]\s*|^-\s*/, '').trim()).filter(Boolean);
+        items = lines.filter(l => !l.includes('lưu ý') && !l.includes('THAY ĐỔI'));
+      }
     }
     
     if (items.length > 0) {

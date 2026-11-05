@@ -8,93 +8,106 @@
       "tag": "BÁN CHẠY NHẤT",
       "rating": 4.9,
       "reviews": 142,
-      "descriptor": "mic không dây cài áo có hộp sạc cao cấp",
-      "description": "Ghi lại giọng nói. Giữ trọn cảm hứng.\nGAERU M3 đồng hành cùng vlog, livestream và những cuộc trò chuyện trước ống kính. Hai micro nhỏ gọn, một đầu thu Type-C và hộp sạc giúp bạn bắt đầu dễ dàng.\n\nNhẹ trên áo. Gọn trong túi.\nThiết kế cài áo nhỏ gọn. Theo dõi phần trăm pin ngay trên thiết bị.\n\nHai giọng nói. Một kết nối.\nĐầu thu hỗ trợ hai bộ phát cùng lúc. Thu âm đa hướng 360°, kết hợp điều chỉnh độ lợi và giới hạn âm lượng tự động.\n\nTự tin ghi âm, trong nhà và ngoài trời.\nGiảm ồn AI kết hợp bông lọc gió. Khoảng cách truyền lên đến 20 m trong môi trường mở, không có vật cản; thực tế thay đổi theo môi trường.\n\nThu âm quanh bạn.\nHướng thu 360° giúp đón giọng nói từ nhiều hướng.\n\nBiết lượng pin. Chủ động buổi quay.\nMột bộ phát lên đến 3,5 giờ. Tổng thời lượng lên đến 24 giờ khi luân phiên hai bộ phát và kết hợp hộp sạc. Màn hình hiển thị phần trăm pin.\n\nThông số GAERU M3\nĐa hướng · 120 dB · 24-bit / 48 kHz · SNR 100 dB.\nPin bộ phát 70 mAh; hộp sạc 500 mAh.\nHộp sạc: 82 × 45 × 39 mm; bộ phát: 28 × 28 × 14,1 mm; đầu thu: 25,35 × 16 × 7,5 mm.\nThông số theo tài liệu được cung cấp. Thời lượng và khoảng cách thực tế tùy điều kiện.",
-      "imageUrl": "https://gaeru.com/api/catalog-images/46afbeb1-0829-485a-b374-e46962168b00?v=webp-20261025",
-      "imageAlt": "New",
-      "gallery": [
-        "https://gaeru.com/api/catalog-images/46afbeb1-0829-485a-b374-e46962168b00?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/c7328a63-ea2b-483c-ab30-9e3b919222ea?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/c20b48fc-3ca6-494f-8192-137c5c7dc926?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/34474145-162f-4dd7-9d1a-4a0d42a282ed?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/d527cb27-3ec3-4b45-aa4c-1ba2da94fd4c?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/a0881308-6fcd-4b30-803b-7639b5fbfe95?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/d29d15e4-c475-4d97-b232-a28d04b8bc74?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/b8f2bdf9-33d8-4230-a287-49c677b9948e?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/96d0f0a7-0a40-4986-af6b-4f32f5788e86?v=webp-20261025"
-      ],
-      "active": true,
+      "descriptor": "Mic không dây cài áo có hộp sạc cao cấp, màn hình LED hiển thị % pin",
+      "description": "Ghi lại giọng nói. Giữ trọn cảm hứng.\nGAERU M3 đồng hành cùng vlog, livestream và những cuộc trò chuyện trước ống kính. Hai micro nhỏ gọn, một đầu thu Type-C và hộp sạc giúp bạn bắt đầu dễ dàng.\n\nNhẹ trên áo. Gọn trong túi.\nThiết kế cài áo nhỏ gọn cho những buổi quay một mình hoặc cùng bạn đồng hành. Theo dõi phần trăm pin ngay trên thiết bị.\n\nHai giọng nói. Một kết nối.\nĐầu thu hỗ trợ hai bộ phát cùng lúc. Thu âm đa hướng 360°, kết hợp điều chỉnh độ lợi và giới hạn âm lượng tự động để hỗ trợ kiểm soát tiếng thu.\n\nTự tin ghi âm, trong nhà và ngoài trời.\nGiảm ồn AI kết hợp bông lọc gió hỗ trợ thu giọng nói trong nhiều bối cảnh. Khoảng cách truyền lên đến 20 m trong môi trường mở, không có vật cản; kết quả thực tế thay đổi theo môi trường.\n\nThu âm quanh bạn.\nHướng thu 360° giúp đón giọng nói từ nhiều hướng. Thiết kế đơn giản, linh hoạt cho những ý tưởng mới.\n\nBiết lượng pin. Chủ động buổi quay.\nMột bộ phát hoạt động lên đến 3,5 giờ. Luân phiên hai bộ phát và kết hợp hộp sạc cho tổng thời lượng lên đến 24 giờ. Màn hình hiển thị phần trăm giúp bạn theo dõi pin thuận tiện.",
       "priceVnd": 1200000,
       "originalPriceVnd": 1200000,
+      "imageUrl": "assets/products/m3-home-cutout.webp",
+      "gallery": [
+        "assets/products/m3-home-cutout.webp",
+        "assets/products/m3.webp",
+        "assets/products/m3-description/12.webp",
+        "assets/products/m3-description/1.webp",
+        "assets/products/m3-description/2.webp",
+        "assets/products/m3-description/3.webp",
+        "assets/products/m3-description/4.webp",
+        "assets/products/m3-description/6.webp",
+        "assets/products/m3-description/7.webp",
+        "assets/products/m3-description/8.webp",
+        "assets/products/m3-description/9.webp",
+        "assets/products/m3-description/10.webp",
+        "assets/products/m3-description/11.webp"
+      ],
+      "highlights": [
+        {
+          "title": "2 micro cài áo",
+          "desc": "Thu âm đồng thời 2 người nói rõ ràng"
+        },
+        {
+          "title": "48 kHz / 24-bit",
+          "desc": "Âm thanh chuẩn phòng thu, chi tiết vượt trội"
+        },
+        {
+          "title": "360° Đa hướng",
+          "desc": "Thu âm đa hướng, công nghệ giảm ồn AI"
+        },
+        {
+          "title": "Thời lượng 24 giờ",
+          "desc": "Tổng thời lượng khi kết hợp hộp sạc thông minh"
+        }
+      ],
+      "specs": {
+        "Hướng thu": "Đa hướng (360°)",
+        "Mức áp suất âm thanh tối đa": "120 dB",
+        "Độ sâu bit / Tần số lấy mẫu": "24-bit / 48 kHz",
+        "Tỷ lệ tín hiệu trên nhiễu (SNR)": "100 dB",
+        "Khoảng cách truyền": "Lên đến 20 m (tầm nhìn thẳng, không vật cản)",
+        "Thời lượng một bộ phát": "Lên đến 3,5 giờ liên tục",
+        "Tổng thời lượng sử dụng": "Lên đến 24 giờ khi luân phiên hai bộ phát và hộp sạc",
+        "Dung lượng pin": "Bộ phát 70 mAh / Hộp sạc 500 mAh",
+        "Màn hình hiển thị": "Màn hình kỹ thuật số hiển thị chính xác % pin",
+        "Kích thước hộp sạc": "82 × 45 × 39 mm",
+        "Kích thước bộ phát": "28 × 28 × 14,1 mm",
+        "Kích thước đầu thu": "25,35 × 16 × 7,5 mm"
+      },
+      "boxContents": [
+        "1 Hộp sạc thông minh có màn hình LED hiển thị phần trăm pin",
+        "2 Micro phát sóng cài áo không dây GAERU M3",
+        "1 Đầu thu Type-C cắm trực tiếp điện thoại",
+        "1 Cáp sạc tiêu chuẩn Type-C",
+        "2 Đầu bông lọc gió lông xù cao cấp",
+        "Đầu chuyển kết nối tương ứng (Lightning, USB, Micro USB theo phân loại)",
+        "1 Sổ hướng dẫn sử dụng chính hãng GAERU"
+      ],
       "variants": [
         {
           "id": "33b3c0c2-2665-45fc-bd4e-052df0ab1efa",
           "sku": "M3-01",
           "name": "Type C",
-          "active": true,
-          "options": {
-            "Cổng kết nối": "Type C"
-          },
-          "imageUrl": "",
           "priceVnd": 1200000,
-          "stockQuantity": 496,
           "originalPriceVnd": 1200000,
-          "promotion": null
+          "stockQuantity": 496,
+          "active": true
         },
         {
           "id": "2a6023ad-5c4b-4e37-9ca1-d2e0499585c6",
           "sku": "M3-G5",
           "name": "Type C + chuyển Micro usb",
-          "active": true,
-          "options": {
-            "Cổng kết nối": "Type C + chuyển Micro usb"
-          },
-          "imageUrl": "",
           "priceVnd": 1200000,
-          "stockQuantity": 499,
           "originalPriceVnd": 1200000,
-          "promotion": null
+          "stockQuantity": 499,
+          "active": true
         },
         {
           "id": "22cc4d5e-3d85-4546-b082-922c11f6899a",
           "sku": "M3-G6",
           "name": "Type C + chuyển USB",
-          "active": true,
-          "options": {
-            "Cổng kết nối": "Type C + chuyển USB"
-          },
-          "imageUrl": "",
           "priceVnd": 1200000,
-          "stockQuantity": 500,
           "originalPriceVnd": 1200000,
-          "promotion": null
+          "stockQuantity": 500,
+          "active": true
         },
         {
           "id": "72e35c58-1b75-4ba4-9438-2432c82f950c",
           "sku": "M3-G4",
           "name": "Type C + đầu chuyển Lightning",
-          "active": true,
-          "options": {
-            "Cổng kết nối": "Type C + đầu chuyển Lightning"
-          },
-          "imageUrl": "",
           "priceVnd": 1200000,
-          "stockQuantity": 500,
           "originalPriceVnd": 1200000,
-          "promotion": null
+          "stockQuantity": 500,
+          "active": true
         }
       ],
-      "optionGroups": [
-        {
-          "name": "Cổng kết nối",
-          "values": [
-            "Type C",
-            "Type C + đầu chuyển Lightning",
-            "Type C + chuyển USB",
-            "Type C + chuyển Micro usb"
-          ]
-        }
-      ]
+      "active": true
     },
     {
       "id": "fac4ec43-511b-40de-912f-cd90379093bb",
@@ -103,293 +116,285 @@
       "category": "audio",
       "tag": "GIÁ TỐT NHẤT",
       "rating": 4.9,
-      "reviews": 89,
-      "descriptor": "Mic không dây cài áo hỗ trợ giảm ồn tạp âm",
-      "description": "MIC CÀI ÁO GAERU K9\n\nCÔNG DỤNG MICRO THU ÂM KHÔNG DÂY:\n- Sản phẩm có chức năng lọc tạp âm khử tiếng ồn thông minh nhờ chip giảm tiếng ồn chuyên nghiệp và tấm chắn gió cung cấp âm thanh chất lượng và chi tiết đến 90%\n- Thời gian thực tự động không có độ trễ giúp bắt sóng tín hiệu ổn định nhanh chóng\n- Phù hợp: Để phát trực tiếp, phỏng vấn, ghi âm, giảng dạy online, quay video…\nTÍNH NĂNG MICRO THU ÂM KHÔNG DÂY:\n- Cắm vào và mở nguồn dùng ngay. Chỉ cần gắn micrô vào cổ áo, gắn đầu thu với thiết bị của bạn và bật micro để kết nối tự động.\n- Nhỏ, gọn và bền: Tinh tế và thiết kế nhỏ gọn, đơn giản, kẹp ve áo tiện lợi khi sử dụng hơn. \n- Công nghệ không dây mới 2.4G: giao thức truyền dẫn riêng, thuật toán nén âm thanh.\n- Kết nối ổn định, bắt nhạy: nhảy tần thích ứng, chống nhiễu mạnh, tín hiệu ổn định, khoảng cách xa \n- Tương thích tốt, hỗ trợ điện thoại di động / PC / máy tính bảng. \nThông tin chi tiết:\nTần số: 2.4GHz\nĐiện áp đầu vào: DC 5V\nCổng sạc: Type C\nDung lượng pin: 40mAh\nKhoảng cách truyền: rào cản 8m, không có rào cản 20m\nKích thước micrô: 60x15x10mm\nTrọng lượng micrô: 7g\nKích thước bộ thu: 44x28x7mm\nTrọng lượng bộ thu: 3g\nGói hàng bao gồm:\nĐầu Phát TX\nĐầu Thu RX\nCáp USB type C",
-      "imageUrl": "https://gaeru.com/api/catalog-images/754b32fc-493f-41c5-839b-2d4a8bb8962c?v=webp-20261025",
-      "imageAlt": "GAERU K9 – mic không dây",
-      "gallery": [
-        "https://gaeru.com/api/catalog-images/754b32fc-493f-41c5-839b-2d4a8bb8962c?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/5ec763d5-b6aa-489a-917c-1e81b372992a?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/ba891e8a-72c9-4db7-b5a8-41fab71e43e8?v=webp-20261025"
-      ],
-      "active": true,
+      "reviews": 88,
+      "descriptor": "Micro thu âm cài áo nhỏ gọn, cắm là chạy ngay không cần app",
+      "description": "Giọng nói ở gần hơn.\nTừ video đầu tiên đến buổi livestream tiếp theo. Micro cài áo nhỏ gọn giúp bạn đặt nguồn thu gần người nói, trong khi điện thoại được bố trí theo góc quay bạn muốn.\n\nKhông dây, không vướng.\nKẹp micro gần vùng ngực, tránh cọ áo và che lưới thu. Di chuyển thử trong không gian quay, nghe lại một đoạn ngắn để kiểm tra tín hiệu trước buổi ghi hình.\n\nĐúng cổng. Đúng phiên bản.\nChọn đầu thu Type-C, Lightning hoặc bộ chuyển theo phiên bản đang bán. Kiểm tra thiết bị và ứng dụng có nhận micro ngoài; không suy ra khả năng tương thích chỉ từ hình dạng đầu cắm.\n\nHai người nói. Thử từng nguồn âm.\nBộ hai micro phù hợp khi phỏng vấn hoặc quay cùng người đồng hành. Bật và thử từng micro riêng, rồi kiểm tra khi cả hai cùng nói để tránh bỏ sót một nguồn âm.\n\nGiảm tiếng ồn, giữ giọng nói.\nKhả năng hỗ trợ giảm ồn phụ thuộc môi trường và vị trí micro. Tránh gió thổi trực tiếp, giảm cọ xát quần áo và nghe thử lại khi đổi không gian.\n\nCắm đầu thu. Bật mic. Thu thử.\nK9 dùng đầu thu của bộ, không ghép Bluetooth để thu giọng nói. Sạc theo tài liệu đi kèm, cắm chắc đầu thu rồi mở đúng ứng dụng quay hoặc livestream bạn sử dụng.",
       "priceVnd": 289000,
       "originalPriceVnd": 289000,
+      "imageUrl": "assets/products/k9.webp",
+      "gallery": [
+        "assets/products/k9.webp",
+        "assets/products/k9-display-800-19cce68491be.webp",
+        "assets/products/k9-display-480-f7433a67675b.webp"
+      ],
+      "highlights": [
+        {
+          "title": "1 hoặc 2 micro",
+          "desc": "Tùy chọn linh hoạt cho 1 hoặc 2 người nói"
+        },
+        {
+          "title": "Đầu thu cắm liền",
+          "desc": "Cắm trực tiếp vào điện thoại, nhận mic ngay tức thì"
+        },
+        {
+          "title": "Cài áo gọn nhẹ",
+          "desc": "Thiết kế siêu nhỏ, kẹp cổ áo vững chãi"
+        },
+        {
+          "title": "Lọc ồn thông minh",
+          "desc": "Tích hợp chip DSP giảm tạp âm môi trường"
+        }
+      ],
+      "specs": {
+        "Kết nối âm thanh": "Không dây 2.4GHz qua đầu thu chuyên dụng của bộ",
+        "Cổng kết nối": "Chân Lightning hoặc Chân Type-C (kèm đầu chuyển Lightning / USB / Micro USB)",
+        "Khoảng cách truyền": "15 - 20 mét (môi trường mở, không vật cản)",
+        "Thời lượng pin": "4 - 6 giờ sử dụng liên tục",
+        "Thời gian sạc": "Khoảng 1 - 1.5 giờ qua cáp sạc",
+        "Độ trễ truyền âm": "Cực thấp ~15ms, đồng bộ hình ảnh và tiếng nói mượt mà",
+        "Tần số đáp ứng": "20 Hz - 20 kHz",
+        "Tỷ lệ tín hiệu / tạp âm": "≥ 64 dB"
+      },
+      "boxContents": [
+        "1 hoặc 2 Micro phát sóng cài áo GAERU K9 (theo phân loại đặt mua)",
+        "1 Đầu thu tín hiệu (Lightning hoặc Type-C theo phân loại)",
+        "1 Cáp sạc USB sang Type-C",
+        "Đầu chuyển cổng kết nối (nếu đặt mua phân loại có kèm đầu chuyển)",
+        "1 Sổ hướng dẫn sử dụng GAERU K9 chính hãng"
+      ],
       "variants": [
         {
           "id": "974ebbbf-46ff-4363-8efa-c1aac72eba05",
           "sku": "K9IP1M",
           "name": "Chân Lightning · Bộ 1 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 1 Micro",
-            "Loại Chân Cắm": "Chân Lightning"
-          },
-          "imageUrl": "/api/catalog-images/ffcd3e5d-f0f1-49ec-97a1-92cdf66aeeb2?v=webp-20261025",
           "priceVnd": 289000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 289000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "17b7f628-5c80-4ea1-9cf2-20aec5797018",
           "sku": "K9IP2M",
           "name": "Chân Lightning · Bộ 2 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 2 Micro",
-            "Loại Chân Cắm": "Chân Lightning"
-          },
-          "imageUrl": "/api/catalog-images/3ddcce24-1d8e-4432-a629-479506848cf3?v=webp-20261025",
           "priceVnd": 409000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 409000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "df040689-93f9-406b-9073-97a44443b88b",
           "sku": "K9TC1M",
           "name": "Chân Type C",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 1 Micro",
-            "Loại Chân Cắm": "Chân Type C"
-          },
-          "imageUrl": "/api/catalog-images/cf542bf2-478e-42ce-afc7-7a5d84d30ecd?v=webp-20261025",
           "priceVnd": 289000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 289000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "3ee0d41a-a159-450a-ba5c-4cbd0beabe5e",
           "sku": "K9TC1M-G4",
           "name": "Chân Type C + Chuyển Lightning · Bộ 1 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 1 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển Lightning"
-          },
-          "imageUrl": "/api/catalog-images/7b677443-8823-4f3e-9536-0d4cdaf52473?v=webp-20261025",
           "priceVnd": 339000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 339000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "b3657f9e-196a-40bf-82ec-236dcfc1d05d",
           "sku": "K9TC2M-G4",
           "name": "Chân Type C + Chuyển Lightning · Bộ 2 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 2 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển Lightning"
-          },
-          "imageUrl": "/api/catalog-images/6d46946a-ef59-45d6-9dbf-5a843e48a3ca?v=webp-20261025",
           "priceVnd": 459000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 459000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "2230ced6-bfda-4ecd-baa5-f58aee209293",
           "sku": "K9TC1M-G5",
           "name": "Chân Type C + Chuyển Micro USB · Bộ 1 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 1 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển Micro USB"
-          },
-          "imageUrl": "/api/catalog-images/64109503-5ca6-4276-b94d-5a63602beb77?v=webp-20261025",
           "priceVnd": 339000,
-          "stockQuantity": 9998,
           "originalPriceVnd": 339000,
-          "promotion": null
+          "stockQuantity": 9998,
+          "active": true
         },
         {
           "id": "afe9cb60-aad2-48cb-890e-50106b67ac49",
           "sku": "K9TC2M-G5",
           "name": "Chân Type C + Chuyển Micro USB · Bộ 2 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 2 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển Micro USB"
-          },
-          "imageUrl": "/api/catalog-images/c03c7a18-e13d-470a-8f8d-1e7fb984053a?v=webp-20261025",
           "priceVnd": 459000,
-          "stockQuantity": 9999,
           "originalPriceVnd": 459000,
-          "promotion": null
+          "stockQuantity": 9999,
+          "active": true
         },
         {
           "id": "1423c68a-726e-411a-a0e1-ee3da0d5217e",
           "sku": "K9TC1M-G6",
           "name": "Chân Type C + Chuyển USB · Bộ 1 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 1 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển USB"
-          },
-          "imageUrl": "/api/catalog-images/d3b3cd2d-6250-49c8-9c75-306e0b1bbcf7?v=webp-20261025",
           "priceVnd": 339000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 339000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "2cc5155a-136c-40c4-b4b7-3efa4d619d3c",
           "sku": "K9TC2M-G6",
           "name": "Chân Type C + Chuyển USB · Bộ 2 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 2 Micro",
-            "Loại Chân Cắm": "Chân Type C + Chuyển USB"
-          },
-          "imageUrl": "/api/catalog-images/4aa65f41-63e3-4a24-8c51-e5c009470350?v=webp-20261025",
           "priceVnd": 459000,
-          "stockQuantity": 10000,
           "originalPriceVnd": 459000,
-          "promotion": null
+          "stockQuantity": 10000,
+          "active": true
         },
         {
           "id": "61a2f9a8-ca87-4d8b-b037-2a6bc8dfe4d1",
           "sku": "K9TC2M",
           "name": "Chân Type C · Bộ 2 Micro",
-          "active": true,
-          "options": {
-            "Lựa chọn": "Bộ 2 Micro",
-            "Loại Chân Cắm": "Chân Type C"
-          },
-          "imageUrl": "/api/catalog-images/1a2ba82d-8e57-4777-85e6-85da0db0a650?v=webp-20261025",
           "priceVnd": 409000,
-          "stockQuantity": 9998,
           "originalPriceVnd": 409000,
-          "promotion": null
+          "stockQuantity": 9998,
+          "active": true
         }
       ],
-      "optionGroups": [
-        {
-          "name": "Loại Chân Cắm",
-          "values": [
-            "Chân Type C",
-            "Chân Lightning",
-            "Chân Type C + Chuyển Lightning",
-            "Chân Type C + Chuyển USB",
-            "Chân Type C + Chuyển Micro USB"
-          ]
-        },
-        {
-          "name": "Lựa chọn",
-          "values": [
-            "Bộ 1 Micro",
-            "Bộ 2 Micro"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "014717c7-6b37-4fe2-b0b7-adb21b56ddc8",
-      "slug": "gaeru-p185",
-      "name": "GAERU P185",
-      "category": "accessory",
-      "tag": "TRIPOD 1.85M",
-      "rating": 4.9,
-      "reviews": 89,
-      "descriptor": "Gậy chụp hình selfie nhỏ gọn cầm tay",
-      "description": "Gậy chụp ảnh P185 có remote bluetooth, có tay điều chỉnh 4 chân có thể gập lại xoay 360 độ, gắn máy ảnh máy quay ren 1/4\n1. Thiết kế bốn chân máy, hỗ trợ ổn định\n2. Keel chất liệu kim loại, ổn định và bền bỉ\n3. Sử dụng vật liệu hợp kim nano hàng không, khả năng chịu tải mạnh, nhẹ và bền\n4. Hỗ trợ xoay 360 độ của điện thoại di động và điều chỉnh góc theo ý muốn\n5. Tháo rời điều khiển từ xa Bluetooth, điều khiển từ xa 10 mét\n6. Chất liệu: ABS + thép không gỉ / ABS + hợp kim nhôm\n7. Tính năng: hoa văn da tinh tế, độ đậm gấp đôi, ổn định bốn chân, điều khiển từ xa\n8. Giao diện: Type-C\n9. Pin tích hợp: Pin lithium 55mAh\n10. Chiều dài kéo dài: 29,5-180cm\n11. Kích thước sản phẩm: 33.5 x 6.2 x 4.9 cm\n12. Trọng lượng sản phẩm: 423 gram\n13. Lưu ý: Chỉ giao gậy selfie, không giao hàng khác gắn trên ảnh mô tả!",
-      "imageUrl": "https://gaeru.com/api/catalog-images/fac5d9a0-39ee-4c4f-88e4-1e5d49087cd2?v=webp-20261025",
-      "imageAlt": "GAERU P185",
-      "gallery": [
-        "https://gaeru.com/api/catalog-images/fac5d9a0-39ee-4c4f-88e4-1e5d49087cd2?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/ce1e3527-c7c3-4df2-97e2-c29e188ba184?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/e70c0389-81a2-4c2c-b9d4-4a626aa11b05?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/0b95b675-adf5-410d-bc3e-9531af51872e?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/3cf51cb0-b30e-45fa-bd4f-b45a06d8b3bf?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/6c0b6a5d-1832-4eaf-a258-e7df4523371d?v=webp-20261025"
-      ],
-      "active": true,
-      "priceVnd": 450000,
-      "originalPriceVnd": 450000,
-      "variants": [
-        {
-          "id": "28734335-e87e-4adb-981f-a8ecac025116",
-          "sku": "P185",
-          "name": "Phiên bản tiêu chuẩn",
-          "active": true,
-          "options": {},
-          "imageUrl": "",
-          "priceVnd": 450000,
-          "stockQuantity": 999,
-          "originalPriceVnd": 450000,
-          "promotion": null
-        }
-      ],
-      "optionGroups": []
+      "active": true
     },
     {
       "id": "2e4ade2e-f646-494c-a5d0-5bd8681231ea",
       "slug": "gaeru-p01",
       "name": "GAERU P01",
-      "category": "video",
+      "category": "gimbal",
       "tag": "AI TRACKING 360°",
       "rating": 4.9,
-      "reviews": 89,
-      "descriptor": "Gimbal AI tự động quay theo người",
-      "description": "Bạn di chuyển. Khung hình theo bạn.\nGimbal AI theo dõi người giúp bạn linh hoạt hơn khi livestream, gọi video và tự quay nội dung. Bắt đầu từ một góc máy ổn định, rồi thử chuyển động trong khung hình.\n\nMở góc quay. Giữ nhịp sáng tạo.\nTheo dõi khuôn mặt và cơ thể, kết hợp khả năng xoay để hỗ trợ ghi hình. Đặt thiết bị trên bề mặt vững, kiểm tra vị trí kẹp điện thoại và thử theo dõi trước buổi quay. Hiệu quả thực tế phụ thuộc khoảng cách, ánh sáng và chuyển động.\n\nĐể bàn hay kèm chân 2m1?\nChọn P01 để bàn cho góc quay trên mặt phẳng, hoặc bộ kèm chân 2m1 khi cần bố trí cao hơn. Kết nối chân đỡ tương thích theo hướng dẫn. Đối chiếu đúng phiên bản và phụ kiện đi kèm khi đặt hàng.\n\nThông số và thông tin sản phẩm\nGIMBAL AI P01 tự động quay theo người\nLưu ý lựa chọn:\n[combo Gimbal P01+ chân 2m1]\n[Gimbal P01 để bàn] không có chân máy\nTính năng Sản Phẩm:\n1. 360 quay chụp mà không chết góc.\n2. AI thông minh – tự động quay theo khuôn mặt và cơ thể.\n3. 6-8h sử dụng lâu dài được xây dựng trong pin lithium.\n4. Mở và sử dụng mà không cần ứng dụng.\n5. Bộ kẹp điện thoại có thể xoay 360 độ tùy ý.\n6. Nó có thể được sử dụng như một giá đỡ điện thoại di động, và có thể kết nối với hầu hết các chân máy ren 1/4.\n7. Điện thoại di động lớn nhất Kích thước có thể kẹp là 7.5cm chiều rộng\nThông Số Sản Phẩm:\nMàu sắc sản phẩm: Đen, Trắng, Hồng.\nGóc quay: 360 độ.\nLật: X: 360 (trái và phải) / Y: 315 (lên và xuống).\nTốc độ quay: Max: 8.2 vòng/phút.\nChế độ theo dõi: toàn thân và một nửa cơ thể hiệu quả có thể bắt năng động theo dõi của nhân vật.\nTrường nhìn cảm biến: 105 độ.\nThông số kĩ thuật:\n1. Vật liệu: ABS\n2. Hỗ trợ kích thước điện thoại: 40-80mm\n3. Đề nghị Khoảng cách: 1-3 mét\n4. Đầu vào Loại C: DC 5V 0.5A~2A\n5. Dung lượng pin: 1200 ma\n6. Kích thước: 183.7x95x95mm (bao gồm cả cơ sở)\n7. Trọng lượng: 220g\nBộ Sản Phẩm Bao Gồm:\n1 X Xoay 360 Điện Thoại Gimbal\n1 X Cáp Sạc\n1 X Hướng Dẫn Sử Dụng\n1 X Chân Để bàn (hoặc chân 2m1)\n(lưu ý: bộ sản phẩm trong trương trình khuyến mại có thể sẽ thay đổi)\n(SẢN PHẨM CÓ THỂ THAY ĐỔI THIẾT KẾ MÀ KHÔNG CÓ THÔNG BÁO TRƯỚC)",
-      "imageUrl": "assets/products/p01.webp",
-      "imageAlt": "Gimbal tự động theo dõi GAERU P01",
-      "gallery": [
-        "assets/products/p01.webp",
-        "https://gaeru.com/api/catalog-images/d82c3162-a1a4-4fce-878a-29f059d382a8?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/87211d88-c1d7-472a-9a39-75b0c53ffdaf?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/9fe4a30a-6471-49bf-9870-9d2612ffb076?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/340cd6b1-f87d-4559-9ebe-c5ff6813723a?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/77095a0e-11ca-431b-ba6d-f92986cce101?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/ee2c7838-9e8b-43e0-8349-9e6405e5ff48?v=webp-20261025"
-      ],
-      "active": true,
+      "reviews": 95,
+      "descriptor": "Gimbal tự động xoay theo người 360 độ, AI nhận diện thông minh không cần app",
+      "description": "Bạn di chuyển. Khung hình theo bạn.\nGimbal AI theo dõi người giúp bạn linh hoạt hơn khi livestream, gọi video và tự quay nội dung. Bắt đầu từ một góc máy ổn định, rồi thử chuyển động trong khung hình.\n\nMở góc quay. Giữ nhịp sáng tạo.\nTheo dõi khuôn mặt và cơ thể, kết hợp khả năng xoay để hỗ trợ ghi hình. Đặt thiết bị trên bề mặt vững, kiểm tra vị trí kẹp điện thoại và thử theo dõi trước buổi quay. Hiệu quả thực tế phụ thuộc khoảng cách, ánh sáng và chuyển động.\n\nĐể bàn hay kèm chân 2m1?\nChọn P01 để bàn cho góc quay trên mặt phẳng, hoặc bộ kèm chân 2m1 khi cần bố trí cao hơn. Kết nối chân đỡ tương thích theo hướng dẫn.",
       "priceVnd": 650000,
       "originalPriceVnd": 650000,
+      "imageUrl": "assets/products/p01.webp",
+      "gallery": [
+        "assets/products/p01.webp",
+        "assets/products/p01-display-800-b1693527696c.webp",
+        "assets/products/p01-display-480-3006d4ac291d.webp"
+      ],
+      "highlights": [
+        {
+          "title": "360° Xoay tự động",
+          "desc": "Quay chụp không góc chết theo chuyển động cơ thể"
+        },
+        {
+          "title": "Cảm biến AI quang học",
+          "desc": "Hoạt động ngay lập tức không cần cài ứng dụng"
+        },
+        {
+          "title": "Pin Lithium 1200 mAh",
+          "desc": "Thời lượng sử dụng bền bỉ từ 6 đến 8 giờ liên tục"
+        },
+        {
+          "title": "Ren 1/4 tiêu chuẩn",
+          "desc": "Đế để bàn chắc chắn hoặc lắp mọi loại tripod 2m1"
+        }
+      ],
+      "specs": {
+        "Góc quay": "360° ngang (trái/phải) / 315° dọc (lên/xuống)",
+        "Tốc độ quay": "Tối đa 8.2 vòng/phút",
+        "Chế độ theo dõi": "Nhận diện khuôn mặt & cơ thể AI",
+        "Trường nhìn cảm biến (FOV)": "105 độ",
+        "Khoảng cách đề nghị": "1 - 3 mét",
+        "Độ rộng kẹp điện thoại": "40 - 80 mm (kẹp xoay 360° ngang dọc)",
+        "Dung lượng pin": "1200 mAh Lithium tích hợp",
+        "Cổng sạc": "Type-C 5V 0.5A - 2A",
+        "Kích thước": "183.7 × 95 × 95 mm (bao gồm đế)",
+        "Trọng lượng": "220 g"
+      },
+      "boxContents": [
+        "1 Gimbal AI GAERU P01 tự động quay theo người 360°",
+        "1 Đế tròn để bàn giữ thăng bằng chống trượt",
+        "1 Chân tripod đứng 2m1 (nếu chọn phân loại kèm chân 2m1)",
+        "1 Cáp sạc Type-C tiêu chuẩn",
+        "1 Sổ hướng dẫn sử dụng GAERU P01"
+      ],
       "variants": [
         {
           "id": "ba3a1172-1b66-4339-9b08-b50123bc85e6",
           "sku": "P01TP",
           "name": "Gimbal GAERU P01 + Chân 2m1",
-          "active": true,
-          "options": {
-            "Phiên bản": "Gimbal GAERU P01 + Chân 2m1"
-          },
-          "imageUrl": "/api/catalog-images/d82c3162-a1a4-4fce-878a-29f059d382a8?v=webp-20261025",
           "priceVnd": 650000,
-          "stockQuantity": 1000,
           "originalPriceVnd": 650000,
-          "promotion": null
+          "stockQuantity": 1000,
+          "active": true
         },
         {
           "id": "acf841f2-bb8e-49e9-90ab-47555c208289",
           "sku": "P01",
           "name": "Gimbal P01 để bàn",
-          "active": true,
-          "options": {
-            "Phiên bản": "Gimbal P01 để bàn"
-          },
-          "imageUrl": "/api/catalog-images/87211d88-c1d7-472a-9a39-75b0c53ffdaf?v=webp-20261025",
           "priceVnd": 550000,
-          "stockQuantity": 1000,
           "originalPriceVnd": 550000,
-          "promotion": null
+          "stockQuantity": 1000,
+          "active": true
         }
       ],
-      "optionGroups": [
+      "active": true
+    },
+    {
+      "id": "014717c7-6b37-4fe2-b0b7-adb21b56ddc8",
+      "slug": "gaeru-p185",
+      "name": "GAERU P185",
+      "category": "gimbal",
+      "tag": "TRIPOD 1.85M",
+      "rating": 4.9,
+      "reviews": 64,
+      "descriptor": "Gậy selfie & Tripod 4 chân kim loại cao 1.85m có remote Bluetooth sạc Type-C",
+      "description": "Gập gọn. Mở thêm góc chụp.\nTừ cầm tay đến đặt máy tự quay. GAERU P185 kết hợp gậy selfie, chân đỡ gập và điều khiển Bluetooth để bạn chủ động bố trí điện thoại.\n\nMột thiết bị. Nhiều cách đặt.\nThu gọn để cầm tay hoặc mở bốn chân để đặt máy. Bắt đầu ở chiều cao thấp, kiểm tra các chân tiếp xúc đều với mặt phẳng rồi mới tăng chiều cao phù hợp.\n\nChọn khung hình theo ý tưởng.\nĐiều chỉnh hướng điện thoại và góc đầu kẹp trước khi ghi hình. Giữ chắc thiết bị khi xoay, siết khớp đúng mức và kiểm tra trọng tâm sau mỗi lần đổi góc.\n\nĐứng vào khung. Bấm từ xa.\nĐiều khiển Bluetooth có thể tháo rời. Ghép nối với điện thoại, mở ứng dụng camera và thử nút chụp trước khi đặt máy xa.\n\nGọn khi cất. Vững khi dùng.\nTháo điện thoại trước khi gập chân và thu từng đoạn. Khi kéo cao, tránh gió mạnh, mặt nghiêng và lối đi.",
+      "priceVnd": 450000,
+      "originalPriceVnd": 450000,
+      "imageUrl": "assets/products/p185-cutout-1cc9dfde9fa3.webp",
+      "gallery": [
+        "assets/products/p185-cutout-1cc9dfde9fa3.webp",
+        "assets/products/p185-cutout-display-800-5b0e6749a14c.webp",
+        "assets/products/p185-cutout-display-480-0992b5f5e3ed.webp"
+      ],
+      "highlights": [
         {
-          "name": "Phiên bản",
-          "values": [
-            "Gimbal GAERU P01 + Chân 2m1",
-            "Gimbal P01 để bàn"
-          ]
+          "title": "4 chân gập kim loại",
+          "desc": "Bố trí trên mặt phẳng siêu vững chắc, chống rung"
+        },
+        {
+          "title": "Remote Bluetooth rời",
+          "desc": "Điều khiển chụp và quay từ xa, pin sạc Type-C 55 mAh"
+        },
+        {
+          "title": "Chiều dài 29.5 - 180 cm",
+          "desc": "Mở rộng góc chụp bao quát hoặc thu gọn bỏ túi"
+        },
+        {
+          "title": "Khớp ren 1/4 tiêu chuẩn",
+          "desc": "Tương thích máy ảnh, đèn trợ sáng, điện thoại"
         }
-      ]
+      ],
+      "specs": {
+        "Chiều dài thu / kéo": "29,5 – 180 cm (1.85 mét)",
+        "Trọng lượng": "423 g",
+        "Điều khiển từ xa": "Bluetooth không dây, pin tích hợp 55 mAh; giao diện sạc Type-C",
+        "Khớp gắn": "Ren 1/4 inch tiêu chuẩn quốc tế",
+        "Chất liệu khung": "Hợp kim nhôm + nhựa ABS chịu lực cao cấp",
+        "Đầu kẹp điện thoại": "Xoay ngang dọc 360°, ngửa gập 270°"
+      },
+      "boxContents": [
+        "1 Gậy chụp ảnh & Tripod 4 chân GAERU P185",
+        "1 Remote Bluetooth tháo rời sạc Type-C",
+        "1 Cáp sạc Type-C",
+        "1 Sổ hướng dẫn sử dụng GAERU"
+      ],
+      "variants": [
+        {
+          "id": "28734335-e87e-4adb-981f-a8ecac025116",
+          "sku": "P185",
+          "name": "Phiên bản tiêu chuẩn",
+          "priceVnd": 450000,
+          "originalPriceVnd": 450000,
+          "stockQuantity": 999,
+          "active": true
+        }
+      ],
+      "active": true
     },
     {
       "id": "7e63f3d3-22ea-44bb-950c-26dbc33052e7",
@@ -399,40 +404,72 @@
       "tag": "FLAGSHIP 2026",
       "rating": 4.9,
       "reviews": 128,
-      "descriptor": "Mic không dây chuyên nghiệp kết nối đa thiết bị",
-      "description": "Ghi trọn câu chuyện.\nBộ micro không dây dành cho những ý tưởng cần nhiều cách kết nối. Thu giọng nói, ghi hình và mang theo bộ thiết bị trong hộp sạc gọn gàng.\n\nNhiều thiết bị. Nhiều cách sáng tạo.\nKết nối với điện thoại, máy tính, máy ảnh hoặc máy quay bằng dây và cổng phù hợp. Hỗ trợ nhạc nền qua Bluetooth và hiệu ứng âm thanh theo hướng dẫn sử dụng. Kiểm tra khả năng tương thích với thiết bị trước khi dùng.\n\nGọn một bộ. Sẵn sàng cho buổi quay.\nHai micro cài áo, một bộ thu và hộp sạc. Chuẩn bị dây kết nối, bông lọc và phụ kiện theo bộ thực nhận; ghi thử để kiểm tra giọng nói và nguồn âm trước khi bắt đầu.\n\nThông số và thông tin sản phẩm\nMic không dây chuyên nghiệp GAERU G1 ULTRA\nkết nối đa thiết bị, tích hợp đa chức năng, kết nối bluetooth phát nhạc nền, Karaoke\nMic không dây GAERU G1 ULTRA là một sản phẩm cực kỳ chuyên nghiệp cho những người yêu thích âm nhạc và muốn thu âm tốt hơn. Với tính linh hoạt cao trong việc kết nối đa thiết bị, GAERU G1 ULTRA có thể được sử dụng với camera, điện thoại di động và máy tính xách tay, PC. Với khả năng tương thích vượt trội của mình, Mic không dây này sẽ giúp bạn thu âm một cách rõ ràng và trung thực hơn. Thêm vào đó với khả năng phát nhạc qua Bluetooth của Mic này cũng giúp bạn có được phong cách thu âm riêng biệt cho riêng mình. Kiểm tra âm thanh trực tiếp thông qua tai nghe kiểm âm. GAERU G1 ULTRA được thiết kế để mang lại cho người sử dụng trải nghiệm thu ân chất lượng cao trong khi tiện lợi trong việc mang đi xa\nBộ sản phẩm bao gồm: 1 hộp sạc, 1 đầu thu, 2 mic cài áo, 1 dây sạc, 1 dây 3.5, 1 dây type C sang type C, 1 dây type C sang lightning, 2 đầu bông lọc, 1 tai nghe kiểm âm.\nThông số kỹ thuật\nPhong cách: Tai nghe Microphone, Microphone cầm tay, Lavalier Microphone, Wireless microphone\nSử dụng: Máy tính Microphone, Hội nghị Microphone, Karaoke Microphone, Nhà Thờ, Sân Khấu Biểu Diễn, INTERVIEW, Bài Diễn Văn, Điện Thoại thông minh, Ghi Âm, Giảng Dạy, Giao Tiếp, Phát Sóng Trực Tiếp\nChức năng: Lọc Giảm Tiếng ồn, Soud card level reverb effects, Karaoke\nLoại: Đa hướng\nGiao diện sạc: Type C\nDải tần số: 2.4ghz\nĐầu vào định mức: 1A\nKhoảng cách truyền: tối đa ~30m\nThời gian sạc: khoảng 1-2 giờ\nTỷ lệ tín hiệu/ tạp âm: 90db\nThời lượng sử dụng: 5-8 giờ\nDung lượng pin: 300mA/ 3.7v\nNhiệt độ sử dụng: -10C ~ 60C\nDải tần đáp ứng: 30hz-18khz\nNhiệt độ bảo quản: -20C~60C\n( Thiết kế có thể thay đổi mà không có thông báo trước)",
-      "imageUrl": "https://gaeru.com/api/catalog-images/c505fa34-697e-4c8b-90aa-6060e0f4a308?v=webp-20261025",
-      "imageAlt": "GAERU G1 ULTRA với hộp sạc, micro cài áo và bộ thu",
-      "gallery": [
-        "https://gaeru.com/api/catalog-images/c505fa34-697e-4c8b-90aa-6060e0f4a308?v=webp-20261025",
-        "assets/products/g1-ultra-clean.webp",
-        "https://gaeru.com/api/catalog-images/9875bb5d-ee7e-45a4-8714-04f46522f655?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/c881803f-db61-45b2-a999-c01005aa1da8?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/f023c2bf-f6aa-4630-9d5d-560f4a545348?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/a08d5039-a229-417a-a797-2154436a7e19?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/5ac5679e-9085-4ae8-bd18-cc6174123c5a?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/f2f2750f-1d0c-4675-b5b3-d0c6ef61e536?v=webp-20261025",
-        "https://gaeru.com/api/catalog-images/7556753e-c545-48ca-88b1-bb0f68176747?v=webp-20261025"
-      ],
-      "active": true,
+      "descriptor": "Mic không dây chuyên nghiệp đa thiết bị, hộp sạc thông minh, tai nghe kiểm âm",
+      "description": "Thêm kết nối. Mở rộng cách kể.\nBộ micro không dây cho những ý tưởng cần nhiều đường âm thanh. Hai micro cài áo, đầu thu và hộp sạc giúp bạn chuẩn bị cho cuộc trò chuyện trước máy quay.\n\nĐiện thoại. Máy ảnh. Máy tính.\nChọn đường kết nối phù hợp với thiết bị ghi. Đối chiếu đầu vào USB/Type-C, Lightning hoặc cổng mic của máy ảnh và loại dây đi kèm; thử trong ứng dụng thực tế trước khi ghi nội dung chính.\n\nNghe trước khi bấm quay.\nNếu bộ có tai nghe kiểm âm, dùng để kiểm tra tín hiệu ở đầu thu. Sau đó vẫn cần nghe lại file trên thiết bị ghi để chắc chắn ứng dụng đã chọn đúng nguồn âm và mức thu.\n\nHai giọng nói, cùng một câu chuyện.\nThử từng bộ phát rồi thu cả hai cùng lúc. Gắn micro tránh cọ áo, dùng bông lọc phù hợp khi có gió và theo dõi nguồn điện trước buổi phỏng vấn hoặc livestream.\n\nNhạc nền theo cách của bạn.\nBluetooth hỗ trợ đưa nhạc nền vào bộ theo hướng dẫn. Cân bằng âm nhạc với giọng nói, kiểm tra hiệu ứng hoặc reverb đang bật.\n\nMột bộ gọn. Chuẩn bị đầy đủ.\nĐối chiếu hộp sạc, đầu thu, hai micro, dây và phụ kiện với phiên bản thực nhận.",
       "priceVnd": 2100000,
       "originalPriceVnd": 2100000,
+      "imageUrl": "assets/products/g1-ultra-clean.webp",
+      "gallery": [
+        "assets/products/g1-ultra-clean.webp",
+        "assets/products/g1-ultra-874bf1d3db77.webp",
+        "assets/products/g1-ultra-874bf1d3db77-display-800-a5a917ef6f29.webp",
+        "assets/products/g1-ultra-874bf1d3db77-display-480-19288308445b.webp"
+      ],
+      "highlights": [
+        {
+          "title": "2 micro cài áo",
+          "desc": "Bộ 2 micro ghi âm phỏng vấn 2 người độc lập"
+        },
+        {
+          "title": "Đa thiết bị kết nối",
+          "desc": "Tương thích máy ảnh DSLR, iPhone, Android, PC"
+        },
+        {
+          "title": "Hộp sạc thông minh",
+          "desc": "Bảo quản và sạc đồng thời toàn bộ micro và đầu thu"
+        },
+        {
+          "title": "Kiểm âm & Nhạc nền",
+          "desc": "Cổng tai nghe kiểm âm 3.5mm + kết nối Bluetooth phát nhạc"
+        }
+      ],
+      "specs": {
+        "Hệ thống": "Hai micro cài áo, một đầu thu đa năng và một hộp sạc",
+        "Kết nối thiết bị": "Đa thiết bị qua dây cáp chuyên dụng (Type-C, Lightning, Jack 3.5mm)",
+        "Khoảng cách truyền tín hiệu": "Tối đa lên đến 30 mét (môi trường mở)",
+        "Chức năng âm thanh": "Lọc giảm tiếng ồn DSP, Sound card reverb effects, hát Karaoke",
+        "Kiểm âm thời gian thực": "Cổng tai nghe 3.5mm kiểm âm trực tiếp trên đầu thu",
+        "Dải tần đáp ứng": "30 Hz - 18 kHz",
+        "Tỷ lệ tín hiệu / tạp âm (SNR)": "≥ 90 dB",
+        "Dung lượng pin": "300 mAh / 3.7V",
+        "Thời lượng sử dụng": "5 - 8 giờ liên tục",
+        "Cổng sạc": "Type-C 5V 1A"
+      },
+      "boxContents": [
+        "1 Hộp sạc thông minh GAERU G1 ULTRA",
+        "1 Đầu thu tín hiệu đa năng có màn hình LED",
+        "2 Micro cài áo không dây GAERU G1 ULTRA",
+        "1 Cáp âm thanh 3.5mm TRS (kết nối máy ảnh chuyên nghiệp)",
+        "1 Cáp Type-C sang Type-C (Android / iPhone 15+)",
+        "1 Cáp Type-C sang Lightning (iPhone)",
+        "1 Cáp sạc Type-C",
+        "2 Đầu bông lọc gió lông xù cao cấp",
+        "1 Tai nghe kiểm âm âm thanh thời gian thực",
+        "1 Sổ hướng dẫn sử dụng GAERU G1 ULTRA"
+      ],
       "variants": [
         {
           "id": "fb079d17-b0fc-438e-bd8b-07c25695d950",
           "sku": "G1",
           "name": "GAERU G1 ULTRA",
-          "active": true,
-          "options": {},
-          "imageUrl": "",
           "priceVnd": 2100000,
-          "stockQuantity": 0,
           "originalPriceVnd": 2100000,
-          "promotion": null
+          "stockQuantity": 0,
+          "active": true
         }
       ],
-      "optionGroups": []
+      "active": true
     }
   ],
-  "syncedAt": "2026-11-05T09:12:42.843Z"
+  "syncedAt": "2026-11-05T09:28:05.126Z"
 }

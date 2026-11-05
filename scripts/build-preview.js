@@ -30,19 +30,32 @@ function fileToBase64(relPath, mimeType) {
 
 const logoWebpBase64 = fileToBase64('assets/brand/gaeru-logo.webp', 'image/webp');
 const logoPngBase64 = fileToBase64('assets/brand/gaeru-logo.png', 'image/png');
-const g1UltraBase64 = fileToBase64('assets/products/g1-ultra-clean.webp', 'image/webp');
+const m3HomeCutoutBase64 = fileToBase64('assets/products/m3-home-cutout.webp', 'image/webp');
 const m3Base64 = fileToBase64('assets/products/m3.webp', 'image/webp');
 const k9Base64 = fileToBase64('assets/products/k9.webp', 'image/webp');
 const p01Base64 = fileToBase64('assets/products/p01.webp', 'image/webp');
+const p185CutoutBase64 = fileToBase64('assets/products/p185-cutout-1cc9dfde9fa3.webp', 'image/webp');
+const g1UltraCleanBase64 = fileToBase64('assets/products/g1-ultra-clean.webp', 'image/webp');
+const g1UltraBase64 = fileToBase64('assets/products/g1-ultra-874bf1d3db77.webp', 'image/webp');
 
 const bundledImages = {
   'assets/brand/gaeru-logo.webp': logoWebpBase64,
   'assets/brand/gaeru-logo.png': logoPngBase64,
-  'assets/products/g1-ultra-clean.webp': g1UltraBase64,
+  'assets/products/m3-home-cutout.webp': m3HomeCutoutBase64,
   'assets/products/m3.webp': m3Base64,
   'assets/products/k9.webp': k9Base64,
-  'assets/products/p01.webp': p01Base64
+  'assets/products/p01.webp': p01Base64,
+  'assets/products/p185-cutout-1cc9dfde9fa3.webp': p185CutoutBase64,
+  'assets/products/g1-ultra-clean.webp': g1UltraCleanBase64,
+  'assets/products/g1-ultra-874bf1d3db77.webp': g1UltraBase64
 };
+
+// Đóng gói thêm các hình ảnh chi tiết M3
+for (const n of [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12]) {
+  const rel = `assets/products/m3-description/${n}.webp`;
+  const b64 = fileToBase64(rel, 'image/webp');
+  if (b64) bundledImages[rel] = b64;
+}
 
 let productsJson = '[]';
 try {
@@ -74,13 +87,16 @@ let innerAppHtml = indexHtml;
 
 // Thay thế trực tiếp các đường dẫn ảnh tĩnh trong HTML bằng Base64 Data URI
 if (logoWebpBase64) {
-  innerAppHtml = innerAppHtml.replace('src="assets/brand/gaeru-logo.webp"', `src="${logoWebpBase64}"`);
+  innerAppHtml = innerAppHtml.split('src="assets/brand/gaeru-logo.webp"').join(`src="${logoWebpBase64}"`);
 }
 if (logoPngBase64) {
-  innerAppHtml = innerAppHtml.replace("this.src='assets/brand/gaeru-logo.png'", `this.src='${logoPngBase64}'`);
+  innerAppHtml = innerAppHtml.split("this.src='assets/brand/gaeru-logo.png'").join(`this.src='${logoPngBase64}'`);
 }
-if (g1UltraBase64) {
-  innerAppHtml = innerAppHtml.replace('src="assets/products/g1-ultra-clean.webp"', `src="${g1UltraBase64}"`);
+if (g1UltraCleanBase64) {
+  innerAppHtml = innerAppHtml.split('src="assets/products/g1-ultra-clean.webp"').join(`src="${g1UltraCleanBase64}"`);
+}
+if (m3HomeCutoutBase64) {
+  innerAppHtml = innerAppHtml.split('src="assets/products/m3-home-cutout.webp"').join(`src="${m3HomeCutoutBase64}"`);
 }
 
 // 2. Nhúng trực tiếp toàn bộ CSS vào <style>
