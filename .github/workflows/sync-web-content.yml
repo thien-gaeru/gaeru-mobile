@@ -7,15 +7,21 @@ on:
     types: [gaeru_web_updated] # Webhook kích hoạt ngay khi web gaeru.com có commit mới
   workflow_dispatch: # Cho phép kích hoạt thủ công từ giao diện GitHub
 
+permissions:
+  contents: write
+
 jobs:
   sync-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout GAERU Mobile Repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Checkout GAERU Web Source Repo
         uses: actions/checkout@v4
@@ -40,13 +46,19 @@ jobs:
           npm run build
           npm run cap:sync
 
-      - name: Commit and Push Changes If Updated
+      - name: Cleanup Web Source Directory Before Commit
         run: |
-          git config user.name "GAERU Bot"
-          git config user.email "346227991+thien-gaeru@users.noreply.github.com"
+          rm -rf gaeru-web-source
+
+      - name: Commit and Push Changes If Updated
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git status
           if [ -n "$(git status --porcelain)" ]; then
-            git add .
+            git add -A
             git commit -m "chore(sync): tu dong dong bo noi dung & asset moi nhat tu gaeru.com [skip ci]"
             git push origin main
           else

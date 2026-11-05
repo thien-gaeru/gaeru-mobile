@@ -4,6 +4,9 @@ dist/
 Thumbs.db
 *.log
 
+# Nguồn web tạm thời khi đồng bộ GitHub Actions
+gaeru-web-source/
+
 # Keystore & Secrets (Bảo mật - Không commit khoá ký)
 *.keystore
 *.jks
