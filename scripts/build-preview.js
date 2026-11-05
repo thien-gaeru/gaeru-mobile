@@ -139,7 +139,7 @@ const previewSimulatorHtml = `<!DOCTYPE html>
 
       <!-- Màn hình cảm ứng: Iframe nhúng tự lực ĐÃ BỎ SANDBOX ĐỂ TƯƠNG TÁC 100% -->
       <div class="relative w-full h-full rounded-[42px] overflow-hidden bg-[#0b0f19] z-10 flex flex-col">
-        <iframe id="phone-frame" srcdoc="${escapeHtmlAttr(innerAppHtml)}" class="w-full h-full border-0 bg-[#0b0f19]" allow="camera; microphone; geolocation; payment"></iframe>
+        <iframe id="phone-frame" class="w-full h-full border-0 bg-[#0b0f19]" allow="camera; microphone; geolocation; payment"></iframe>
       </div>
 
       <!-- Vạch Home Indicator dưới cùng -->
@@ -265,8 +265,34 @@ const previewSimulatorHtml = `<!DOCTYPE html>
     const INLINED_APP_HTML = ${JSON.stringify(innerAppHtml).replace(/</g, '\\u003c')};
 
     const frame = document.getElementById('phone-frame');
-    if (frame && (!frame.srcdoc || frame.srcdoc === 'about:blank')) {
-      frame.srcdoc = INLINED_APP_HTML;
+
+    function renderIframeApp() {
+      if (!frame) return;
+      try {
+        frame.srcdoc = INLINED_APP_HTML;
+      } catch (e) {
+        console.warn('srcdoc assign error:', e);
+      }
+
+      // Đảm bảo tuyệt đối không trắng màn hình: Fallback sau 200ms
+      setTimeout(() => {
+        try {
+          const doc = frame.contentDocument || (frame.contentWindow ? frame.contentWindow.document : null);
+          if (doc && (!doc.body || !doc.body.children || doc.body.children.length === 0)) {
+            doc.open();
+            doc.write(INLINED_APP_HTML);
+            doc.close();
+          }
+        } catch (err) {
+          console.warn('Fallback render error:', err);
+        }
+      }, 200);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderIframeApp);
+    } else {
+      renderIframeApp();
     }
 
     function getFrameWin() {

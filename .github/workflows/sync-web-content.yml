@@ -23,10 +23,10 @@ jobs:
           repository: 'thien-gaeru/gaeru'
           path: 'gaeru-web-source'
 
-      - name: Setup Node.js (Yêu cầu Node 22+ cho Capacitor v8)
+      - name: Setup Node.js (Dong bo Node.js 24.22.2)
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24.22.2'
           cache: 'npm'
 
       - name: Install Mobile Dependencies
