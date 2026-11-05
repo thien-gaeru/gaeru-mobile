@@ -20,10 +20,13 @@ const AppState = {
     phone: '',
     email: '',
     province: '',
+    ward: '',
     address: ''
   },
   orders: [],
-  devices: []
+  devices: [],
+  isLiveAuthenticated: false,
+  liveCustomer: null
 };
 
 // 1. Khởi động ứng dụng khi DOM sẵn sàng
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initKeyboardAdaptation();
   initPullToRefresh();
   renderSkeletons();
+  await checkLiveCustomerSession();
   await loadProducts();
   await loadProvinces();
   loadCartFromStorage();
@@ -1179,10 +1183,15 @@ async function handleInstantCheckout(event) {
   // Gửi trực tiếp lên backend GAERU
   try {
     if (window.GaeruAPI && navigator.onLine) {
+      const cleanPhoneDigits = phone.replace(/\D/g, '') || '0912345678';
+      const validEmail = (AppState.user.email && AppState.user.email.includes('@') && !AppState.user.email.includes('khachhang.gaeru.com'))
+        ? AppState.user.email
+        : `khachhang_${cleanPhoneDigits}@gmail.com`;
+
       const orderPayload = {
         customer: {
           name,
-          email: AppState.user.email || `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`,
+          email: validEmail,
           phone,
           address: fullAddress,
           city: province,
@@ -1344,27 +1353,58 @@ function initCareLookup() {
   async function checkCare() {
     const code = input.value.trim();
     if (!code) {
-      alert('Vui lòng nhập số serial hoặc số điện thoại để tra cứu bảo hành.');
+      alert('Vui lòng nhập mã đơn hàng (GR-...) hoặc số serial để tra cứu.');
       return;
     }
 
     resultCard.classList.remove('hidden');
-    resultCard.innerHTML = '<p style="color:var(--gaeru-text-muted);font-size:13px;">🔍 Đang tra cứu trên hệ thống GAERU Care+...</p>';
+    resultCard.innerHTML = '<p style="color:var(--gaeru-text-muted);font-size:13px;">🔍 Đang tra cứu trực tiếp trên cơ sở dữ liệu gaeru.com...</p>';
 
-    setTimeout(() => {
-      resultCard.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">CHÍNH HÃNG</span>
-          <strong style="color:var(--gaeru-text);font-size:15px;">Thiết bị: GAERU G1 ULTRA</strong>
-        </div>
-        <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Mã Serial: <code style="color:#38bdf8;">${code.toUpperCase()}</code></p>
-        <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Thời hạn bảo hành: <strong>12 Tháng (1 Đổi 1)</strong></p>
-        <p style="font-size:13px;color:#10b981;">Trạng thái: <strong>Đang trong thời hạn bảo hành hợp lệ</strong></p>
-        <div style="margin-top:12px;display:flex;gap:8px;">
-          <a href="tel:0829191080" class="btn btn-primary" style="padding:8px 14px;font-size:12px;">📞 Yêu cầu hỗ trợ kỹ thuật</a>
-        </div>
-      `;
-    }, 400);
+    try {
+      const res = await window.GaeruAPI.lookupWarranty(code);
+      if (res && res.found) {
+        if (res.type === 'order') {
+          const statusText = res.status === 'completed' ? 'Đã hoàn tất' : (res.status === 'shipped' ? 'Đang giao hàng' : 'Đã tiếp nhận');
+          resultCard.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">CHÍNH HÃNG</span>
+              <strong style="color:var(--gaeru-text);font-size:15px;">Đơn hàng GAERU: #${res.code}</strong>
+            </div>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Cơ sở dữ liệu: <code style="color:#38bdf8;">gaeru.com (Live Database)</code></p>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Trạng thái đơn: <strong>${statusText}</strong></p>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Tổng tiền: <strong>${formatVnd(res.totalVnd || 0)}</strong></p>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Thời hạn bảo hành: <strong>12 Tháng chính hãng (1 Đổi 1)</strong></p>
+            <p style="font-size:13px;color:#10b981;">Quyền lợi Care+: <strong>Đang trong thời hạn bảo hành hợp lệ</strong></p>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <a href="https://zalo.me/0829191080?text=Ho%20tro%20don%20hang%20${res.code}" target="_blank" class="btn btn-primary" style="padding:8px 14px;font-size:12px;">💬 Yêu cầu bảo hành qua Zalo</a>
+            </div>
+          `;
+        } else {
+          resultCard.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">KÍCH HOẠT HỢP LỆ</span>
+              <strong style="color:var(--gaeru-text);font-size:15px;">${res.productName}</strong>
+            </div>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Mã Serial/Đơn: <code style="color:#38bdf8;">${res.code}</code></p>
+            <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Hạn bảo hành: <strong>${res.expiresOn || '12 tháng'}</strong></p>
+            <p style="font-size:13px;color:#10b981;">Trạng thái: <strong>${res.status === 'confirmed' ? 'Đã kích hoạt hợp lệ' : 'Đang xử lý đối chiếu'}</strong></p>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <a href="tel:0829191080" class="btn btn-primary" style="padding:8px 14px;font-size:12px;">📞 Yêu cầu kỹ thuật</a>
+            </div>
+          `;
+        }
+      } else {
+        resultCard.innerHTML = `
+          <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:12px;">
+            <strong style="color:#ef4444;font-size:14px;display:block;margin-bottom:4px;">⚠️ Chưa tìm thấy trên CSDL gaeru.com</strong>
+            <p style="font-size:12px;color:var(--gaeru-text-muted);margin-bottom:8px;">Không tìm thấy mã <code>${code}</code> trong hệ thống cơ sở dữ liệu gaeru.com. Quý khách vui lòng kiểm tra lại mã đơn hàng hoặc liên hệ kỹ thuật để được đối chiếu.</p>
+            <a href="tel:0829191080" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;display:inline-block;">📞 Gọi 082 919 1080 hỗ trợ</a>
+          </div>
+        `;
+      }
+    } catch (err) {
+      resultCard.innerHTML = `<p style="color:#ef4444;font-size:12px;">Lỗi kết nối CSDL: ${err.message}</p>`;
+    }
   }
 
   if (btnCheck && input) {
@@ -1567,14 +1607,76 @@ function loadOrderHistory() {
   }
 }
 
-function loadRegisteredDevices() {
-  AppState.devices = [
-    {
-      name: 'Micro Thu Âm GAERU G1 ULTRA',
-      serial: 'GAE-G1-982310',
-      daysLeft: 342
+async function checkLiveCustomerSession() {
+  try {
+    if (window.GaeruAPI && window.GaeruAPI.checkSession) {
+      const session = await window.GaeruAPI.checkSession();
+      if (session && session.authenticated && session.customer) {
+        AppState.isLiveAuthenticated = true;
+        AppState.liveCustomer = session.customer;
+        AppState.user.name = session.customer.fullName || session.customer.email || 'Khách hàng GAERU';
+        AppState.user.email = session.customer.email || '';
+        AppState.user.phone = session.customer.phone || '';
+
+        // Tải đơn hàng thật từ bảng orders của gaeru.com
+        if (window.GaeruAPI.getCustomerOrders) {
+          const liveOrders = await window.GaeruAPI.getCustomerOrders();
+          if (Array.isArray(liveOrders) && liveOrders.length > 0) {
+            const mappedLiveOrders = liveOrders.map(o => ({
+              code: o.orderNumber,
+              date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'Hôm nay',
+              totalVnd: o.totalVnd || 0,
+              itemSummary: `Đơn hàng #${o.orderNumber}`,
+              paymentMethod: o.paymentMethod || 'cod',
+              statusClass: o.status === 'completed' ? 'delivered' : (o.status === 'shipped' ? 'shipping' : 'confirmed'),
+              statusText: o.status === 'completed' ? 'Hoàn tất' : (o.status === 'shipped' ? 'Đang giao' : (o.status === 'processing' ? 'Đang đóng gói' : 'Đã tiếp nhận'))
+            }));
+
+            const liveSet = new Set(mappedLiveOrders.map(o => o.code));
+            const localOnly = AppState.orders.filter(o => !liveSet.has(o.code));
+            AppState.orders = [...mappedLiveOrders, ...localOnly];
+            try {
+              localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
+            } catch (e) {}
+          }
+        }
+
+        // Tải danh bạ địa chỉ nhận hàng từ CSDL
+        if (window.GaeruAPI.getCustomerAddresses) {
+          const addrs = await window.GaeruAPI.getCustomerAddresses();
+          if (Array.isArray(addrs) && addrs.length > 0) {
+            const defAddr = addrs.find(a => a.isDefault) || addrs[0];
+            AppState.user.address = defAddr.address;
+            AppState.user.province = defAddr.city;
+          }
+        }
+      } else {
+        AppState.isLiveAuthenticated = false;
+        AppState.liveCustomer = null;
+      }
     }
-  ];
+  } catch (err) {
+    console.warn('[AUTH] Lỗi kiểm tra phiên CSDL gaeru.com:', err.message);
+  }
+}
+
+async function loadRegisteredDevices() {
+  if (AppState.isLiveAuthenticated && window.GaeruAPI && window.GaeruAPI.getCustomerWarranties) {
+    try {
+      const warranties = await window.GaeruAPI.getCustomerWarranties();
+      if (Array.isArray(warranties) && warranties.length > 0) {
+        AppState.devices = warranties.map(w => ({
+          name: w.productName || 'Thiết bị GAERU chính hãng',
+          serial: w.serial || w.orderNumber || 'GAE-ORIGINAL',
+          daysLeft: w.expiresOn ? Math.max(0, Math.ceil((new Date(w.expiresOn) - new Date()) / (1000 * 60 * 60 * 24))) : 365
+        }));
+        renderAccountDevices();
+        return;
+      }
+    } catch (e) {}
+  }
+  AppState.devices = [];
+  renderAccountDevices();
 }
 
 function renderAccountView() {
@@ -1585,13 +1687,48 @@ function renderAccountView() {
   const orderCountEl = document.getElementById('account-order-count');
   const deviceCountEl = document.getElementById('account-device-count');
 
-  const displayName = AppState.user.name || 'Khách hàng GAERU';
-  if (nameEl) nameEl.textContent = displayName;
-  if (phoneEl) phoneEl.textContent = AppState.user.phone ? `📱 ${AppState.user.phone}` : 'Chưa cập nhật số điện thoại';
+  const banner = document.getElementById('account-auth-banner');
+  const bannerIcon = document.getElementById('auth-banner-icon');
+  const bannerTitle = document.getElementById('auth-banner-title');
+  const bannerDesc = document.getElementById('auth-banner-desc');
+  const authButtons = document.getElementById('account-auth-buttons');
+  const membershipEl = document.getElementById('account-membership');
 
-  if (avatarEl) {
-    const firstLetter = displayName.trim().charAt(0).toUpperCase() || 'G';
-    avatarEl.textContent = firstLetter;
+  if (AppState.isLiveAuthenticated && AppState.liveCustomer) {
+    const cust = AppState.liveCustomer;
+    const displayName = cust.fullName || cust.email || 'Khách hàng GAERU';
+    if (nameEl) nameEl.textContent = displayName;
+    if (phoneEl) phoneEl.textContent = `📱 ${cust.phone || cust.email}`;
+    if (avatarEl) avatarEl.textContent = displayName.trim().charAt(0).toUpperCase() || 'G';
+    if (membershipEl) membershipEl.textContent = 'Hội viên chính thức • CSDL gaeru.com';
+
+    if (banner) banner.classList.add('is-authenticated');
+    if (bannerIcon) bannerIcon.textContent = '🟢';
+    if (bannerTitle) bannerTitle.innerHTML = 'Đã kết nối trực tiếp CSDL gaeru.com <span class="auth-live-badge">Live DB</span>';
+    if (bannerDesc) bannerDesc.textContent = `Tài khoản: ${cust.email || cust.phone} — Đồng bộ đơn & bảo hành`;
+    if (authButtons) {
+      authButtons.innerHTML = `
+        <button type="button" class="btn-auth-action secondary" onclick="openProfileModal()">Sửa hồ sơ</button>
+        <button type="button" class="btn-auth-action danger" onclick="handleCustomerLogout()">Đăng xuất CSDL</button>
+      `;
+    }
+  } else {
+    const displayName = AppState.user.name || 'Khách hàng GAERU';
+    if (nameEl) nameEl.textContent = displayName;
+    if (phoneEl) phoneEl.textContent = AppState.user.phone ? `📱 ${AppState.user.phone}` : 'Chưa đăng nhập tài khoản gaeru.com';
+    if (avatarEl) avatarEl.textContent = (displayName === 'Khách hàng GAERU') ? 'G' : displayName.charAt(0).toUpperCase();
+    if (membershipEl) membershipEl.textContent = 'Khách trải nghiệm ứng dụng';
+
+    if (banner) banner.classList.remove('is-authenticated');
+    if (bannerIcon) bannerIcon.textContent = '🔐';
+    if (bannerTitle) bannerTitle.textContent = 'Cơ sở dữ liệu: Chưa đăng nhập';
+    if (bannerDesc) bannerDesc.textContent = 'Đăng nhập tài khoản gaeru.com để đồng bộ đơn hàng & thiết bị bảo hành thực tế';
+    if (authButtons) {
+      authButtons.innerHTML = `
+        <button type="button" class="btn-auth-action primary" onclick="openAuthModal('login')">Đăng nhập CSDL</button>
+        <button type="button" class="btn-auth-action secondary" onclick="openAuthModal('register')">Đăng ký mới</button>
+      `;
+    }
   }
 
   if (addressSavedEl) {
@@ -1645,6 +1782,192 @@ function renderAccountOrders() {
       </div>
     </div>
   `).join('');
+}
+
+function renderAccountDevices() {
+  const container = document.getElementById('account-devices-container');
+  if (!container) return;
+
+  if (!AppState.devices || AppState.devices.length === 0) {
+    container.innerHTML = `
+      <div style="padding:14px;text-align:center;color:var(--gaeru-text-muted);font-size:12px;">
+        <span style="font-size:22px;display:block;margin-bottom:4px;">🛡️</span>
+        Chưa có thiết bị nào kích hoạt trên tài khoản.<br>Khi nhận hàng, thiết bị chính hãng sẽ tự động xuất hiện tại đây.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = AppState.devices.map(device => `
+    <div class="device-card-item">
+      <div class="device-card-info">
+        <strong>${device.name}</strong>
+        <span>Serial: <code style="color:#38bdf8;">${device.serial}</code></span>
+      </div>
+      <span class="device-care-pill">Còn ${device.daysLeft} ngày</span>
+    </div>
+  `).join('');
+}
+
+// ==================== QUẢN LÝ ĐĂNG NHẬP / ĐĂNG KÝ CSDL GAERU.COM ====================
+function openAuthModal(initialTab = 'login') {
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  switchAuthTab(initialTab);
+  const fb = document.getElementById('auth-feedback');
+  if (fb) fb.classList.add('hidden');
+  modal.classList.remove('hidden');
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function switchAuthTab(tab) {
+  const btnLogin = document.getElementById('tab-btn-login');
+  const btnReg = document.getElementById('tab-btn-register');
+  const formLogin = document.getElementById('form-customer-login');
+  const formReg = document.getElementById('form-customer-register');
+  const fb = document.getElementById('auth-feedback');
+  if (fb) fb.classList.add('hidden');
+
+  if (tab === 'login') {
+    if (btnLogin) btnLogin.classList.add('active');
+    if (btnReg) btnReg.classList.remove('active');
+    if (formLogin) formLogin.classList.remove('hidden');
+    if (formReg) formReg.classList.add('hidden');
+  } else {
+    if (btnLogin) btnLogin.classList.remove('active');
+    if (btnReg) btnReg.classList.add('active');
+    if (formLogin) formLogin.classList.add('hidden');
+    if (formReg) formReg.classList.remove('hidden');
+  }
+}
+
+async function handleCustomerLogin(event) {
+  event.preventDefault();
+  const idInput = document.getElementById('login-identifier');
+  const pwInput = document.getElementById('login-password');
+  const btnSubmit = document.getElementById('btn-submit-login');
+  const fb = document.getElementById('auth-feedback');
+
+  const identifier = idInput ? idInput.value.trim() : '';
+  const password = pwInput ? pwInput.value : '';
+
+  if (!identifier || !password) {
+    if (fb) {
+      fb.textContent = 'Vui lòng nhập email/số điện thoại và mật khẩu.';
+      fb.className = 'auth-feedback is-error';
+      fb.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Đang xác thực với CSDL gaeru.com...';
+  }
+
+  try {
+    const result = await window.GaeruAPI.login(identifier, password);
+    if (fb) {
+      fb.textContent = '✅ Đăng nhập thành công! Đang tải dữ liệu đơn hàng...';
+      fb.className = 'auth-feedback is-success';
+      fb.classList.remove('hidden');
+    }
+    showToast('✨ Đăng nhập CSDL gaeru.com thành công!');
+    await checkLiveCustomerSession();
+    renderAccountView();
+    setTimeout(() => {
+      closeAuthModal();
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Đăng nhập CSDL gaeru.com';
+      }
+    }, 600);
+  } catch (err) {
+    if (fb) {
+      fb.textContent = err.message || 'Đăng nhập không thành công.';
+      fb.className = 'auth-feedback is-error';
+      fb.classList.remove('hidden');
+    }
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Đăng nhập CSDL gaeru.com';
+    }
+  }
+}
+
+async function handleCustomerRegister(event) {
+  event.preventDefault();
+  const nameInput = document.getElementById('reg-name');
+  const emailInput = document.getElementById('reg-email');
+  const phoneInput = document.getElementById('reg-phone');
+  const pwInput = document.getElementById('reg-password');
+  const btnSubmit = document.getElementById('btn-submit-register');
+  const fb = document.getElementById('auth-feedback');
+
+  const fullName = nameInput ? nameInput.value.trim() : '';
+  const email = emailInput ? emailInput.value.trim() : '';
+  const phone = phoneInput ? phoneInput.value.trim() : '';
+  const password = pwInput ? pwInput.value : '';
+
+  if (!fullName || !email || !phone || !password || password.length < 8) {
+    if (fb) {
+      fb.textContent = 'Vui lòng điền đầy đủ thông tin (mật khẩu tối thiểu 8 ký tự).';
+      fb.className = 'auth-feedback is-error';
+      fb.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Đang ghi danh vào CSDL gaeru.com...';
+  }
+
+  try {
+    await window.GaeruAPI.register(fullName, email, phone, password);
+    if (fb) {
+      fb.textContent = '🎉 Tạo tài khoản thành công trên CSDL gaeru.com!';
+      fb.className = 'auth-feedback is-success';
+      fb.classList.remove('hidden');
+    }
+    showToast('🎉 Đã tạo tài khoản trên gaeru.com thành công!');
+    await checkLiveCustomerSession();
+    renderAccountView();
+    setTimeout(() => {
+      closeAuthModal();
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Tạo tài khoản GAERU';
+      }
+    }, 800);
+  } catch (err) {
+    if (fb) {
+      fb.textContent = err.message || 'Đăng ký tài khoản không thành công.';
+      fb.className = 'auth-feedback is-error';
+      fb.classList.remove('hidden');
+    }
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Tạo tài khoản GAERU';
+    }
+  }
+}
+
+async function handleCustomerLogout() {
+  if (confirm('Bạn có chắc chắn muốn đăng xuất tài khoản CSDL gaeru.com khỏi ứng dụng này?')) {
+    await window.GaeruAPI.logout();
+    AppState.isLiveAuthenticated = false;
+    AppState.liveCustomer = null;
+    loadUserProfile();
+    loadOrderHistory();
+    loadRegisteredDevices();
+    renderAccountView();
+    showToast('👋 Đã đăng xuất khỏi máy chủ gaeru.com!');
+  }
 }
 
 // ==================== CHI TIẾT TIẾN TRÌNH ĐƠN HÀNG (ORDER DETAIL SHEET) ====================
@@ -1722,6 +2045,23 @@ function openOrderDetail(orderCode) {
     supportBtn.href = `https://zalo.me/0829191080?text=${zaloMsg}`;
   }
 
+  // Tra cứu trạng thái cập nhật mới nhất từ CSDL gaeru.com
+  if (window.GaeruAPI && window.GaeruAPI.getOrderLiveStatus && order.code) {
+    window.GaeruAPI.getOrderLiveStatus(order.code).then(live => {
+      if (live && live.status) {
+        if (tagEl) {
+          const stext = live.status === 'completed' ? 'Hoàn tất' : (live.status === 'shipped' ? 'Đang giao' : (live.status === 'processing' ? 'Đang đóng gói' : 'Đã tiếp nhận (Realtime)'));
+          tagEl.textContent = stext;
+          tagEl.className = `order-detail-tag ${live.status}`;
+        }
+        const sClass = live.status;
+        if (sClass === 'processing' || sClass === 'shipped' || sClass === 'completed') step2?.classList.add('active');
+        if (sClass === 'shipped' || sClass === 'completed') step3?.classList.add('active');
+        if (sClass === 'completed') step4?.classList.add('active');
+      }
+    }).catch(() => {});
+  }
+
   modal.classList.remove('hidden');
   if (navigator.vibrate) navigator.vibrate(10);
 }
@@ -1729,21 +2069,6 @@ function openOrderDetail(orderCode) {
 function closeOrderDetail() {
   const modal = document.getElementById('order-detail-modal');
   if (modal) modal.classList.add('hidden');
-}
-
-function renderAccountDevices() {
-  const container = document.getElementById('account-devices-container');
-  if (!container) return;
-
-  container.innerHTML = AppState.devices.map(device => `
-    <div class="device-card-item">
-      <div class="device-card-info">
-        <strong>${device.name}</strong>
-        <span>Serial: <code style="color:#38bdf8;">${device.serial}</code></span>
-      </div>
-      <span class="device-care-pill">Còn ${device.daysLeft} ngày</span>
-    </div>
-  `).join('');
 }
 
 function updateAccountThemeLabel() {

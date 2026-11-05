@@ -37,7 +37,7 @@
           },
           "imageUrl": "",
           "priceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 497,
           "originalPriceVnd": 1200000,
           "promotion": null
         },
@@ -434,5 +434,5 @@
       "optionGroups": []
     }
   ],
-  "syncedAt": "2026-11-05T05:22:39.847Z"
+  "syncedAt": "2026-11-05T06:48:45.612Z"
 }

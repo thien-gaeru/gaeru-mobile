@@ -174,7 +174,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 4. Proxy endpoint: kết nối API và nhúng web thật gaeru.com mà không bị CORS / X-Frame-Options
+  // 4. Preflight OPTIONS request cho API và proxy
+  if (req.method === 'OPTIONS' && (pathname.startsWith('/proxy') || pathname.startsWith('/api/'))) {
+    const clientOrigin = req.headers.origin || `http://${req.headers.host}`;
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': clientOrigin,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD',
+      'Access-Control-Allow-Headers': 'Content-Type, Accept, X-CSRF-Token, Cookie, Authorization',
+      'Access-Control-Max-Age': '86400'
+    });
+    res.end();
+    return;
+  }
+
+  // 5. Proxy endpoint: kết nối trực tiếp API và cơ sở dữ liệu thật gaeru.com
   if (pathname.startsWith('/proxy') || pathname.startsWith('/api/') || pathname.startsWith('/catalog-images/')) {
     const backend = await getBackendUrl();
     const targetPath = pathname.startsWith('/proxy') ? (pathname.replace(/^\/proxy/, '') || '/') : pathname;
@@ -215,11 +229,32 @@ const server = http.createServer(async (req, res) => {
           lowerKey !== 'content-security-policy' &&
           lowerKey !== 'content-security-policy-report-only' &&
           lowerKey !== 'content-encoding' &&
-          lowerKey !== 'content-length'
+          lowerKey !== 'content-length' &&
+          lowerKey !== 'set-cookie'
         ) {
           resHeaders[key] = value;
         }
       });
+
+      // Lấy danh sách Set-Cookie từ backend
+      const rawCookies = typeof response.headers.getSetCookie === 'function'
+        ? response.headers.getSetCookie()
+        : (response.headers.get('set-cookie') ? [response.headers.get('set-cookie')] : []);
+
+      // Bỏ flag 'Secure' nếu client đang gọi qua HTTP để trình duyệt chấp nhận và gửi lại cookie session gaeru.sid
+      const isHttps = req.headers['x-forwarded-proto'] === 'https' || req.socket.encrypted;
+      if (rawCookies.length > 0) {
+        resHeaders['set-cookie'] = rawCookies.map(cookieStr => {
+          return !isHttps ? cookieStr.replace(/;\s*Secure/gi, '') : cookieStr;
+        });
+      }
+
+      // Thêm CORS headers
+      const clientOrigin = req.headers.origin || `http://${req.headers.host}`;
+      resHeaders['Access-Control-Allow-Origin'] = clientOrigin;
+      resHeaders['Access-Control-Allow-Credentials'] = 'true';
+      resHeaders['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD';
+      resHeaders['Access-Control-Allow-Headers'] = 'Content-Type, Accept, X-CSRF-Token, Cookie, Authorization';
 
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('text/html')) {
@@ -242,7 +277,10 @@ const server = http.createServer(async (req, res) => {
         res.end(Buffer.from(arrayBuffer));
       }
     } catch (err) {
-      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.writeHead(502, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': req.headers.origin || '*'
+      });
       res.end(JSON.stringify({ error: 'Không thể kết nối máy chủ backend GAERU', detail: err.message }));
     }
     return;

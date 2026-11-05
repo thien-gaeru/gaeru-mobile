@@ -225,6 +225,21 @@
         </div>
       </div>
 
+      <!-- Banner Trực tiếp CSDL GAERU.COM -->
+      <div id="account-auth-banner" class="account-auth-banner">
+        <div class="auth-banner-left">
+          <span class="auth-banner-icon" id="auth-banner-icon">🔐</span>
+          <div>
+            <strong id="auth-banner-title">Cơ sở dữ liệu: Chưa đăng nhập</strong>
+            <p id="auth-banner-desc">Đăng nhập tài khoản gaeru.com để đồng bộ đơn hàng & thiết bị bảo hành</p>
+          </div>
+        </div>
+        <div id="account-auth-buttons" class="auth-banner-actions">
+          <button type="button" class="btn-auth-action primary" onclick="openAuthModal('login')">Đăng nhập CSDL</button>
+          <button type="button" class="btn-auth-action secondary" onclick="openAuthModal('register')">Đăng ký mới</button>
+        </div>
+      </div>
+
       <!-- Quick Metrics Strip -->
       <div class="account-stats-row">
         <div class="stat-box" id="stat-box-orders">
@@ -691,6 +706,74 @@
           Đóng
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ĐĂNG NHẬP / ĐĂNG KÝ CƠ SỞ DỮ LIỆU GAERU.COM -->
+  <div id="auth-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeAuthModal()"></div>
+    <div class="modal-content">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
+
+      <div class="auth-tabs-header">
+        <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="switchAuthTab('login')">
+          Đăng nhập
+        </button>
+        <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchAuthTab('register')">
+          Đăng ký tài khoản
+        </button>
+      </div>
+
+      <div id="auth-feedback" class="auth-feedback hidden"></div>
+
+      <!-- Form Đăng nhập -->
+      <form id="form-customer-login" class="auth-form" onsubmit="handleCustomerLogin(event)">
+        <p class="auth-form-sub">Đăng nhập bằng tài khoản website gaeru.com để đồng bộ tức thì</p>
+        
+        <label class="form-group">
+          <span>Email hoặc Số điện thoại *</span>
+          <input type="text" id="login-identifier" required placeholder="Ví dụ: 0912345678 hoặc email@gmail.com" autocomplete="username">
+        </label>
+
+        <label class="form-group">
+          <span>Mật khẩu *</span>
+          <input type="password" id="login-password" required placeholder="Nhập mật khẩu" autocomplete="current-password">
+        </label>
+
+        <button type="submit" id="btn-submit-login" class="btn btn-primary btn-block">
+          Đăng nhập CSDL gaeru.com
+        </button>
+      </form>
+
+      <!-- Form Đăng ký -->
+      <form id="form-customer-register" class="auth-form hidden" onsubmit="handleCustomerRegister(event)">
+        <p class="auth-form-sub">Tạo tài khoản lưu trực tiếp vào cơ sở dữ liệu gaeru.com</p>
+
+        <label class="form-group">
+          <span>Họ và tên *</span>
+          <input type="text" id="reg-name" required placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name">
+        </label>
+
+        <label class="form-group">
+          <span>Email *</span>
+          <input type="email" id="reg-email" required placeholder="Ví dụ: yourname@gmail.com" autocomplete="email">
+        </label>
+
+        <label class="form-group">
+          <span>Số điện thoại *</span>
+          <input type="tel" id="reg-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}" autocomplete="tel">
+        </label>
+
+        <label class="form-group">
+          <span>Mật khẩu (tối thiểu 8 ký tự) *</span>
+          <input type="password" id="reg-password" required minlength="8" placeholder="Nhập mật khẩu" autocomplete="new-password">
+        </label>
+
+        <button type="submit" id="btn-submit-register" class="btn btn-primary btn-block">
+          Tạo tài khoản GAERU
+        </button>
+      </form>
     </div>
   </div>
 
