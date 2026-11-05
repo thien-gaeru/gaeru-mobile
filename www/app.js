@@ -1622,20 +1622,24 @@ async function handleInstantCheckout(event) {
   showOrderSuccessModal(orderRecord);
 }
 
-// Xử lý gửi đơn hàng
+// Xử lý gửi đơn hàng (tương thích cả form truyền thống và Instant Checkout)
 async function handleCheckout(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
 
-  const name = document.getElementById('order-name').value.trim();
-  const phone = document.getElementById('order-phone').value.trim();
-  const province = document.getElementById('order-province').value;
-  const address = document.getElementById('order-address').value.trim();
+  const nameEl = document.getElementById('order-name') || document.getElementById('instant-order-name');
+  const phoneEl = document.getElementById('order-phone') || document.getElementById('instant-order-phone');
+  const provEl = document.getElementById('order-province') || document.getElementById('instant-order-province');
+  const addrEl = document.getElementById('order-address') || document.getElementById('instant-order-address');
+
+  if (!nameEl) {
+    return handleInstantCheckout(event);
+  }
+
+  const name = nameEl.value.trim();
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  const province = provEl ? provEl.value : '';
+  const address = addrEl ? addrEl.value.trim() : '';
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
-
-  const nameEl = document.getElementById('order-name');
-  const phoneEl = document.getElementById('order-phone');
-  const provEl = document.getElementById('order-province');
-  const addrEl = document.getElementById('order-address');
 
   [nameEl, phoneEl, provEl, addrEl].forEach(el => el && el.classList.remove('is-invalid'));
 
@@ -1664,9 +1668,11 @@ async function handleCheckout(event) {
     return;
   }
 
-  const btnSubmit = document.getElementById('btn-submit-order');
-  btnSubmit.disabled = true;
-  btnSubmit.textContent = 'Đang xử lý đơn hàng...';
+  const btnSubmit = document.getElementById('btn-submit-instant-order') || document.getElementById('btn-submit-order');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Đang xử lý đơn hàng...';
+  }
 
   const orderPayload = {
     customer: {
@@ -1958,6 +1964,25 @@ function saveUserProfile(event) {
 }
 
 function applyProfileToCheckoutForm() {
+  const instantName = document.getElementById('instant-order-name');
+  const instantPhone = document.getElementById('instant-order-phone');
+  const instantProv = document.getElementById('instant-order-province');
+  const instantAddr = document.getElementById('instant-order-address');
+
+  if (AppState.user && AppState.user.name && AppState.user.name !== 'Khách hàng GAERU' && instantName && !instantName.value) {
+    instantName.value = AppState.user.name;
+  }
+  if (AppState.user && AppState.user.phone && instantPhone && !instantPhone.value) {
+    instantPhone.value = AppState.user.phone;
+  }
+  if (AppState.user && AppState.user.province && instantProv && !instantProv.value) {
+    instantProv.value = AppState.user.province;
+    handleInstantProvinceChange();
+  }
+  if (AppState.user && AppState.user.address && instantAddr && !instantAddr.value) {
+    instantAddr.value = AppState.user.address;
+  }
+
   const orderName = document.getElementById('order-name');
   const orderPhone = document.getElementById('order-phone');
   const orderProv = document.getElementById('order-province');

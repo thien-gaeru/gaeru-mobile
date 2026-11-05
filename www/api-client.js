@@ -431,16 +431,18 @@ const GaeruAPI = (function () {
         });
         if (wRes.ok) {
           const wData = await wRes.json();
-          const match = (wData.warranties || []).find(w => 
+          const list = wData.activations || wData.warranties || [];
+          const match = list.find(w => 
             (w.serial && w.serial.toUpperCase() === cleanCode) ||
-            (w.orderNumber && w.orderNumber.toUpperCase() === cleanCode)
+            (w.orderNumber && w.orderNumber.toUpperCase() === cleanCode) ||
+            (w.externalOrderNumber && w.externalOrderNumber.toUpperCase() === cleanCode)
           );
           if (match) {
             return {
               found: true,
               type: 'warranty',
-              code: match.serial || match.orderNumber,
-              productName: match.productName || 'Thiết bị GAERU chính hãng',
+              code: match.serial || match.orderNumber || match.externalOrderNumber,
+              productName: match.productName || match.externalProductName || 'Thiết bị GAERU chính hãng',
               status: match.status,
               expiresOn: match.expiresOn,
               isGenuine: true
@@ -450,40 +452,6 @@ const GaeruAPI = (function () {
       } catch (e) {}
 
       return { found: false };
-    },
-
-    /**
-     * Lấy danh sách thiết bị bảo hành của khách hàng từ CSDL
-     */
-    async getCustomerWarranties() {
-      try {
-        const res = await fetch(`${BASE_URL}/api/customer/warranties`, {
-          credentials: 'include',
-          cache: 'no-store'
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return data.warranties || [];
-        }
-      } catch (e) {}
-      return [];
-    },
-
-    /**
-     * Lấy danh bạ địa chỉ nhận hàng của khách hàng từ bảng customer_addresses
-     */
-    async getCustomerAddresses() {
-      try {
-        const res = await fetch(`${BASE_URL}/api/customer/addresses`, {
-          credentials: 'include',
-          cache: 'no-store'
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return data.addresses || [];
-        }
-      } catch (e) {}
-      return [];
     },
 
     /**
