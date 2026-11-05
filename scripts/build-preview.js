@@ -167,7 +167,18 @@ const previewSimulatorHtml = `<!DOCTYPE html>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">Tương tác trực tiếp & Hiển thị hình ảnh 100% tự lực</p>
         </div>
-        <span class="text-xs font-mono px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md font-bold">LIVE DB 100%</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-mode-live" onclick="switchToLiveMode()" class="px-2.5 py-1 text-xs bg-emerald-600/80 hover:bg-emerald-500 text-white rounded-md font-semibold transition flex items-center gap-1 shadow">
+            <span class="inline-block w-2 h-2 bg-white rounded-full animate-pulse"></span>
+            <span>Chế độ Live</span>
+          </button>
+          <button id="btn-mode-offline" onclick="switchToOfflineMode()" class="px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md font-medium transition flex items-center gap-1">
+            <span>📦 Tự lực</span>
+          </button>
+          <button onclick="reloadSimulatorFrame()" class="p-1.5 text-slate-400 hover:text-white rounded-md bg-slate-800 border border-slate-700" title="Tải lại màn hình">
+            🔄
+          </button>
+        </div>
       </div>
 
       <!-- BỘ PHÍM TƯƠNG TÁC NHANH (QUICK INTERACTION CONTROLS) -->
@@ -277,16 +288,49 @@ const previewSimulatorHtml = `<!DOCTYPE html>
   <script>
     // Dữ liệu ứng dụng hoàn chỉnh được nhúng an toàn, escape toàn bộ '<' để parser HTML không ngắt script
     const INLINED_APP_HTML = ${JSON.stringify(innerAppHtml).replace(/</g, '\\u003c')};
+    const LIVE_URL = 'http://localhost:5000';
+    let currentMode = 'live'; // 'live' | 'offline'
 
     const frame = document.getElementById('phone-frame');
+    const btnLive = document.getElementById('btn-mode-live');
+    const btnOffline = document.getElementById('btn-mode-offline');
 
-    function renderIframeApp() {
-      if (!frame) return;
-      try {
-        frame.srcdoc = INLINED_APP_HTML;
-      } catch (e) {
-        console.warn('srcdoc assign error:', e);
+    async function switchToLiveMode() {
+      currentMode = 'live';
+      if (btnLive) {
+        btnLive.className = 'px-2.5 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-md font-semibold transition flex items-center gap-1 shadow ring-2 ring-emerald-400/50';
       }
+      if (btnOffline) {
+        btnOffline.className = 'px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-400 rounded-md font-medium transition flex items-center gap-1';
+      }
+
+      try {
+        // Kiểm tra Live Server đang chạy ở cổng 5000
+        const res = await fetch(LIVE_URL + '/api/realtime/health', { signal: AbortSignal.timeout(1000) });
+        if (res.ok) {
+          console.log('🟢 Đang kết nối trực tiếp Live Server: ' + LIVE_URL);
+          frame.removeAttribute('srcdoc');
+          frame.src = LIVE_URL;
+          return;
+        }
+      } catch (e) {
+        console.warn('Live Server chưa sẵn sàng, dùng chế độ tự lực offline:', e.message);
+      }
+
+      switchToOfflineMode();
+    }
+
+    function switchToOfflineMode() {
+      currentMode = 'offline';
+      if (btnLive) {
+        btnLive.className = 'px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-400 rounded-md font-medium transition flex items-center gap-1';
+      }
+      if (btnOffline) {
+        btnOffline.className = 'px-2.5 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded-md font-semibold transition flex items-center gap-1 shadow ring-2 ring-amber-400/50';
+      }
+
+      frame.removeAttribute('src');
+      frame.srcdoc = INLINED_APP_HTML;
 
       // Đảm bảo tuyệt đối không trắng màn hình: Fallback sau 200ms
       setTimeout(() => {
@@ -297,16 +341,23 @@ const previewSimulatorHtml = `<!DOCTYPE html>
             doc.write(INLINED_APP_HTML);
             doc.close();
           }
-        } catch (err) {
-          console.warn('Fallback render error:', err);
-        }
+        } catch (err) {}
       }, 200);
     }
 
+    function reloadSimulatorFrame() {
+      if (currentMode === 'live') {
+        frame.src = LIVE_URL + '?t=' + Date.now();
+      } else {
+        switchToOfflineMode();
+      }
+    }
+
+    // Tự động kiểm tra và ưu tiên nạp LIVE
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderIframeApp);
+      document.addEventListener('DOMContentLoaded', switchToLiveMode);
     } else {
-      renderIframeApp();
+      switchToLiveMode();
     }
 
     function getFrameWin() {
@@ -316,38 +367,44 @@ const previewSimulatorHtml = `<!DOCTYPE html>
 
     function simSwitchTab(tabId) {
       const win = getFrameWin();
-      if (win && win.switchTab) {
-        win.switchTab(tabId);
+      if (win) {
+        win.postMessage({ type: 'SIM_SWITCH_TAB', tabId }, '*');
+        try { if (win.switchTab) win.switchTab(tabId); } catch (e) {}
       }
     }
 
     function simOpenOrder(slug) {
       const win = getFrameWin();
-      if (win && win.openInstantOrder) {
-        win.openInstantOrder(slug);
+      if (win) {
+        win.postMessage({ type: 'SIM_OPEN_ORDER', slug }, '*');
+        try { if (win.openInstantOrder) win.openInstantOrder(slug); } catch (e) {}
       }
     }
 
     function simTestCare(code) {
       const win = getFrameWin();
       if (win) {
-        if (win.switchTab) win.switchTab('tab-care');
-        setTimeout(() => {
-          const doc = win.document;
-          const input = doc.getElementById('care-serial-input');
-          const btn = doc.getElementById('btn-check-care');
-          if (input && btn) {
-            input.value = code;
-            btn.click();
-          }
-        }, 150);
+        win.postMessage({ type: 'SIM_TEST_CARE', code }, '*');
+        try {
+          if (win.switchTab) win.switchTab('tab-care');
+          setTimeout(() => {
+            const doc = win.document;
+            const input = doc.getElementById('care-serial-input');
+            const btn = doc.getElementById('btn-check-care');
+            if (input && btn) {
+              input.value = code;
+              btn.click();
+            }
+          }, 150);
+        } catch (e) {}
       }
     }
 
     function simSyncWeb() {
       const win = getFrameWin();
-      if (win && win.syncAllLiveContent) {
-        win.syncAllLiveContent();
+      if (win) {
+        win.postMessage({ type: 'SIM_SYNC_WEB' }, '*');
+        try { if (win.syncAllLiveContent) win.syncAllLiveContent(); } catch (e) {}
       }
     }
 
@@ -363,9 +420,7 @@ const previewSimulatorHtml = `<!DOCTYPE html>
               win.SafeStorage.setItem('gaeru_theme_preference', theme);
             }
           }
-        } catch (e) {
-          console.warn('Frame theme set:', e);
-        }
+        } catch (e) {}
       }
     }
   </script>

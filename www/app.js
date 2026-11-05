@@ -2784,4 +2784,32 @@ if (typeof window !== 'undefined') {
   window.openGuideDetail = openGuideDetail;
   window.closeGuideDetail = closeGuideDetail;
   window.syncAllLiveContent = syncAllLiveContent;
+
+  // Lắng nghe tín hiệu điều khiển từ khung Simulator ngoài (kể cả khi chạy Live http://localhost:5000)
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    const { type } = e.data;
+    if (type === 'SIM_SWITCH_TAB' && e.data.tabId) {
+      switchTab(e.data.tabId);
+    } else if (type === 'SIM_OPEN_ORDER' && e.data.slug) {
+      openInstantOrder(e.data.slug);
+    } else if (type === 'SIM_TEST_CARE' && e.data.code) {
+      switchTab('tab-care');
+      setTimeout(() => {
+        const input = document.getElementById('care-serial-input');
+        const btn = document.getElementById('btn-check-care');
+        if (input && btn) {
+          input.value = e.data.code;
+          btn.click();
+        }
+      }, 150);
+    } else if (type === 'SIM_SYNC_WEB') {
+      syncAllLiveContent();
+    } else if (type === 'GAERU_SET_THEME' && e.data.theme) {
+      const theme = e.data.theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      SafeStorage.setItem('gaeru_theme_preference', theme);
+      showToast(theme === 'dark' ? '🌙 Giao diện Tối' : '☀️ Giao diện Sáng', 'info');
+    }
+  });
 }
