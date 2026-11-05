@@ -221,15 +221,18 @@ const previewSimulatorHtml = `<!DOCTYPE html>
         </div>
 
         <!-- Thao tác thử nghiệm đặt hàng, tra cứu & đồng bộ -->
-        <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-700/60">
+        <div class="grid grid-cols-4 gap-1.5 pt-1 border-t border-slate-700/60">
           <button class="px-2 py-2 text-xs bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simOpenOrder('gaeru-g1-ultra')">
-            ⚡ Đặt hàng G1
+            ⚡ Đặt G1
           </button>
           <button class="px-2 py-2 text-xs bg-sky-600/90 hover:bg-sky-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simTestCare('GR-20261105-0404344DB3')">
             🔍 Tra cứu BH
           </button>
           <button class="px-2 py-2 text-xs bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simSyncWeb()">
-            🔄 Đồng bộ Web
+            🔄 Đồng bộ CSDL
+          </button>
+          <button class="px-2 py-2 text-xs bg-amber-600/90 hover:bg-amber-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simLoginDemo()">
+            👤 Đăng nhập mẫu
           </button>
         </div>
       </div>
@@ -422,6 +425,19 @@ const previewSimulatorHtml = `<!DOCTYPE html>
         win.postMessage({ type: 'SIM_SYNC_WEB' }, '*');
         try { if (win.syncAllLiveContent) win.syncAllLiveContent(); } catch (e) {}
       }
+    }
+
+    function simLoginDemo() {
+      simSwitchTab('tab-account');
+      setTimeout(() => {
+        const win = getFrameWin();
+        if (win) {
+          try {
+            if (win.handleQuickDemoLogin) win.handleQuickDemoLogin();
+            else if (win.openAuthModal) win.openAuthModal('login');
+          } catch (e) {}
+        }
+      }, 200);
     }
 
     function setFrameTheme(theme) {

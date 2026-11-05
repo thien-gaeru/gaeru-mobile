@@ -9,6 +9,7 @@
   <title>GAERU — Thiết bị quay chụp & Thu âm</title>
   <link rel="stylesheet" href="brand.css">
   <link rel="stylesheet" href="app.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <!-- Vùng đệm thanh trạng thái (Safe Area Top) -->
@@ -727,44 +728,73 @@
     </div>
   </div>
 
-  <!-- MODAL: ĐĂNG NHẬP / ĐĂNG KÝ CƠ SỞ DỮ LIỆU GAERU.COM -->
+  <!-- MODAL: ĐĂNG NHẬP / ĐĂNG KÝ / KHÔI PHỤC TÀI KHOẢN CƠ SỞ DỮ LIỆU GAERU.COM -->
   <div id="auth-modal" class="modal-sheet hidden">
     <div class="modal-backdrop" onclick="closeAuthModal()"></div>
-    <div class="modal-content">
+    <div class="modal-content auth-modal-content">
       <div class="modal-drag-handle"></div>
       <button class="modal-close-btn" onclick="closeAuthModal()">✕</button>
 
+      <!-- 3 Tabs chuyển đổi phương thức -->
       <div class="auth-tabs-header">
         <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="switchAuthTab('login')">
           Đăng nhập
         </button>
         <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchAuthTab('register')">
-          Đăng ký tài khoản
+          Đăng ký mới
+        </button>
+        <button type="button" id="tab-btn-reset" class="auth-tab-btn" onclick="switchAuthTab('reset')">
+          Khôi phục
         </button>
       </div>
 
       <div id="auth-feedback" class="auth-feedback hidden"></div>
 
-      <!-- Form Đăng nhập -->
+      <!-- 1. FORM ĐĂNG NHẬP -->
       <form id="form-customer-login" class="auth-form" onsubmit="handleCustomerLogin(event)">
-        <p class="auth-form-sub">Đăng nhập bằng tài khoản website gaeru.com để đồng bộ tức thì</p>
+        <p class="auth-form-sub">Đăng nhập tài khoản website gaeru.com để đồng bộ tức thì</p>
         
         <label class="form-group">
-          <span>Email hoặc Số điện thoại *</span>
+          <span>Email hoặc Số điện thoại di động *</span>
           <input type="text" id="login-identifier" required placeholder="Ví dụ: 0912345678 hoặc email@gmail.com" autocomplete="username">
         </label>
 
         <label class="form-group">
           <span>Mật khẩu *</span>
-          <input type="password" id="login-password" required placeholder="Nhập mật khẩu" autocomplete="current-password">
+          <div class="password-input-wrap">
+            <input type="password" id="login-password" required placeholder="Nhập mật khẩu" autocomplete="current-password">
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('login-password', this)" title="Ẩn/Hiện mật khẩu">👁️</button>
+          </div>
         </label>
+
+        <div class="auth-forgot-row">
+          <button type="button" class="text-link-btn" onclick="switchAuthTab('reset')">Quên mật khẩu? Khôi phục ngay ↗</button>
+        </div>
 
         <button type="submit" id="btn-submit-login" class="btn btn-primary btn-block">
           Đăng nhập CSDL gaeru.com
         </button>
+
+        <div class="account-oauth-divider"><span>Hoặc tiếp tục với</span></div>
+
+        <!-- Nút Đăng nhập Google chuẩn Web GAERU -->
+        <button type="button" class="btn-oauth-google" onclick="handleGoogleLogin()" aria-label="Đăng nhập với Google">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" style="flex-shrink:0;">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+            <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          <span>Đăng nhập với Google</span>
+        </button>
+
+        <!-- Nút Trải nghiệm nhanh 1 chạm -->
+        <button type="button" class="btn-quick-demo-login" onclick="handleQuickDemoLogin()">
+          <span>⚡ Trải nghiệm nhanh (Đăng nhập tài khoản mẫu)</span>
+        </button>
       </form>
 
-      <!-- Form Đăng ký -->
+      <!-- 2. FORM ĐĂNG KÝ TÀI KHOẢN -->
       <form id="form-customer-register" class="auth-form hidden" onsubmit="handleCustomerRegister(event)">
         <p class="auth-form-sub">Tạo tài khoản lưu trực tiếp vào cơ sở dữ liệu gaeru.com</p>
 
@@ -785,12 +815,90 @@
 
         <label class="form-group">
           <span>Mật khẩu (tối thiểu 8 ký tự) *</span>
-          <input type="password" id="reg-password" required minlength="8" placeholder="Nhập mật khẩu" autocomplete="new-password">
+          <div class="password-input-wrap">
+            <input type="password" id="reg-password" required minlength="8" placeholder="Nhập mật khẩu" autocomplete="new-password">
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('reg-password', this)" title="Ẩn/Hiện mật khẩu">👁️</button>
+          </div>
+        </label>
+
+        <label class="form-group">
+          <span>Nhập lại mật khẩu *</span>
+          <div class="password-input-wrap">
+            <input type="password" id="reg-password-confirm" required minlength="8" placeholder="Xác nhận lại mật khẩu" autocomplete="new-password">
+            <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('reg-password-confirm', this)" title="Ẩn/Hiện mật khẩu">👁️</button>
+          </div>
+        </label>
+
+        <label class="auth-consent-label">
+          <input type="checkbox" id="reg-privacy-consent" required checked>
+          <span>Tôi đã đọc và đồng ý với <a href="https://gaeru.com/chinh-sach" target="_blank" class="text-link">Chính sách bảo mật</a> của GAERU.</span>
         </label>
 
         <button type="submit" id="btn-submit-register" class="btn btn-primary btn-block">
           Tạo tài khoản GAERU
         </button>
+
+        <div class="account-oauth-divider"><span>Hoặc đăng ký nhanh</span></div>
+
+        <button type="button" class="btn-oauth-google" onclick="handleGoogleLogin()" aria-label="Đăng ký với Google">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" style="flex-shrink:0;">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+            <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          <span>Đăng ký nhanh với Google</span>
+        </button>
+      </form>
+
+      <!-- 3. FORM KHÔI PHỤC MẬT KHẨU -->
+      <form id="form-customer-reset" class="auth-form hidden" onsubmit="handlePasswordResetRequest(event)">
+        <p class="auth-form-sub">Nhập email và số điện thoại đã đăng ký để khôi phục mật khẩu tài khoản</p>
+
+        <!-- Bước 1: Yêu cầu mã xác thực -->
+        <div id="reset-step-1">
+          <label class="form-group">
+            <span>Email tài khoản *</span>
+            <input type="email" id="reset-email" required placeholder="Ví dụ: yourname@gmail.com" autocomplete="email">
+          </label>
+
+          <label class="form-group">
+            <span>Số điện thoại *</span>
+            <input type="tel" id="reset-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}" autocomplete="tel">
+          </label>
+
+          <button type="submit" id="btn-submit-reset-request" class="btn btn-primary btn-block">
+            Gửi yêu cầu khôi phục mật khẩu
+          </button>
+        </div>
+
+        <!-- Bước 2: Nhập Token và Mật khẩu mới -->
+        <div id="reset-step-2" class="hidden" style="margin-top:12px;">
+          <div style="background:rgba(2, 132, 199, 0.08);border:1px solid var(--gaeru-border);border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--gaeru-text);">
+            🔑 Mã token xác minh đã được tạo. Vui lòng nhập token và mật khẩu mới để hoàn tất.
+          </div>
+
+          <label class="form-group">
+            <span>Mã Token xác nhận *</span>
+            <input type="text" id="reset-token" placeholder="Dán mã token xác nhận" autocomplete="off">
+          </label>
+
+          <label class="form-group">
+            <span>Mật khẩu mới (tối thiểu 8 ký tự) *</span>
+            <div class="password-input-wrap">
+              <input type="password" id="reset-new-password" minlength="8" placeholder="Nhập mật khẩu mới" autocomplete="new-password">
+              <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('reset-new-password', this)" title="Ẩn/Hiện mật khẩu">👁️</button>
+            </div>
+          </label>
+
+          <button type="button" id="btn-submit-reset-confirm" class="btn btn-primary btn-block" onclick="handlePasswordResetConfirm(event)">
+            Lưu mật khẩu mới & Đăng nhập
+          </button>
+        </div>
+
+        <div style="text-align:center;margin-top:14px;">
+          <button type="button" class="text-link-btn" onclick="switchAuthTab('login')">← Quay lại Đăng nhập</button>
+        </div>
       </form>
     </div>
   </div>

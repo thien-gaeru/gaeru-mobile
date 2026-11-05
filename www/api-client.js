@@ -184,6 +184,140 @@ const GaeruAPI = (function () {
     },
 
     /**
+     * Đăng nhập hoặc tạo tài khoản nhanh qua Google OAuth 2.0 (Google Identity Services)
+     */
+    async loginWithGoogle(credential) {
+      const csrf = await this.getCsrfToken();
+      const res = await fetch(`${BASE_URL}/api/customer-auth/oauth/google`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(csrf ? { 'X-CSRF-Token': csrf } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({ credential }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.message || 'Xác thực Google chưa thành công.');
+      }
+      return data;
+    },
+
+    /**
+     * Lấy cấu hình xác thực Google OAuth từ máy chủ gaeru.com
+     */
+    async getGoogleOAuthConfig() {
+      try {
+        const res = await fetch(`${BASE_URL}/api/customer-auth/oauth/config`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(5000)
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (err) {
+        console.warn('[API] Lỗi lấy cấu hình OAuth Google:', err.message);
+      }
+      return {
+        google: {
+          enabled: true,
+          configured: true,
+          clientId: '956241657455-lul7a99favn0a99jud2dgglr8kp3apn7.apps.googleusercontent.com'
+        }
+      };
+    },
+
+    /**
+     * Yêu cầu khôi phục mật khẩu (Gửi mã xác thực qua Email & SĐT)
+     */
+    async requestPasswordReset(email, phone) {
+      const csrf = await this.getCsrfToken();
+      const res = await fetch(`${BASE_URL}/api/customer-auth/reset-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(csrf ? { 'X-CSRF-Token': csrf } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, phone }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Không tìm thấy tài khoản phù hợp với thông tin đã nhập.');
+      }
+      return data;
+    },
+
+    /**
+     * Xác nhận đổi mật khẩu mới bằng mã token
+     */
+    async confirmPasswordReset(token, password) {
+      const csrf = await this.getCsrfToken();
+      const res = await fetch(`${BASE_URL}/api/customer-auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(csrf ? { 'X-CSRF-Token': csrf } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({ token, password }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      }
+      return data;
+    },
+
+    /**
+     * Lấy danh sách thiết bị bảo hành thực tế của khách hàng từ bảng warranty_activations
+     */
+    async getCustomerWarranties() {
+      try {
+        const res = await fetch(`${BASE_URL}/api/customer/warranties`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(8000)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.activations || data.warranties || [];
+        }
+      } catch (err) {
+        console.warn('[API] Không thể tải danh sách bảo hành từ CSDL gaeru.com:', err.message);
+      }
+      return [];
+    },
+
+    /**
+     * Lấy danh sách địa chỉ nhận hàng đã lưu trên CSDL gaeru.com
+     */
+    async getCustomerAddresses() {
+      try {
+        const res = await fetch(`${BASE_URL}/api/customer/addresses`, {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(6000)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.addresses || [];
+        }
+      } catch (err) {
+        console.warn('[API] Không thể tải danh bạ địa chỉ từ CSDL gaeru.com:', err.message);
+      }
+      return [];
+    },
+
+    /**
      * Đăng ký tài khoản mới trực tiếp vào bảng customers trên CSDL gaeru.com
      */
     async register(fullName, email, phone, password) {
