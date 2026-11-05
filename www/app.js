@@ -29,26 +29,78 @@ const AppState = {
   liveCustomer: null
 };
 
-// 1. Khởi động ứng dụng khi DOM sẵn sàng
-document.addEventListener('DOMContentLoaded', async () => {
-  initThemeDetection();
-  initNetworkMonitor();
-  initNavigation();
-  initSearch();
-  initHeroCarousel();
-  initSheetDragToDismiss();
-  initKeyboardAdaptation();
-  initPullToRefresh();
-  renderSkeletons();
-  await checkLiveCustomerSession();
-  await loadProducts();
-  await loadProvinces();
-  loadCartFromStorage();
-  initAccount();
-  initCareLookup();
-  initCapacitor();
-  initRealtimeSync();
-});
+if (typeof window !== 'undefined') {
+  window.AppState = AppState;
+}
+
+// Định dạng tiền tệ chuẩn Việt Nam (VND)
+function formatVnd(amount) {
+  const num = Number(amount) || 0;
+  return num.toLocaleString('vi-VN') + ' ₫';
+}
+
+// Trình quản lý bộ nhớ an toàn (SafeStorage chống lỗi SecurityError trong sandbox webview)
+const SafeStorage = {
+  getItem(key) {
+    try {
+      return (typeof window !== 'undefined' && window.localStorage) ? window.localStorage.getItem(key) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem(key, value) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(key, value);
+    } catch (e) {}
+  },
+  removeItem(key) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem(key);
+    } catch (e) {}
+  }
+};
+
+// Trình xử lý hình ảnh dự phòng không lỗi (Fallback Image Handler)
+function handleImageError(imgEl, title = 'GAERU') {
+  if (!imgEl) return;
+  imgEl.onerror = null;
+  if (window.__BUNDLED_IMAGE_ASSETS__ && window.__BUNDLED_IMAGE_ASSETS__['assets/brand/gaeru-logo.png']) {
+    imgEl.src = window.__BUNDLED_IMAGE_ASSETS__['assets/brand/gaeru-logo.png'];
+    return;
+  }
+  imgEl.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><rect width="200" height="200" rx="20" fill="%231e293b"/><circle cx="100" cy="85" r="40" fill="%230284c7" opacity="0.2"/><path d="M100 65v40M80 85h40" stroke="%2338bdf8" stroke-width="4" stroke-linecap="round"/><text x="100" y="150" text-anchor="middle" fill="%2394a3b8" font-family="sans-serif" font-size="12" font-weight="600">' + encodeURIComponent(title) + '</text></svg>';
+}
+
+// 1. Khởi động ứng dụng an toàn cho cả trường hợp DOMContentLoaded đã kích hoạt
+function startApp() {
+  try {
+    initThemeDetection();
+    initNetworkMonitor();
+    initNavigation();
+    initSearch();
+    initHeroCarousel();
+    initSheetDragToDismiss();
+    initKeyboardAdaptation();
+    initPullToRefresh();
+    renderSkeletons();
+    checkLiveCustomerSession();
+    loadProducts();
+    loadProvinces();
+    loadCartFromStorage();
+    initAccount();
+    initCareLookup();
+    initCapacitor();
+    initRealtimeSync();
+  } catch (err) {
+    console.error('[GAERU Mobile] Lỗi khởi động ứng dụng:', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
 
 // ==================== TRẠNG THÁI MẠNG (ONLINE / OFFLINE) ====================
 function initNetworkMonitor() {
@@ -168,14 +220,32 @@ function normalizeProduct(raw) {
   if (!raw) return null;
 
   // 1. Chuẩn hoá hình ảnh
-  let imageUrl = raw.imageUrl || '';
-  if (imageUrl.startsWith('/')) {
+  let imageUrl = raw.imageUrl || raw.image_url || '';
+
+  // Ưu tiên nạp hình ảnh đóng gói sẵn trong App (Base64) để hiển thị tức thì không phụ thuộc mạng
+  if (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__) {
+    if (raw.slug === 'gaeru-m3' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/m3.webp']) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/m3.webp'];
+    } else if (raw.slug === 'gaeru-g1-ultra' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/g1-ultra-clean.webp']) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/g1-ultra-clean.webp'];
+    } else if (raw.slug === 'gaeru-k9' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp']) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp'];
+    } else if (raw.slug === 'gaeru-p01' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/p01.webp']) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/p01.webp'];
+    } else if (raw.slug === 'gaeru-p185' && window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp']) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__['assets/products/k9.webp'];
+    } else if (window.__BUNDLED_IMAGE_ASSETS__[imageUrl]) {
+      imageUrl = window.__BUNDLED_IMAGE_ASSETS__[imageUrl];
+    }
+  }
+
+  if (imageUrl && imageUrl.startsWith('/')) {
     imageUrl = `https://gaeru.com${imageUrl}`;
   } else if (!imageUrl && raw.gallery && raw.gallery.length > 0) {
     imageUrl = raw.gallery[0].startsWith('/') ? `https://gaeru.com${raw.gallery[0]}` : raw.gallery[0];
   }
   if (!imageUrl) {
-    imageUrl = 'assets/brand/gaeru-logo.png';
+    imageUrl = (typeof window !== 'undefined' && window.__BUNDLED_IMAGE_ASSETS__ && window.__BUNDLED_IMAGE_ASSETS__['assets/brand/gaeru-logo.png']) || 'assets/brand/gaeru-logo.png';
   }
 
   // 2. Chuẩn hoá các biến thể (variants)
@@ -827,18 +897,20 @@ function initKeyboardAdaptation() {
 
 // ==================== GIỎ HÀNG & THANH TOÁN ====================
 function loadCartFromStorage() {
-  try {
-    const raw = localStorage.getItem('gaeru_cart');
-    if (raw) AppState.cart = JSON.parse(raw);
-  } catch (e) {}
+  const raw = SafeStorage.getItem('gaeru_cart');
+  if (raw) {
+    try {
+      AppState.cart = JSON.parse(raw);
+    } catch (e) {
+      AppState.cart = [];
+    }
+  }
   updateCartBadge();
   renderCart();
 }
 
 function saveCartToStorage() {
-  try {
-    localStorage.setItem('gaeru_cart', JSON.stringify(AppState.cart));
-  } catch (e) {}
+  SafeStorage.setItem('gaeru_cart', JSON.stringify(AppState.cart));
   updateCartBadge();
 }
 
@@ -987,8 +1059,10 @@ function populateProvinceSelects() {
 
   const instantProv = document.getElementById('instant-order-province');
   const profProv = document.getElementById('profile-input-province');
+  const orderProv = document.getElementById('order-province');
   if (instantProv) instantProv.innerHTML = optionsHtml;
   if (profProv) profProv.innerHTML = optionsHtml;
+  if (orderProv) orderProv.innerHTML = optionsHtml;
 }
 
 function handleInstantProvinceChange() {
@@ -1180,8 +1254,35 @@ async function handleInstantCheckout(event) {
   const note = document.getElementById('instant-order-note')?.value.trim() || '';
   const paymentMethod = document.querySelector('input[name="instantPaymentMethod"]:checked')?.value || 'cod';
 
-  if (!name || !phone || !province || !address) {
-    alert('Vui lòng điền đầy đủ thông tin giao hàng.');
+  const nameEl = document.getElementById('instant-order-name');
+  const phoneEl = document.getElementById('instant-order-phone');
+  const provEl = document.getElementById('instant-order-province');
+  const addrEl = document.getElementById('instant-order-address');
+
+  [nameEl, phoneEl, provEl, addrEl].forEach(el => el && el.classList.remove('is-invalid'));
+
+  if (!name || name.length < 2) {
+    if (nameEl) { nameEl.classList.add('is-invalid'); nameEl.focus(); }
+    showToast('Vui lòng nhập họ và tên người nhận hàng!', 'warning');
+    return;
+  }
+
+  const phoneClean = phone.replace(/\D/g, '');
+  if (!phone || phoneClean.length < 9 || phoneClean.length > 11) {
+    if (phoneEl) { phoneEl.classList.add('is-invalid'); phoneEl.focus(); }
+    showToast('Số điện thoại không hợp lệ! Vui lòng nhập số 10 chữ số (09x, 08x, 03x...)', 'warning');
+    return;
+  }
+
+  if (!province) {
+    if (provEl) { provEl.classList.add('is-invalid'); provEl.focus(); }
+    showToast('Vui lòng chọn Tỉnh / Thành phố nhận hàng!', 'warning');
+    return;
+  }
+
+  if (!address || address.length < 3) {
+    if (addrEl) { addrEl.classList.add('is-invalid'); addrEl.focus(); }
+    showToast('Vui lòng nhập địa chỉ cụ thể (số nhà, tên đường...)!', 'warning');
     return;
   }
 
@@ -1250,16 +1351,12 @@ async function handleInstantCheckout(event) {
   };
 
   AppState.orders.unshift(orderRecord);
-  try {
-    localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
-  } catch (e) {}
+  SafeStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
 
   // Tự động lưu hồ sơ nếu chưa có
   if (!AppState.user.phone) {
     AppState.user = { name, phone, email: `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`, province, ward, address };
-    try {
-      localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
-    } catch (e) {}
+    SafeStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
   }
 
   renderAccountView();
@@ -1270,9 +1367,8 @@ async function handleInstantCheckout(event) {
     btnSubmit.textContent = 'Xác nhận đặt hàng ngay';
   }
 
-  alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${createdOrderNumber}\nSản phẩm: ${itemSummary}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${fullAddress}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận và giao hàng nhanh chóng!`);
-
-  switchTab('tab-account');
+  showToast(`Đặt hàng thành công! Mã đơn: #${createdOrderNumber}`, 'success');
+  showOrderSuccessModal(orderRecord);
 }
 
 // Xử lý gửi đơn hàng
@@ -1285,8 +1381,35 @@ async function handleCheckout(event) {
   const address = document.getElementById('order-address').value.trim();
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
 
-  if (!name || !phone || !province || !address) {
-    alert('Vui lòng điền đầy đủ thông tin giao hàng.');
+  const nameEl = document.getElementById('order-name');
+  const phoneEl = document.getElementById('order-phone');
+  const provEl = document.getElementById('order-province');
+  const addrEl = document.getElementById('order-address');
+
+  [nameEl, phoneEl, provEl, addrEl].forEach(el => el && el.classList.remove('is-invalid'));
+
+  if (!name || name.length < 2) {
+    if (nameEl) { nameEl.classList.add('is-invalid'); nameEl.focus(); }
+    showToast('Vui lòng nhập họ và tên người nhận hàng!', 'warning');
+    return;
+  }
+
+  const phoneClean = phone.replace(/\D/g, '');
+  if (!phone || phoneClean.length < 9 || phoneClean.length > 11) {
+    if (phoneEl) { phoneEl.classList.add('is-invalid'); phoneEl.focus(); }
+    showToast('Số điện thoại không hợp lệ! Vui lòng nhập số 10 chữ số', 'warning');
+    return;
+  }
+
+  if (!province) {
+    if (provEl) { provEl.classList.add('is-invalid'); provEl.focus(); }
+    showToast('Vui lòng chọn Tỉnh / Thành phố nhận hàng!', 'warning');
+    return;
+  }
+
+  if (!address || address.length < 3) {
+    if (addrEl) { addrEl.classList.add('is-invalid'); addrEl.focus(); }
+    showToast('Vui lòng nhập địa chỉ chi tiết giao hàng!', 'warning');
     return;
   }
 
@@ -1331,21 +1454,19 @@ async function handleCheckout(event) {
       totalVnd: orderTotal,
       itemSummary: itemSummary,
       paymentMethod: paymentMethod,
+      recipient: `${name} (${phone})`,
+      address: `${address}, ${province}`,
       statusClass: 'pending',
       statusText: 'Chờ xác nhận'
     };
 
     AppState.orders.unshift(newOrder);
-    try {
-      localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
-    } catch (e) {}
+    SafeStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
 
     // Tự động lưu hồ sơ nếu chưa có
     if (!AppState.user.phone) {
       AppState.user = { name, phone, email: `${phone}@customer.gaeru.com`, province, address };
-      try {
-        localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
-      } catch (e) {}
+      SafeStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
     }
     renderAccountView();
 
@@ -1353,11 +1474,11 @@ async function handleCheckout(event) {
     saveCartToStorage();
     renderCart();
 
-    alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn hàng: ${orderCode}\nKhách hàng: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận trong 24h!`);
-    switchTab('tab-account');
+    showToast(`Đặt hàng thành công! Mã đơn: #${orderCode}`, 'success');
+    showOrderSuccessModal(newOrder);
 
   } catch (err) {
-    alert('Lỗi đặt hàng: ' + err.message);
+    showToast('Lỗi đặt hàng: ' + (err.message || 'Không thể tạo đơn'), 'error');
   } finally {
     btnSubmit.disabled = false;
     btnSubmit.textContent = 'Xác nhận Đặt hàng ngay';
@@ -1373,22 +1494,32 @@ function initCareLookup() {
   async function checkCare() {
     const code = input.value.trim();
     if (!code) {
-      alert('Vui lòng nhập mã đơn hàng (GR-...) hoặc số serial để tra cứu.');
+      showToast('Vui lòng nhập mã đơn hàng (GR-...) hoặc số serial để tra cứu!', 'warning');
+      input.focus();
       return;
     }
 
     resultCard.classList.remove('hidden');
-    resultCard.innerHTML = '<p style="color:var(--gaeru-text-muted);font-size:13px;">🔍 Đang tra cứu trực tiếp trên cơ sở dữ liệu gaeru.com...</p>';
+    resultCard.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;padding:12px;color:var(--gaeru-text-muted);font-size:13px;">
+        <div class="pull-refresh-spinner" style="width:16px;height:16px;border-width:2px;"></div>
+        <span>Đang đối soát cơ sở dữ liệu gaeru.com...</span>
+      </div>
+    `;
 
     try {
       const res = await window.GaeruAPI.lookupWarranty(code);
       if (res && res.found) {
+        showToast(`Đã tìm thấy thông tin bảo hành chính hãng: #${res.code}`, 'success');
         if (res.type === 'order') {
           const statusText = res.status === 'completed' ? 'Đã hoàn tất' : (res.status === 'shipped' ? 'Đang giao hàng' : 'Đã tiếp nhận');
           resultCard.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">CHÍNH HÃNG</span>
-              <strong style="color:var(--gaeru-text);font-size:15px;">Đơn hàng GAERU: #${res.code}</strong>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">CHÍNH HÃNG</span>
+                <strong style="color:var(--gaeru-text);font-size:15px;">Đơn hàng GAERU: #${res.code}</strong>
+              </div>
+              <button type="button" class="btn" style="padding:2px 8px;font-size:11px;background:rgba(56,189,248,0.1);color:#38bdf8;" onclick="copyOrderCode('${res.code}')">📋 Chép</button>
             </div>
             <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Cơ sở dữ liệu: <code style="color:#38bdf8;">gaeru.com (Live Database)</code></p>
             <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Trạng thái đơn: <strong>${statusText}</strong></p>
@@ -1401,9 +1532,12 @@ function initCareLookup() {
           `;
         } else {
           resultCard.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">KÍCH HOẠT HỢP LỆ</span>
-              <strong style="color:var(--gaeru-text);font-size:15px;">${res.productName}</strong>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;">KÍCH HOẠT HỢP LỆ</span>
+                <strong style="color:var(--gaeru-text);font-size:15px;">${res.productName}</strong>
+              </div>
+              <button type="button" class="btn" style="padding:2px 8px;font-size:11px;background:rgba(56,189,248,0.1);color:#38bdf8;" onclick="copyOrderCode('${res.code}')">📋 Chép</button>
             </div>
             <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Mã Serial/Đơn: <code style="color:#38bdf8;">${res.code}</code></p>
             <p style="font-size:13px;color:var(--gaeru-text-muted);margin-bottom:4px;">Hạn bảo hành: <strong>${res.expiresOn || '12 tháng'}</strong></p>
@@ -1414,6 +1548,7 @@ function initCareLookup() {
           `;
         }
       } else {
+        showToast('Không tìm thấy thông tin cho mã này trên hệ thống gaeru.com', 'error');
         resultCard.innerHTML = `
           <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;padding:12px;">
             <strong style="color:#ef4444;font-size:14px;display:block;margin-bottom:4px;">⚠️ Chưa tìm thấy trên CSDL gaeru.com</strong>
@@ -1423,6 +1558,7 @@ function initCareLookup() {
         `;
       }
     } catch (err) {
+      showToast('Lỗi tra cứu: ' + (err.message || 'Không thể kết nối máy chủ'), 'error');
       resultCard.innerHTML = `<p style="color:#ef4444;font-size:12px;">Lỗi kết nối CSDL: ${err.message}</p>`;
     }
   }
@@ -1506,37 +1642,35 @@ function initAccount() {
   const btnReset = document.getElementById('btn-reset-app-data');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      if (confirm('Bạn có chắc muốn đặt lại dữ liệu tạm (giỏ hàng, bộ nhớ đệm) của ứng dụng GAERU?')) {
-        localStorage.removeItem('gaeru_cart');
-        localStorage.removeItem('gaeru_order_history');
-        AppState.cart = [];
-        AppState.orders = [];
-        saveCartToStorage();
-        renderCart();
-        renderAccountView();
-        showToast('🧹 Đã xoá bộ nhớ tạm ứng dụng thành công!');
-      }
+      SafeStorage.removeItem('gaeru_cart');
+      SafeStorage.removeItem('gaeru_order_history');
+      AppState.cart = [];
+      AppState.orders = [];
+      saveCartToStorage();
+      renderCart();
+      renderAccountView();
+      showToast('Đã làm sạch bộ nhớ tạm ứng dụng thành công!', 'success');
     });
   }
 }
 
 function loadUserProfile() {
-  try {
-    const raw = localStorage.getItem('gaeru_user_profile');
-    if (raw) {
+  const raw = SafeStorage.getItem('gaeru_user_profile');
+  if (raw) {
+    try {
       AppState.user = JSON.parse(raw);
-    } else {
-      AppState.user = {
-        name: 'Khách hàng GAERU',
-        phone: '',
-        email: '',
-        province: '',
-        ward: '',
-        address: ''
-      };
+    } catch (e) {
+      AppState.user = { name: 'Khách hàng GAERU', phone: '', email: '', province: '', ward: '', address: '' };
     }
-  } catch (e) {
-    AppState.user = { name: 'Khách hàng GAERU', phone: '', email: '', province: '', ward: '', address: '' };
+  } else {
+    AppState.user = {
+      name: 'Khách hàng GAERU',
+      phone: '',
+      email: '',
+      province: '',
+      ward: '',
+      address: ''
+    };
   }
 }
 
@@ -1550,20 +1684,26 @@ function saveUserProfile(event) {
   const ward = document.getElementById('profile-input-ward')?.value || '';
   const address = document.getElementById('profile-input-address').value.trim();
 
-  if (!name || !phone) {
-    alert('Vui lòng nhập họ tên và số điện thoại.');
+  if (!name || name.length < 2) {
+    showToast('Vui lòng nhập họ và tên của bạn!', 'warning');
+    document.getElementById('profile-input-name').focus();
+    return;
+  }
+
+  const phoneDigits = phone.replace(/\D/g, '');
+  if (!phone || phoneDigits.length < 9) {
+    showToast('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)!', 'warning');
+    document.getElementById('profile-input-phone').focus();
     return;
   }
 
   AppState.user = { name, phone, email, province, ward, address };
-  try {
-    localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
-  } catch (e) {}
+  SafeStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
 
   applyProfileToCheckoutForm();
   closeProfileModal();
   renderAccountView();
-  showToast('✅ Đã lưu thông tin hồ sơ tài khoản!');
+  showToast('Đã lưu thông tin hồ sơ và sổ địa chỉ thành công!', 'success');
 }
 
 function applyProfileToCheckoutForm() {
@@ -1615,14 +1755,14 @@ function closeProfileModal() {
 }
 
 function loadOrderHistory() {
-  try {
-    const raw = localStorage.getItem('gaeru_order_history');
-    if (raw) {
+  const raw = SafeStorage.getItem('gaeru_order_history');
+  if (raw) {
+    try {
       AppState.orders = JSON.parse(raw);
-    } else {
+    } catch (e) {
       AppState.orders = [];
     }
-  } catch (e) {
+  } else {
     AppState.orders = [];
   }
 }
@@ -1655,9 +1795,7 @@ async function checkLiveCustomerSession() {
             const liveSet = new Set(mappedLiveOrders.map(o => o.code));
             const localOnly = AppState.orders.filter(o => !liveSet.has(o.code));
             AppState.orders = [...mappedLiveOrders, ...localOnly];
-            try {
-              localStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
-            } catch (e) {}
+            SafeStorage.setItem('gaeru_order_history', JSON.stringify(AppState.orders));
           }
         }
 
@@ -2094,7 +2232,7 @@ function closeOrderDetail() {
 function updateAccountThemeLabel() {
   const label = document.getElementById('account-current-theme-label');
   if (!label) return;
-  const pref = localStorage.getItem('gaeru_theme_preference');
+  const pref = SafeStorage.getItem('gaeru_theme_preference');
   if (pref === 'dark') {
     label.textContent = '🌙 Chế độ Tối (Dark)';
   } else if (pref === 'light') {
@@ -2104,19 +2242,94 @@ function updateAccountThemeLabel() {
   }
 }
 
-// ==================== TOAST ALERT ====================
+// ==================== TOAST ALERT & DIALOG PHẢN HỒI TRỰC QUAN ====================
 let toastTimer = null;
-function showToast(message) {
+function showToast(message, type = 'info', duration = 2800) {
   const toast = document.getElementById('toast');
   if (!toast) return;
 
-  toast.textContent = message;
+  const config = {
+    success: {
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`,
+      bg: 'rgba(6, 78, 59, 0.96)',
+      border: '#10b981',
+      text: '#ecfdf5'
+    },
+    error: {
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>`,
+      bg: 'rgba(127, 29, 29, 0.96)',
+      border: '#ef4444',
+      text: '#fef2f2'
+    },
+    warning: {
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      bg: 'rgba(120, 53, 15, 0.96)',
+      border: '#f59e0b',
+      text: '#fffbeb'
+    },
+    info: {
+      icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`,
+      bg: 'rgba(15, 23, 42, 0.97)',
+      border: '#0284c7',
+      text: '#ffffff'
+    }
+  };
+
+  const style = config[type] || config.info;
+  toast.innerHTML = `
+    <span class="toast-icon">${style.icon}</span>
+    <span class="toast-text">${message}</span>
+  `;
+  toast.style.background = style.bg;
+  toast.style.borderColor = style.border;
+  toast.style.color = style.text;
   toast.classList.remove('hidden');
 
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toast.classList.add('hidden');
-  }, 2400);
+  }, duration);
+}
+
+function showOrderSuccessModal(order) {
+  const modal = document.getElementById('order-success-modal');
+  if (!modal) {
+    showToast(`Đặt hàng thành công! Mã đơn: #${order.code}`, 'success', 4500);
+    return;
+  }
+
+  const codeEl = document.getElementById('success-order-code');
+  const itemEl = document.getElementById('success-order-item');
+  const totalEl = document.getElementById('success-order-total');
+  const recipEl = document.getElementById('success-order-recipient');
+  const addrEl = document.getElementById('success-order-address');
+  const statusEl = document.getElementById('success-order-status');
+
+  if (codeEl) codeEl.textContent = '#' + order.code;
+  if (itemEl) itemEl.textContent = order.itemSummary;
+  if (totalEl) totalEl.textContent = formatVnd(order.totalVnd);
+  if (recipEl) recipEl.textContent = order.recipient;
+  if (addrEl) addrEl.textContent = order.address;
+  if (statusEl) {
+    statusEl.textContent = order.statusText || 'Đã tiếp nhận (Realtime)';
+  }
+
+  modal.classList.remove('hidden');
+  if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
+}
+
+function closeOrderSuccessModal() {
+  const modal = document.getElementById('order-success-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function copyOrderCode(code) {
+  const text = code || (AppState.orders[0] ? AppState.orders[0].code : '');
+  if (!text) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).catch(() => {});
+  }
+  showToast(`Đã sao chép mã đơn #${text} vào bộ nhớ tạm!`, 'success');
 }
 
 // ==================== LẮNG NGHE KẾT NỐI REALTIME VỚI GAERU.COM ====================
@@ -2273,7 +2486,7 @@ function initThemeDetection() {
   const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
   function getEffectiveTheme() {
-    const saved = localStorage.getItem('gaeru_theme_preference');
+    const saved = SafeStorage.getItem('gaeru_theme_preference');
     if (saved === 'dark' || saved === 'light') {
       return saved;
     }
@@ -2324,7 +2537,7 @@ function initThemeDetection() {
   if (mediaQuery) {
     const handleSystemThemeChange = (e) => {
       // Nếu người dùng chưa gán tùy chọn thủ công, tự động đồng bộ theo điện thoại
-      const saved = localStorage.getItem('gaeru_theme_preference');
+      const saved = SafeStorage.getItem('gaeru_theme_preference');
       if (!saved) {
         applyTheme(e.matches ? 'dark' : 'light', false);
       }
@@ -2343,9 +2556,9 @@ function initThemeDetection() {
       const activeTheme = document.documentElement.getAttribute('data-theme') || (mediaQuery && mediaQuery.matches ? 'dark' : 'light');
       const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
 
-      localStorage.setItem('gaeru_theme_preference', nextTheme);
+      SafeStorage.setItem('gaeru_theme_preference', nextTheme);
       applyTheme(nextTheme, true);
-      showToast(nextTheme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng');
+      showToast(nextTheme === 'dark' ? '🌙 Đã chuyển sang giao diện Tối' : '☀️ Đã chuyển sang giao diện Sáng', 'info');
     });
   }
 }
@@ -2369,4 +2582,20 @@ function updateNativeStatusBar(isDark) {
   } catch (err) {
     // Ignore webview mode
   }
+}
+
+// Xuất các hàm điều khiển cốt lõi ra window để tương tác trực quan
+if (typeof window !== 'undefined') {
+  window.switchTab = switchTab;
+  window.openProductDetail = openProductDetail;
+  window.closeProductDetail = closeProductDetail;
+  window.openInstantOrder = openInstantOrder;
+  window.closeInstantOrder = closeInstantOrder;
+  window.handleInstantCheckout = handleInstantCheckout;
+  window.showToast = showToast;
+  window.showOrderSuccessModal = showOrderSuccessModal;
+  window.closeOrderSuccessModal = closeOrderSuccessModal;
+  window.copyOrderCode = copyOrderCode;
+  window.SafeStorage = SafeStorage;
+  window.handleImageError = handleImageError;
 }

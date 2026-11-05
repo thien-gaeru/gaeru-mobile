@@ -777,6 +777,68 @@
     </div>
   </div>
 
+  <!-- MODAL BÁO THÀNH CÔNG ĐẶT HÀNG (TRỰC QUAN 100% THAY THẾ ALERT) -->
+  <div id="order-success-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeOrderSuccessModal()"></div>
+    <div class="modal-content" style="text-align:center; max-height:85vh; overflow-y:auto; padding: 20px 16px;">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeOrderSuccessModal()">✕</button>
+
+      <div style="margin: 10px auto 12px; width: 64px; height: 64px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+
+      <h3 style="font-size: 18px; font-weight: 800; color: var(--gaeru-text); margin-bottom: 4px;">ĐẶT HÀNG THÀNH CÔNG!</h3>
+      <p style="font-size: 12px; color: var(--gaeru-text-muted); margin-bottom: 16px;">Đơn hàng đã được lưu và cấp mã thực tế từ hệ thống GAERU</p>
+
+      <div style="background: var(--gaeru-surface-2, rgba(255,255,255,0.05)); border: 1px solid var(--gaeru-border); border-radius: 16px; padding: 14px; text-align: left; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed var(--gaeru-border); padding-bottom: 8px;">
+          <div>
+            <span style="font-size: 11px; color: var(--gaeru-text-muted); display: block;">MÃ ĐƠN HÀNG</span>
+            <strong id="success-order-code" style="font-size: 16px; color: #38bdf8; font-family: monospace;">#GR-...</strong>
+          </div>
+          <button type="button" class="btn" style="padding: 5px 12px; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px;" onclick="copyOrderCode(document.getElementById('success-order-code').textContent.replace('#',''))">
+            📋 Sao chép
+          </button>
+        </div>
+
+        <div style="font-size: 12px; margin-bottom: 6px;">
+          <span style="color: var(--gaeru-text-muted);">Sản phẩm:</span>
+          <strong id="success-order-item" style="color: var(--gaeru-text); display: block; margin-top: 2px;">-</strong>
+        </div>
+
+        <div style="font-size: 12px; margin-bottom: 6px;">
+          <span style="color: var(--gaeru-text-muted);">Tổng thanh toán:</span>
+          <strong id="success-order-total" style="color: #10b981; font-size: 15px; display: block; margin-top: 2px;">0 ₫</strong>
+        </div>
+
+        <div style="font-size: 12px; margin-bottom: 6px;">
+          <span style="color: var(--gaeru-text-muted);">Người nhận:</span>
+          <span id="success-order-recipient" style="color: var(--gaeru-text); display: block; margin-top: 2px; font-weight:600;">-</span>
+        </div>
+
+        <div style="font-size: 12px; margin-bottom: 10px;">
+          <span style="color: var(--gaeru-text-muted);">Địa chỉ giao hàng:</span>
+          <span id="success-order-address" style="color: var(--gaeru-text); display: block; margin-top: 2px;">-</span>
+        </div>
+
+        <div style="font-size: 11px; color: #10b981; background: rgba(16, 185, 129, 0.1); border-radius: 8px; padding: 6px 10px; display: flex; align-items: center; gap: 6px;">
+          <span>🛡️</span>
+          <span id="success-order-status">Đang xử lý tiếp nhận</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700;" onclick="closeOrderSuccessModal(); switchTab('tab-account');">
+          📦 Xem đơn trong mục Tài khoản
+        </button>
+        <button type="button" class="btn" style="width: 100%; padding: 10px; background: transparent; color: var(--gaeru-text-muted); border: 1px solid var(--gaeru-border);" onclick="closeOrderSuccessModal()">
+          Tiếp tục xem sản phẩm
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="toast hidden"></div>
 
