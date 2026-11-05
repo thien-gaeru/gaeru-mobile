@@ -254,17 +254,31 @@ function normalizeProduct(raw) {
 async function loadProducts() {
   try {
     let rawList = [];
-    if (window.GaeruAPI) {
+    if (window.__BUNDLED_PRODUCTS__ && window.__BUNDLED_PRODUCTS__.length > 0) {
+      rawList = window.__BUNDLED_PRODUCTS__;
+    } else if (window.GaeruAPI) {
       rawList = await window.GaeruAPI.getProducts().catch(() => []);
     }
     if (!rawList || rawList.length === 0) {
-      const res = await fetch('data/products.json');
-      const json = await res.json();
-      rawList = json.products || [];
+      try {
+        const res = await fetch('data/products.json');
+        if (res.ok) {
+          const json = await res.json();
+          rawList = json.products || json || [];
+        }
+      } catch (e) {}
+    }
+    if (!rawList || rawList.length === 0) {
+      if (window.__BUNDLED_PRODUCTS__) {
+        rawList = window.__BUNDLED_PRODUCTS__;
+      }
     }
     AppState.products = (rawList || []).map(normalizeProduct).filter(Boolean);
   } catch (err) {
     console.warn('Lỗi tải sản phẩm, dùng dữ liệu dự phòng:', err);
+    if (window.__BUNDLED_PRODUCTS__) {
+      AppState.products = window.__BUNDLED_PRODUCTS__.map(normalizeProduct).filter(Boolean);
+    }
   }
 
   renderProductGrids();
@@ -939,6 +953,12 @@ function renderCart() {
 // ==================== TẢI TỈNH / THÀNH & XÃ PHƯỜNG VIỆT NAM ====================
 async function loadProvinces() {
   try {
+    if (window.__BUNDLED_PROVINCES__ && window.__BUNDLED_PROVINCES__.provinces) {
+      AppState.provinces = window.__BUNDLED_PROVINCES__.provinces;
+      populateProvinceSelects();
+      applyProfileToCheckoutForm();
+      return;
+    }
     const res = await fetch('assets/data/vietnam-addresses.json');
     if (res.ok) {
       const data = await res.json();
