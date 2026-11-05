@@ -2052,6 +2052,383 @@ body.keyboard-open .bottom-nav {
   cursor: not-allowed;
 }
 
+/* ==================== PULL TO REFRESH CHỈ BÁO VUỐT CẬP NHẬT ==================== */
+.pull-refresh-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: height 0.25s ease, opacity 0.25s ease;
+  background: var(--gaeru-surface-hover);
+  border-bottom: 1px solid var(--gaeru-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gaeru-text-muted);
+}
+
+.pull-refresh-indicator.visible {
+  height: 48px;
+  opacity: 1;
+}
+
+.pull-refresh-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 113, 227, 0.2);
+  border-top-color: var(--gaeru-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ==================== SKELETON LOADING SHIMMER ==================== */
+.skeleton-card {
+  background: var(--gaeru-surface);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-thumb {
+  width: 100%;
+  height: 130px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--gaeru-surface-hover) 25%, var(--gaeru-border) 50%, var(--gaeru-surface-hover) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--gaeru-surface-hover) 25%, var(--gaeru-border) 50%, var(--gaeru-surface-hover) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+.skeleton-line.w-80 { width: 80%; }
+.skeleton-line.w-50 { width: 50%; }
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==================== GALLERY CAROUSEL TRONG CHI TIẾT SẢN PHẨM ==================== */
+.detail-gallery-wrap {
+  position: relative;
+  width: 100%;
+  background: var(--gaeru-surface-hover);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--gaeru-border);
+  margin-bottom: 14px;
+}
+
+.detail-main-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+body.dark .detail-main-stage {
+  background: #11141d;
+}
+
+.detail-main-img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease;
+}
+
+.gallery-nav-btn.prev { left: 8px; }
+.gallery-nav-btn.next { right: 8px; }
+.gallery-nav-btn:active { background: rgba(0, 0, 0, 0.7); }
+
+.gallery-counter {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.detail-thumbnails-strip {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.detail-thumbnails-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.detail-thumb-item {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: var(--gaeru-surface);
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.detail-thumb-item.active {
+  border-color: var(--gaeru-blue);
+  transform: scale(1.05);
+}
+
+.detail-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Huy hiệu cam kết chất lượng */
+.detail-trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--gaeru-surface-hover);
+  color: var(--gaeru-text);
+  border: 1px solid var(--gaeru-border);
+}
+
+.dot-green {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--gaeru-green);
+}
+
+/* Bộ sản phẩm bao gồm */
+.detail-box-section {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  background: var(--gaeru-surface-hover);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.detail-box-section h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--gaeru-text);
+}
+
+.box-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.box-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--gaeru-text-muted);
+}
+
+.box-item-row .icon-check {
+  color: var(--gaeru-blue);
+  font-weight: bold;
+}
+
+/* Form row đôi cho tỉnh / xã */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ==================== MODAL CHI TIẾT ĐƠN HÀNG ==================== */
+.order-detail-header {
+  margin-bottom: 16px;
+}
+
+.order-detail-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--gaeru-blue);
+  margin-bottom: 4px;
+}
+
+.order-modal-sub {
+  font-size: 11px;
+  color: var(--gaeru-text-muted);
+}
+
+.order-timeline {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.order-timeline::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--gaeru-border);
+  z-index: 1;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+}
+
+.step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gaeru-surface);
+  border: 2px solid var(--gaeru-border);
+  transition: all 0.25s ease;
+}
+
+.timeline-step.active .step-dot {
+  background: var(--gaeru-blue);
+  border-color: var(--gaeru-blue);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+}
+
+.step-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gaeru-text-muted);
+}
+
+.timeline-step.active .step-name {
+  color: var(--gaeru-text);
+  font-weight: 700;
+}
+
+.order-detail-card {
+  background: var(--gaeru-surface-hover);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.order-detail-card h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gaeru-text-muted);
+  margin-bottom: 8px;
+}
+
+.order-detail-card p {
+  font-size: 12px;
+  color: var(--gaeru-text);
+  margin-bottom: 4px;
+}
+
+.order-summary-bold {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: var(--gaeru-blue) !important;
+  margin-bottom: 8px !important;
+}
+
+.order-calc-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-top: 4px;
+  color: var(--gaeru-text-muted);
+}
+
+.order-calc-row.total {
+  border-top: 1px dashed var(--gaeru-border);
+  padding-top: 8px;
+  margin-top: 8px;
+  color: var(--gaeru-text);
+}
+
+.total-big {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--gaeru-blue);
+}
+
+.order-modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .hidden {
   display: none !important;
 }

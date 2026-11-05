@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   initHeroCarousel();
   initSheetDragToDismiss();
   initKeyboardAdaptation();
+  initPullToRefresh();
+  renderSkeletons();
   await loadProducts();
   await loadProvinces();
   loadCartFromStorage();
@@ -421,6 +423,145 @@ function initHeroCarousel() {
   }, { passive: true });
 }
 
+// ==================== SKELETON LOADING PLACEHOLDERS ====================
+function renderSkeletons() {
+  const homeGrid = document.getElementById('home-product-grid');
+  const catalogGrid = document.getElementById('catalog-product-grid');
+  const skelHtml = Array(4).fill(0).map(() => `
+    <div class="skeleton-card">
+      <div class="skeleton-thumb"></div>
+      <div class="skeleton-line w-80"></div>
+      <div class="skeleton-line w-50"></div>
+    </div>
+  `).join('');
+
+  if (homeGrid && (!AppState.products || AppState.products.length === 0)) homeGrid.innerHTML = skelHtml;
+  if (catalogGrid && (!AppState.products || AppState.products.length === 0)) catalogGrid.innerHTML = skelHtml;
+}
+
+// ==================== CỬ CHỈ KÉO XUỐNG ĐỂ LÀM MỚI (PULL TO REFRESH) ====================
+function initPullToRefresh() {
+  const main = document.querySelector('.app-main');
+  const indicator = document.getElementById('pull-refresh-indicator');
+  const textEl = indicator ? indicator.querySelector('.pull-refresh-text') : null;
+  if (!main || !indicator) return;
+
+  let startY = 0;
+  let isPulling = false;
+  let isRefreshing = false;
+
+  main.addEventListener('touchstart', (e) => {
+    if (main.scrollTop <= 5 && !isRefreshing) {
+      startY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  main.addEventListener('touchmove', (e) => {
+    if (!isPulling || isRefreshing) return;
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - startY;
+
+    if (deltaY > 15 && main.scrollTop <= 5) {
+      const pullHeight = Math.min(60, Math.floor(deltaY * 0.45));
+      indicator.style.height = `${pullHeight}px`;
+      indicator.style.opacity = `${Math.min(1, pullHeight / 48)}`;
+      if (textEl) {
+        textEl.textContent = pullHeight >= 48 ? 'Thả tay để cập nhật...' : 'Kéo xuống để cập nhật...';
+      }
+    }
+  }, { passive: true });
+
+  main.addEventListener('touchend', async () => {
+    if (!isPulling || isRefreshing) return;
+    isPulling = false;
+
+    const currentHeight = parseInt(indicator.style.height || '0', 10);
+    if (currentHeight >= 45) {
+      isRefreshing = true;
+      indicator.classList.add('visible');
+      if (textEl) textEl.textContent = 'Đang đồng bộ dữ liệu gaeru.com...';
+      if (navigator.vibrate) navigator.vibrate(20);
+
+      try {
+        if (window.GaeruAPI && window.GaeruAPI.syncNow) {
+          await window.GaeruAPI.syncNow();
+        }
+        await loadProducts();
+        showToast('✅ Đã cập nhật sản phẩm mới nhất!');
+      } catch (err) {
+        console.warn('Lỗi làm mới:', err);
+      } finally {
+        setTimeout(() => {
+          indicator.classList.remove('visible');
+          indicator.style.height = '0';
+          indicator.style.opacity = '0';
+          isRefreshing = false;
+        }, 400);
+      }
+    } else {
+      indicator.style.height = '0';
+      indicator.style.opacity = '0';
+    }
+  });
+}
+
+// ==================== QUẢN LÝ THƯ VIỆN HÌNH ẢNH (GALLERY CAROUSEL) ====================
+let galleryState = {
+  images: [],
+  currentIndex: 0
+};
+
+function renderGallery() {
+  const imgEl = document.getElementById('detail-img');
+  const counterEl = document.getElementById('detail-gallery-counter');
+  const thumbsWrap = document.getElementById('detail-thumbnails');
+
+  if (!galleryState.images || galleryState.images.length === 0) return;
+
+  const currentUrl = galleryState.images[galleryState.currentIndex] || galleryState.images[0];
+  if (imgEl) {
+    imgEl.style.opacity = '0.35';
+    setTimeout(() => {
+      imgEl.src = currentUrl;
+      imgEl.style.opacity = '1';
+    }, 100);
+  }
+
+  if (counterEl) {
+    counterEl.textContent = `${galleryState.currentIndex + 1} / ${galleryState.images.length}`;
+  }
+
+  if (thumbsWrap) {
+    thumbsWrap.innerHTML = galleryState.images.map((url, idx) => `
+      <div class="detail-thumb-item ${idx === galleryState.currentIndex ? 'active' : ''}" onclick="selectGalleryThumbnail(${idx})">
+        <img src="${url}" alt="Ảnh ${idx + 1}" loading="lazy" onerror="this.src='assets/brand/gaeru-logo.png'">
+      </div>
+    `).join('');
+  }
+}
+
+function prevGalleryImage() {
+  if (galleryState.images.length <= 1) return;
+  galleryState.currentIndex = (galleryState.currentIndex - 1 + galleryState.images.length) % galleryState.images.length;
+  renderGallery();
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
+function nextGalleryImage() {
+  if (galleryState.images.length <= 1) return;
+  galleryState.currentIndex = (galleryState.currentIndex + 1) % galleryState.images.length;
+  renderGallery();
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
+function selectGalleryThumbnail(idx) {
+  if (idx < 0 || idx >= galleryState.images.length) return;
+  galleryState.currentIndex = idx;
+  renderGallery();
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
 // ==================== MODAL CHI TIẾT SẢN PHẨM & CỬ CHỈ VUỐT XUỐNG ĐỂ ĐÓNG ====================
 function openProductDetail(slug) {
   const product = AppState.products.find(p => p.slug === slug);
@@ -429,7 +570,12 @@ function openProductDetail(slug) {
   AppState.selectedProduct = product;
   AppState.selectedVariant = (product.variants && product.variants.length > 0) ? product.variants[0] : null;
 
-  document.getElementById('detail-img').src = AppState.selectedVariant?.imageUrl || product.imageUrl;
+  // Cài đặt thư viện hình ảnh đa góc chụp
+  const allImages = (product.gallery && product.gallery.length > 0) ? product.gallery : [product.imageUrl];
+  galleryState.images = allImages;
+  galleryState.currentIndex = 0;
+  renderGallery();
+
   document.getElementById('detail-name').textContent = product.name;
   
   const currentPrice = AppState.selectedVariant?.priceVnd || product.priceVnd || 0;
@@ -454,6 +600,34 @@ function openProductDetail(slug) {
 
   document.getElementById('detail-descriptor').textContent = product.descriptor || '';
   document.getElementById('detail-description').textContent = product.description || '';
+
+  // Trích xuất "Bộ sản phẩm bao gồm" từ mô tả sản phẩm
+  const boxSection = document.getElementById('detail-box-contents');
+  const boxList = document.getElementById('detail-box-list');
+  if (boxSection && boxList) {
+    let items = [];
+    if (product.description && product.description.includes('Bộ sản phẩm bao gồm:')) {
+      const parts = product.description.split('Bộ sản phẩm bao gồm:')[1];
+      const itemsLine = parts.split('\n')[0];
+      items = itemsLine.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (product.description && product.description.includes('Bộ Sản Phẩm Bao Gồm:')) {
+      const parts = product.description.split('Bộ Sản Phẩm Bao Gồm:')[1];
+      const lines = parts.split('\n').slice(0, 6).map(s => s.replace(/^\d+\s*[xX]\s*|^-\s*/, '').trim()).filter(Boolean);
+      items = lines.filter(l => !l.includes('lưu ý') && !l.includes('THAY ĐỔI'));
+    }
+    
+    if (items.length > 0) {
+      boxList.innerHTML = items.map(item => `
+        <div class="box-item-row">
+          <span class="icon-check">✓</span>
+          <span>${item}</span>
+        </div>
+      `).join('');
+      boxSection.classList.remove('hidden');
+    } else {
+      boxSection.classList.add('hidden');
+    }
+  }
 
   // Render các biến thể nếu có
   renderDetailVariants(product);
@@ -758,44 +932,73 @@ function renderCart() {
   }
 }
 
-// ==================== TẢI TỈNH / THÀNH VIỆT NAM ====================
+// ==================== TẢI TỈNH / THÀNH & XÃ PHƯỜNG VIỆT NAM ====================
 async function loadProvinces() {
-  const select = document.getElementById('order-province');
-  const profSelect = document.getElementById('profile-input-province');
-  const instantSelect = document.getElementById('instant-order-province');
-  if (!select && !profSelect && !instantSelect) return;
-
   try {
     const res = await fetch('assets/data/vietnam-addresses.json');
     if (res.ok) {
       const data = await res.json();
       if (data && data.provinces) {
         AppState.provinces = data.provinces;
-        const optionsHtml = data.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
-        if (select) {
-          select.innerHTML = '<option value="">Chọn tỉnh / thành phố nhận hàng</option>' + optionsHtml;
-        }
-        if (profSelect) {
-          profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + optionsHtml;
-          if (AppState.user && AppState.user.province) profSelect.value = AppState.user.province;
-        }
-        if (instantSelect) {
-          instantSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + optionsHtml;
-          if (AppState.user && AppState.user.province) instantSelect.value = AppState.user.province;
-        }
+        populateProvinceSelects();
       }
     }
   } catch (err) {
     console.warn('Lỗi tải danh mục tỉnh thành:', err);
-    const defaultProvinces = ['Hà Nội', 'TP Hồ Chí Minh', 'Ninh Bình', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
-    const defHtml = defaultProvinces.map(p => `<option value="${p}">${p}</option>`).join('');
-    if (select) select.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
-    if (profSelect) profSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
-    if (instantSelect) instantSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' + defHtml;
+    AppState.provinces = [
+      { name: 'Hà Nội', fullName: 'Thành phố Hà Nội', wards: [{ name: 'Phường Ba Đình' }, { name: 'Phường Hoàn Kiếm' }, { name: 'Phường Cầu Giấy' }, { name: 'Phường Đống Đa' }] },
+      { name: 'TP Hồ Chí Minh', fullName: 'Thành phố Hồ Chí Minh', wards: [{ name: 'Quận 1' }, { name: 'Quận 3' }, { name: 'TP Thủ Đức' }, { name: 'Quận Bình Thạnh' }] },
+      { name: 'Ninh Bình', fullName: 'Tỉnh Ninh Bình', wards: [{ name: 'TP Ninh Bình' }, { name: 'Huyện Gia Viễn' }, { name: 'Huyện Hoa Lư' }] },
+      { name: 'Đà Nẵng', fullName: 'Thành phố Đà Nẵng', wards: [{ name: 'Quận Hải Châu' }, { name: 'Quận Sơn Trà' }] }
+    ];
+    populateProvinceSelects();
   }
 
-  // Tự động điền dữ liệu người dùng vào checkout form nếu có
   applyProfileToCheckoutForm();
+}
+
+function populateProvinceSelects() {
+  const optionsHtml = '<option value="">Chọn tỉnh / thành</option>' +
+    AppState.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+
+  const instantProv = document.getElementById('instant-order-province');
+  const profProv = document.getElementById('profile-input-province');
+  if (instantProv) instantProv.innerHTML = optionsHtml;
+  if (profProv) profProv.innerHTML = optionsHtml;
+}
+
+function handleInstantProvinceChange() {
+  const provSelect = document.getElementById('instant-order-province');
+  const wardSelect = document.getElementById('instant-order-ward');
+  if (!provSelect || !wardSelect) return;
+
+  const selectedName = provSelect.value;
+  const matched = AppState.provinces.find(p => p.name === selectedName);
+
+  if (matched && matched.wards && matched.wards.length > 0) {
+    wardSelect.innerHTML = '<option value="">Chọn phường / xã</option>' +
+      matched.wards.map(w => `<option value="${w.name}">${w.name}</option>`).join('');
+    wardSelect.disabled = false;
+  } else {
+    wardSelect.innerHTML = '<option value="">(Không có danh sách xã)</option>';
+  }
+}
+
+function handleProfileProvinceChange() {
+  const provSelect = document.getElementById('profile-input-province');
+  const wardSelect = document.getElementById('profile-input-ward');
+  if (!provSelect || !wardSelect) return;
+
+  const selectedName = provSelect.value;
+  const matched = AppState.provinces.find(p => p.name === selectedName);
+
+  if (matched && matched.wards && matched.wards.length > 0) {
+    wardSelect.innerHTML = '<option value="">Chọn phường / xã</option>' +
+      matched.wards.map(w => `<option value="${w.name}">${w.name}</option>`).join('');
+    wardSelect.disabled = false;
+  } else {
+    wardSelect.innerHTML = '<option value="">Chọn phường / xã</option>';
+  }
 }
 
 // ==================== ĐẶT MUA NHANH TRỰC TIẾP (INSTANT CHECKOUT) ====================
@@ -849,16 +1052,20 @@ function openInstantOrder(slug, variantId) {
   const nameInput = document.getElementById('instant-order-name');
   const phoneInput = document.getElementById('instant-order-phone');
   const provSelect = document.getElementById('instant-order-province');
+  const wardSelect = document.getElementById('instant-order-ward');
   const addrInput = document.getElementById('instant-order-address');
 
   if (provSelect && provSelect.options.length <= 1 && AppState.provinces.length > 0) {
-    provSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' +
-      AppState.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+    populateProvinceSelects();
   }
 
   if (nameInput) nameInput.value = (AppState.user.name && AppState.user.name !== 'Khách hàng GAERU') ? AppState.user.name : '';
   if (phoneInput) phoneInput.value = AppState.user.phone || '';
-  if (provSelect && AppState.user.province) provSelect.value = AppState.user.province;
+  if (provSelect && AppState.user.province) {
+    provSelect.value = AppState.user.province;
+    handleInstantProvinceChange();
+    if (wardSelect && AppState.user.ward) wardSelect.value = AppState.user.ward;
+  }
   if (addrInput) addrInput.value = AppState.user.address || '';
 
   closeProductDetail();
@@ -944,7 +1151,9 @@ async function handleInstantCheckout(event) {
   const name = document.getElementById('instant-order-name').value.trim();
   const phone = document.getElementById('instant-order-phone').value.trim();
   const province = document.getElementById('instant-order-province').value;
+  const ward = document.getElementById('instant-order-ward')?.value || '';
   const address = document.getElementById('instant-order-address').value.trim();
+  const note = document.getElementById('instant-order-note')?.value.trim() || '';
   const paymentMethod = document.querySelector('input[name="instantPaymentMethod"]:checked')?.value || 'cod';
 
   if (!name || !phone || !province || !address) {
@@ -962,6 +1171,7 @@ async function handleInstantCheckout(event) {
   const totalVnd = unitPrice * instantOrderState.quantity;
   const variantName = instantOrderState.variant?.name ? ` (${instantOrderState.variant.name})` : '';
   const itemSummary = `${instantOrderState.quantity}x ${instantOrderState.product.name}${variantName}`;
+  const fullAddress = `${address}${ward ? ', ' + ward : ''}, ${province}`;
 
   let createdOrderNumber = 'GAE' + Math.floor(100000 + Math.random() * 900000);
   let isLiveCreated = false;
@@ -974,9 +1184,9 @@ async function handleInstantCheckout(event) {
           name,
           email: AppState.user.email || `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`,
           phone,
-          address: `${address}, ${province}`,
+          address: fullAddress,
           city: province,
-          note: `Đặt qua GAERU Mobile App${variantName ? ' - ' + variantName : ''}`
+          note: note ? `${note} (Đặt qua GAERU Mobile App${variantName ? ' - ' + variantName : ''})` : `Đặt qua GAERU Mobile App${variantName ? ' - ' + variantName : ''}`
         },
         paymentMethod: paymentMethod === 'cod' ? 'cod' : 'bank_transfer',
         items: [
@@ -1003,6 +1213,9 @@ async function handleInstantCheckout(event) {
     totalVnd: totalVnd,
     itemSummary: itemSummary,
     paymentMethod: paymentMethod,
+    recipient: `${name} (${phone})`,
+    address: fullAddress,
+    note: note,
     statusClass: isLiveCreated ? 'confirmed' : 'pending',
     statusText: isLiveCreated ? 'Đã tiếp nhận (Realtime)' : 'Chờ xác nhận'
   };
@@ -1014,7 +1227,7 @@ async function handleInstantCheckout(event) {
 
   // Tự động lưu hồ sơ nếu chưa có
   if (!AppState.user.phone) {
-    AppState.user = { name, phone, email: `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`, province, address };
+    AppState.user = { name, phone, email: `${phone.replace(/\D/g, '')}@khachhang.gaeru.com`, province, ward, address };
     try {
       localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
     } catch (e) {}
@@ -1028,7 +1241,7 @@ async function handleInstantCheckout(event) {
     btnSubmit.textContent = 'Xác nhận đặt hàng ngay';
   }
 
-  alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${createdOrderNumber}\nSản phẩm: ${itemSummary}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${address}, ${province}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận và giao hàng nhanh chóng!`);
+  alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nMã đơn: #${createdOrderNumber}\nSản phẩm: ${itemSummary}\nTổng tiền: ${formatVnd(totalVnd)}\nNgười nhận: ${name} (${phone})\nĐịa chỉ: ${fullAddress}\n\nĐơn hàng đã được lưu vào mục "Tài khoản". Đội ngũ GAERU sẽ liên hệ xác nhận và giao hàng nhanh chóng!`);
 
   switchTab('tab-account');
 }
@@ -1258,11 +1471,12 @@ function loadUserProfile() {
         phone: '',
         email: '',
         province: '',
+        ward: '',
         address: ''
       };
     }
   } catch (e) {
-    AppState.user = { name: 'Khách hàng GAERU', phone: '', email: '', province: '', address: '' };
+    AppState.user = { name: 'Khách hàng GAERU', phone: '', email: '', province: '', ward: '', address: '' };
   }
 }
 
@@ -1273,6 +1487,7 @@ function saveUserProfile(event) {
   const phone = document.getElementById('profile-input-phone').value.trim();
   const email = document.getElementById('profile-input-email').value.trim();
   const province = document.getElementById('profile-input-province').value;
+  const ward = document.getElementById('profile-input-ward')?.value || '';
   const address = document.getElementById('profile-input-address').value.trim();
 
   if (!name || !phone) {
@@ -1280,7 +1495,7 @@ function saveUserProfile(event) {
     return;
   }
 
-  AppState.user = { name, phone, email, province, address };
+  AppState.user = { name, phone, email, province, ward, address };
   try {
     localStorage.setItem('gaeru_user_profile', JSON.stringify(AppState.user));
   } catch (e) {}
@@ -1316,15 +1531,19 @@ function openProfileModal() {
   if (!modal) return;
 
   const provSelect = document.getElementById('profile-input-province');
+  const wardSelect = document.getElementById('profile-input-ward');
   if (provSelect && provSelect.options.length <= 1 && AppState.provinces.length > 0) {
-    provSelect.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>' +
-      AppState.provinces.map(p => `<option value="${p.name}">${p.fullName || p.name}</option>`).join('');
+    populateProvinceSelects();
   }
 
   document.getElementById('profile-input-name').value = AppState.user.name === 'Khách hàng GAERU' ? '' : (AppState.user.name || '');
   document.getElementById('profile-input-phone').value = AppState.user.phone || '';
   document.getElementById('profile-input-email').value = AppState.user.email || '';
-  if (provSelect && AppState.user.province) provSelect.value = AppState.user.province;
+  if (provSelect && AppState.user.province) {
+    provSelect.value = AppState.user.province;
+    handleProfileProvinceChange();
+    if (wardSelect && AppState.user.ward) wardSelect.value = AppState.user.ward;
+  }
   document.getElementById('profile-input-address').value = AppState.user.address || '';
 
   modal.classList.remove('hidden');
@@ -1376,8 +1595,9 @@ function renderAccountView() {
   }
 
   if (addressSavedEl) {
-    if (AppState.user.address || AppState.user.province) {
-      addressSavedEl.textContent = `${AppState.user.address ? AppState.user.address + ', ' : ''}${AppState.user.province || ''}`;
+    const parts = [AppState.user.address, AppState.user.ward, AppState.user.province].filter(Boolean);
+    if (parts.length > 0) {
+      addressSavedEl.textContent = parts.join(', ');
     } else {
       addressSavedEl.textContent = 'Chạm để thiết lập địa chỉ mặc định';
     }
@@ -1408,7 +1628,7 @@ function renderAccountOrders() {
   }
 
   container.innerHTML = AppState.orders.map(order => `
-    <div class="order-card-mini">
+    <div class="order-card-mini" onclick="openOrderDetail('${order.code}')" style="cursor:pointer;" title="Chạm để xem chi tiết tiến trình đơn hàng">
       <div class="order-header-row">
         <span class="order-code">#${order.code}</span>
         <span class="order-status-badge ${order.statusClass || 'shipping'}">${order.statusText || 'Đang giao hàng'}</span>
@@ -1419,10 +1639,96 @@ function renderAccountOrders() {
       </div>
       <div style="font-size:11px;color:var(--gaeru-text-muted);display:flex;justify-content:space-between;margin-top:2px;">
         <span>${order.date || 'Hôm nay'}</span>
-        <span>${order.paymentMethod === 'cod' ? 'Thanh toán COD' : 'Chuyển khoản VietQR'}</span>
+        <span style="color:var(--gaeru-cyan);display:flex;align-items:center;gap:3px;font-weight:600;">
+          <span>Chi tiết &gt;</span>
+        </span>
       </div>
     </div>
   `).join('');
+}
+
+// ==================== CHI TIẾT TIẾN TRÌNH ĐƠN HÀNG (ORDER DETAIL SHEET) ====================
+function openOrderDetail(orderCode) {
+  const modal = document.getElementById('order-detail-modal');
+  if (!modal) return;
+
+  const order = AppState.orders.find(o => o.code === orderCode) || {
+    code: orderCode,
+    date: 'Hôm nay',
+    totalVnd: 0,
+    itemSummary: 'Thiết bị GAERU',
+    paymentMethod: 'cod',
+    recipient: `${AppState.user.name || 'Khách hàng'} (${AppState.user.phone || ''})`,
+    address: `${AppState.user.address || ''}, ${AppState.user.ward ? AppState.user.ward + ', ' : ''}${AppState.user.province || ''}`,
+    statusClass: 'confirmed',
+    statusText: 'Đã tiếp nhận'
+  };
+
+  const codeEl = document.getElementById('order-modal-code');
+  const tagEl = document.getElementById('order-modal-status-tag');
+  const dateEl = document.getElementById('order-modal-date');
+  const summaryEl = document.getElementById('order-modal-summary');
+  const subtotalEl = document.getElementById('order-modal-subtotal');
+  const totalEl = document.getElementById('order-modal-total');
+  const recipientEl = document.getElementById('order-modal-recipient');
+  const addressEl = document.getElementById('order-modal-address');
+  const paymentEl = document.getElementById('order-modal-payment');
+  const supportBtn = document.getElementById('btn-order-support');
+
+  if (codeEl) codeEl.textContent = `#${order.code}`;
+  if (tagEl) {
+    tagEl.textContent = order.statusText || 'Đã tiếp nhận';
+    tagEl.className = `order-detail-tag ${order.statusClass || 'confirmed'}`;
+  }
+  if (dateEl) dateEl.textContent = `Thời gian đặt: ${order.date || 'Hôm nay'}`;
+  if (summaryEl) summaryEl.textContent = order.itemSummary || 'Thiết bị GAERU chính hãng';
+  if (subtotalEl) subtotalEl.textContent = formatVnd(order.totalVnd || 0);
+  if (totalEl) totalEl.textContent = formatVnd(order.totalVnd || 0);
+
+  const recipientText = order.recipient || `${AppState.user.name || 'Khách hàng GAERU'} ${AppState.user.phone ? '(' + AppState.user.phone + ')' : ''}`;
+  const addressText = order.address || [AppState.user.address, AppState.user.ward, AppState.user.province].filter(Boolean).join(', ');
+  
+  if (recipientEl) recipientEl.textContent = recipientText;
+  if (addressEl) addressEl.textContent = addressText || 'Nhận tại trung tâm kỹ thuật GAERU';
+  if (paymentEl) {
+    paymentEl.textContent = order.paymentMethod === 'cod'
+      ? 'Thanh toán tiền mặt khi nhận hàng (COD)'
+      : 'Chuyển khoản VietQR (Đã kích hoạt)';
+  }
+
+  // Cập nhật các bước tiến trình đơn hàng (Timeline steps)
+  const step1 = document.getElementById('tl-step-1');
+  const step2 = document.getElementById('tl-step-2');
+  const step3 = document.getElementById('tl-step-3');
+  const step4 = document.getElementById('tl-step-4');
+
+  const sClass = order.statusClass || 'pending';
+  [step1, step2, step3, step4].forEach(s => s && s.classList.remove('active'));
+
+  if (step1) step1.classList.add('active'); // Đặt hàng luôn hoàn tất
+  if (sClass === 'confirmed' || sClass === 'processing' || sClass === 'shipping' || sClass === 'delivered' || sClass === 'done') {
+    if (step2) step2.classList.add('active');
+  }
+  if (sClass === 'shipping' || sClass === 'delivered' || sClass === 'done') {
+    if (step3) step3.classList.add('active');
+  }
+  if (sClass === 'delivered' || sClass === 'done') {
+    if (step4) step4.classList.add('active');
+  }
+
+  // Cập nhật link Zalo hỗ trợ kèm mã đơn
+  if (supportBtn) {
+    const zaloMsg = encodeURIComponent(`Xin chào GAERU, tôi cần hỗ trợ thông tin đơn hàng #${order.code} (${order.itemSummary || ''})`);
+    supportBtn.href = `https://zalo.me/0829191080?text=${zaloMsg}`;
+  }
+
+  modal.classList.remove('hidden');
+  if (navigator.vibrate) navigator.vibrate(10);
+}
+
+function closeOrderDetail() {
+  const modal = document.getElementById('order-detail-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function renderAccountDevices() {

@@ -47,6 +47,12 @@
   <!-- Vùng nội dung chính (Chuyển đổi giữa các Tab) -->
   <main class="app-main">
 
+    <!-- CHỈ BÁO KÉO XUỐNG ĐỂ TẢI LẠI (PULL TO REFRESH) -->
+    <div id="pull-refresh-indicator" class="pull-refresh-indicator">
+      <div class="pull-refresh-spinner"></div>
+      <span class="pull-refresh-text">Kéo xuống để cập nhật...</span>
+    </div>
+
     <!-- TAB 1: TRANG CHỦ -->
     <section id="tab-home" class="tab-pane active">
       <!-- Hero Banner Carousel -->
@@ -175,7 +181,7 @@
           <span class="step-number">02</span>
           <div>
             <strong>Mô tả hiện tượng</strong>
-            <p>Liên hệ hotline hoặc quét mã để kỹ thuật viên kiểm tra từ xa.</p>
+            <p>Liên hệ hotline hoặc kỹ thuật viên GAERU kiểm tra từ xa qua Zalo/Điện thoại.</p>
           </div>
         </div>
         <div class="step-item">
@@ -387,8 +393,17 @@
       <button class="modal-close-btn" onclick="closeProductDetail()">✕</button>
 
       <div class="product-detail-body">
-        <div class="detail-gallery">
-          <img id="detail-img" src="" alt="Sản phẩm GAERU">
+        <!-- Thư viện hình ảnh đa góc chụp & Carousel -->
+        <div class="detail-gallery-wrap">
+          <div class="detail-main-stage">
+            <button type="button" class="gallery-nav-btn prev" onclick="prevGalleryImage()" aria-label="Ảnh trước">‹</button>
+            <img id="detail-img" src="" alt="Sản phẩm GAERU" class="detail-main-img">
+            <button type="button" class="gallery-nav-btn next" onclick="nextGalleryImage()" aria-label="Ảnh sau">›</button>
+            <span id="detail-gallery-counter" class="gallery-counter">1 / 1</span>
+          </div>
+          <div id="detail-thumbnails" class="detail-thumbnails-strip">
+            <!-- Render động các ảnh nhỏ thumbnail -->
+          </div>
         </div>
 
         <div class="detail-info">
@@ -397,6 +412,13 @@
           <div class="detail-price-row">
             <span id="detail-price" class="detail-price">0 ₫</span>
             <span id="detail-old-price" class="old-price">0 ₫</span>
+          </div>
+
+          <!-- Huy hiệu cam kết chất lượng -->
+          <div class="detail-trust-badges">
+            <span class="badge-pill stock-badge"><span class="dot-green"></span> Chính hãng GAERU</span>
+            <span class="badge-pill ship-badge">🚀 Miễn phí ship</span>
+            <span class="badge-pill warranty-badge">🛡️ 1 đổi 1 30 ngày</span>
           </div>
 
           <p id="detail-descriptor" class="detail-descriptor"></p>
@@ -419,6 +441,14 @@
             </div>
           </div>
 
+          <!-- Bộ sản phẩm bao gồm -->
+          <div id="detail-box-contents" class="detail-box-section hidden">
+            <h4>📦 Bộ sản phẩm bao gồm</h4>
+            <div id="detail-box-list" class="box-items-list">
+              <!-- Render động -->
+            </div>
+          </div>
+
           <div class="detail-desc-box">
             <h4>Mô tả thiết bị</h4>
             <p id="detail-description"></p>
@@ -427,6 +457,9 @@
       </div>
 
       <div class="detail-footer-actions">
+        <a href="https://zalo.me/0829191080" target="_blank" class="btn btn-secondary btn-icon-only" title="Nhắn Zalo tư vấn">
+          💬
+        </a>
         <a href="tel:0829191080" class="btn btn-secondary btn-icon-only" title="Gọi hotline tư vấn">
           📞
         </a>
@@ -481,16 +514,30 @@
           <input type="tel" id="instant-order-phone" required placeholder="Ví dụ: 0912345678" pattern="[0-9]{9,12}">
         </label>
 
+        <div class="form-row-2">
+          <label class="form-group">
+            <span>Tỉnh / Thành phố *</span>
+            <select id="instant-order-province" required onchange="handleInstantProvinceChange()">
+              <option value="">Chọn tỉnh / thành</option>
+            </select>
+          </label>
+
+          <label class="form-group">
+            <span>Phường / Xã *</span>
+            <select id="instant-order-ward" required>
+              <option value="">Chọn phường / xã</option>
+            </select>
+          </label>
+        </div>
+
         <label class="form-group">
-          <span>Tỉnh / Thành phố *</span>
-          <select id="instant-order-province" required>
-            <option value="">Chọn tỉnh / thành phố</option>
-          </select>
+          <span>Địa chỉ chi tiết (Số nhà, tên đường, ngõ xóm) *</span>
+          <input type="text" id="instant-order-address" required placeholder="Ví dụ: Số 25 ngõ 12 Đường Cầu Giấy">
         </label>
 
         <label class="form-group">
-          <span>Địa chỉ chi tiết (Số nhà, đường, phường/xã) *</span>
-          <input type="text" id="instant-order-address" required placeholder="Ví dụ: 123 Đường Lê Lợi, Phường 1">
+          <span>Ghi chú đơn hàng (Tuỳ chọn)</span>
+          <input type="text" id="instant-order-note" placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi đến">
         </label>
 
         <label class="form-group">
@@ -551,15 +598,24 @@
           <input type="email" id="profile-input-email" placeholder="Ví dụ: email@gmail.com">
         </label>
 
-        <label class="form-group">
-          <span>Tỉnh / Thành phố mặc định</span>
-          <select id="profile-input-province">
-            <option value="">Chọn tỉnh / thành phố</option>
-          </select>
-        </label>
+        <div class="form-row-2">
+          <label class="form-group">
+            <span>Tỉnh / Thành phố mặc định</span>
+            <select id="profile-input-province" onchange="handleProfileProvinceChange()">
+              <option value="">Chọn tỉnh / thành</option>
+            </select>
+          </label>
+
+          <label class="form-group">
+            <span>Phường / Xã mặc định</span>
+            <select id="profile-input-ward">
+              <option value="">Chọn phường / xã</option>
+            </select>
+          </label>
+        </div>
 
         <label class="form-group">
-          <span>Địa chỉ nhận hàng chi tiết</span>
+          <span>Địa chỉ nhận hàng chi tiết (Số nhà, đường)</span>
           <input type="text" id="profile-input-address" placeholder="Ví dụ: 123 Đường Lê Lợi, Phường 1">
         </label>
 
@@ -567,6 +623,74 @@
           Lưu thông tin hồ sơ
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CHI TIẾT ĐƠN HÀNG (ORDER DETAIL SHEET) -->
+  <div id="order-detail-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeOrderDetail()"></div>
+    <div class="modal-content">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeOrderDetail()">✕</button>
+
+      <div class="order-detail-header">
+        <span class="order-detail-tag" id="order-modal-status-tag">Đã tiếp nhận</span>
+        <h3 id="order-modal-code">#GAE123456</h3>
+        <p id="order-modal-date" class="order-modal-sub">Thời gian đặt: 05/11/2026</p>
+      </div>
+
+      <!-- Tiến trình đơn hàng -->
+      <div class="order-timeline">
+        <div class="timeline-step active" id="tl-step-1">
+          <div class="step-dot"></div>
+          <span class="step-name">Đặt hàng</span>
+        </div>
+        <div class="timeline-step active" id="tl-step-2">
+          <div class="step-dot"></div>
+          <span class="step-name">Xác nhận</span>
+        </div>
+        <div class="timeline-step" id="tl-step-3">
+          <div class="step-dot"></div>
+          <span class="step-name">Đóng gói</span>
+        </div>
+        <div class="timeline-step" id="tl-step-4">
+          <div class="step-dot"></div>
+          <span class="step-name">Giao hàng</span>
+        </div>
+      </div>
+
+      <div class="order-detail-card">
+        <h4>Chi tiết gói hàng</h4>
+        <p id="order-modal-summary" class="order-summary-bold"></p>
+        <div class="order-calc-row">
+          <span>Tiền hàng:</span>
+          <strong id="order-modal-subtotal">0 ₫</strong>
+        </div>
+        <div class="order-calc-row">
+          <span>Phí vận chuyển:</span>
+          <strong style="color:var(--gaeru-green);">Miễn phí</strong>
+        </div>
+        <div class="order-calc-row total">
+          <span>Tổng thanh toán:</span>
+          <strong id="order-modal-total" class="total-big">0 ₫</strong>
+        </div>
+      </div>
+
+      <div class="order-detail-card">
+        <h4>Thông tin nhận hàng</h4>
+        <p><strong>Người nhận:</strong> <span id="order-modal-recipient"></span></p>
+        <p><strong>Địa chỉ:</strong> <span id="order-modal-address"></span></p>
+        <p><strong>Thanh toán:</strong> <span id="order-modal-payment"></span></p>
+      </div>
+
+      <div class="order-modal-actions">
+        <a id="btn-order-support" href="https://zalo.me/0829191080" target="_blank" class="btn btn-secondary btn-flex">
+          💬 Hỗ trợ đơn này
+        </a>
+        <button type="button" class="btn btn-primary btn-flex" onclick="closeOrderDetail()">
+          Đóng
+        </button>
+      </div>
     </div>
   </div>
 
