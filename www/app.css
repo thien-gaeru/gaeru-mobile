@@ -2624,3 +2624,80 @@ body.dark .detail-main-stage {
 .hidden {
   display: none !important;
 }
+
+/* ==================== CẨM NANG & HƯỚNG DẪN SÁNG TẠO ==================== */
+.home-guides-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.guide-card {
+  background: var(--gaeru-card-bg);
+  border: 1px solid var(--gaeru-border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.guide-card:active {
+  transform: scale(0.985);
+  background: var(--gaeru-card-hover);
+  border-color: var(--gaeru-blue);
+}
+
+.guide-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.guide-card-tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--gaeru-blue);
+  background: rgba(0, 113, 227, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.guide-card-date {
+  font-size: 11px;
+  color: var(--gaeru-text-muted);
+}
+
+.guide-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gaeru-text);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.guide-card-excerpt {
+  font-size: 12px;
+  color: var(--gaeru-text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.guide-card-action {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gaeru-blue);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}

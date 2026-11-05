@@ -1,13 +1,21 @@
 {
-  "shippingCarriers": [],
-  "shippingNote": "Phí vận chuyển được tính theo tỉnh/thành phố đã chọn.",
-  "shippingRates": {},
-  "paymentMethods": [
-    "cod"
-  ],
-  "cod": {
-    "maxAmountVnd": 50000000,
-    "instructions": "Thanh toán tiền mặt trực tiếp cho bưu tá khi nhận hàng."
+  "settings": {
+    "shippingCarriers": [],
+    "shippingNote": "Phí vận chuyển được tính theo tỉnh/thành phố đã chọn.",
+    "shippingRates": {
+      "Toàn quốc": 0
+    },
+    "paymentMethods": [
+      "cod"
+    ],
+    "cod": {
+      "maxAmountVnd": 50000000,
+      "instructions": "Thanh toán tiền mặt trực tiếp cho bưu tá khi nhận hàng."
+    },
+    "ordersEnabled": true,
+    "hotline": "082 919 1080",
+    "email": "business@gaeru.com",
+    "warrantyMonths": 12
   },
-  "ordersEnabled": false
+  "syncedAt": "2026-11-05T09:02:04.658Z"
 }

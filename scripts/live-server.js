@@ -56,7 +56,7 @@ try {
       notifyLiveReload();
 
       // Nếu thay đổi liên quan đến sản phẩm, gửi sự kiện realtime tới app
-      if (filename && (filename.includes('products.json') || filename.includes('settings.json'))) {
+      if (filename && (filename.includes('products.json') || filename.includes('settings.json') || filename.includes('guides.json'))) {
         broadcastAppEvent({
           type: 'product_change',
           source: 'local_file_change',
@@ -68,6 +68,49 @@ try {
   });
 } catch (e) {
   console.warn('[WATCHER] Không thể watch tự động:', e.message);
+}
+
+// Watch thư mục nguồn web gaeru (tự động đồng bộ sang mobile khi web có thay đổi)
+const WEB_SOURCE_DIR = path.resolve(__dirname, '..', '..', 'gaeru');
+if (fs.existsSync(WEB_SOURCE_DIR)) {
+  let webDebounceTimer = null;
+  function triggerAutoSync(relPath) {
+    if (webDebounceTimer) clearTimeout(webDebounceTimer);
+    webDebounceTimer = setTimeout(() => {
+      console.log(`[WEB AUTO-SYNC] Phát hiện thay đổi tại gaeru web: ${relPath}`);
+      console.log('[WEB AUTO-SYNC] Đang tự động đồng bộ nội dung sang Mobile App...');
+      try {
+        const { execSync } = require('child_process');
+        execSync(`node "${path.join(__dirname, 'sync-web-content.js')}"`, { stdio: 'inherit' });
+        console.log('[WEB AUTO-SYNC] ✅ Đã đồng bộ hoàn tất!');
+        broadcastAppEvent({
+          type: 'product_change',
+          source: 'gaeru_web_source_change',
+          file: relPath,
+          timestamp: Date.now()
+        });
+      } catch (err) {
+        console.warn('[WEB AUTO-SYNC] Lỗi đồng bộ tự động:', err.message);
+      }
+    }, 400);
+  }
+
+  try {
+    const watchSubs = ['assets', 'content', 'brand.css'];
+    for (const sub of watchSubs) {
+      const fullSub = path.join(WEB_SOURCE_DIR, sub);
+      if (fs.existsSync(fullSub)) {
+        fs.watch(fullSub, { recursive: true }, (evt, file) => {
+          if (file && !file.includes('.git')) {
+            triggerAutoSync(`${sub}/${file}`);
+          }
+        });
+      }
+    }
+    console.log(`[WEB AUTO-SYNC] 🟢 Đã kích hoạt theo dõi tự động thay đổi từ: ${WEB_SOURCE_DIR}`);
+  } catch (err) {
+    console.warn('[WEB AUTO-SYNC] Không thể kích hoạt web watcher:', err.message);
+  }
 }
 
 // Heartbeat định kỳ gửi tới các kết nối realtime app (mỗi 15 giây)

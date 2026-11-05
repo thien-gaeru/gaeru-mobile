@@ -2,7 +2,7 @@ name: Real-time Sync with gaeru.com
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Tự động kiểm tra và đồng bộ định kỳ mỗi 6 tiếng
+    - cron: '0 */2 * * *' # Tự động kiểm tra và đồng bộ định kỳ mỗi 2 tiếng
   repository_dispatch:
     types: [gaeru_web_updated] # Webhook kích hoạt ngay khi web gaeru.com có commit mới
   workflow_dispatch: # Cho phép kích hoạt thủ công từ giao diện GitHub

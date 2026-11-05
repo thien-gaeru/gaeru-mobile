@@ -85,6 +85,7 @@ function startApp() {
     renderSkeletons();
     checkLiveCustomerSession();
     loadProducts();
+    loadGuides();
     loadProvinces();
     loadCartFromStorage();
     initAccount();
@@ -321,37 +322,218 @@ function normalizeProduct(raw) {
   };
 }
 
-async function loadProducts() {
-  try {
-    let rawList = [];
+async function loadProducts(forceLive = false) {
+  // 1. Nạp tức thì (0ms) từ cache / bundled để giao diện sẵn sàng ngay lập tức không chớp trắng
+  if (!AppState.products || AppState.products.length === 0 || forceLive) {
+    let initialList = [];
     if (window.__BUNDLED_PRODUCTS__ && window.__BUNDLED_PRODUCTS__.length > 0) {
-      rawList = window.__BUNDLED_PRODUCTS__;
-    } else if (window.GaeruAPI) {
-      rawList = await window.GaeruAPI.getProducts().catch(() => []);
+      initialList = window.__BUNDLED_PRODUCTS__;
     }
-    if (!rawList || rawList.length === 0) {
+    if (!initialList.length) {
+      try {
+        const cached = SafeStorage.getItem('gaeru_cache_/api/products');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          initialList = parsed.products || parsed || [];
+        }
+      } catch (e) {}
+    }
+    if (!initialList.length) {
       try {
         const res = await fetch('data/products.json');
         if (res.ok) {
           const json = await res.json();
-          rawList = json.products || json || [];
+          initialList = json.products || json || [];
         }
       } catch (e) {}
     }
-    if (!rawList || rawList.length === 0) {
-      if (window.__BUNDLED_PRODUCTS__) {
-        rawList = window.__BUNDLED_PRODUCTS__;
-      }
-    }
-    AppState.products = (rawList || []).map(normalizeProduct).filter(Boolean);
-  } catch (err) {
-    console.warn('Lỗi tải sản phẩm, dùng dữ liệu dự phòng:', err);
-    if (window.__BUNDLED_PRODUCTS__) {
-      AppState.products = window.__BUNDLED_PRODUCTS__.map(normalizeProduct).filter(Boolean);
+
+    if (initialList.length > 0) {
+      AppState.products = initialList.map(normalizeProduct).filter(Boolean);
+      renderProductGrids();
+      updateHeroBannerFromProducts();
     }
   }
 
-  renderProductGrids();
+  // 2. Luôn gọi ngầm API gaeru.com (Stale-While-Revalidate) để bảo đảm 100% dữ liệu đồng bộ với web
+  if (window.GaeruAPI && window.GaeruAPI.getProducts && (navigator.onLine || forceLive)) {
+    try {
+      const liveList = await window.GaeruAPI.getProducts();
+      if (Array.isArray(liveList) && liveList.length > 0) {
+        AppState.products = liveList.map(normalizeProduct).filter(Boolean);
+        try {
+          SafeStorage.setItem('gaeru_cache_/api/products', JSON.stringify({ products: liveList, syncedAt: new Date().toISOString() }));
+        } catch (e) {}
+
+        renderProductGrids();
+        updateHeroBannerFromProducts();
+      }
+    } catch (err) {
+      console.warn('[Gaeru Sync] Không thể kết nối live API gaeru.com lúc này:', err.message);
+    }
+  }
+}
+
+// Cập nhật giá và mô tả Hero Banner theo dữ liệu sản phẩm thực tế từ gaeru.com
+function updateHeroBannerFromProducts() {
+  const cards = document.querySelectorAll('.hero-card');
+  cards.forEach(card => {
+    const slug = card.getAttribute('data-slug');
+    if (!slug) return;
+    const p = AppState.products.find(item => item.slug === slug);
+    if (!p) return;
+
+    const priceEl = card.querySelector('.hero-price');
+    if (priceEl) {
+      const oldPriceHtml = (p.originalPriceVnd && p.originalPriceVnd > p.priceVnd)
+        ? ` <span class="old-price">${formatVnd(p.originalPriceVnd)}</span>`
+        : '';
+      priceEl.innerHTML = `${formatVnd(p.priceVnd)}${oldPriceHtml}`;
+    }
+
+    const descEl = card.querySelector('.hero-desc') || card.querySelector('p');
+    if (descEl && p.descriptor) {
+      descEl.textContent = p.descriptor;
+    }
+
+    const badgeEl = card.querySelector('.hero-badge');
+    if (badgeEl && p.tag) {
+      badgeEl.textContent = p.tag;
+    }
+  });
+}
+
+// ==================== CẨM NANG & HƯỚNG DẪN SÁNG TẠO ĐỒNG BỘ TỪ GAERU.COM ====================
+AppState.guides = [];
+
+async function loadGuides() {
+  try {
+    let guides = [];
+    if (window.__BUNDLED_GUIDES__ && Array.isArray(window.__BUNDLED_GUIDES__) && window.__BUNDLED_GUIDES__.length > 0) {
+      guides = window.__BUNDLED_GUIDES__;
+    }
+
+    if (!guides.length) {
+      try {
+        const res = await fetch('data/guides.json');
+        if (res.ok) {
+          const json = await res.json();
+          guides = json.guides || [];
+        }
+      } catch (e) {}
+    }
+
+    if (!guides.length) {
+      try {
+        const nRes = await fetch('data/news.json');
+        if (nRes.ok) {
+          const nJson = await nRes.json();
+          guides = nJson.posts || [];
+        }
+      } catch (e) {}
+    }
+
+    AppState.guides = guides;
+    renderHomeGuides();
+  } catch (err) {
+    console.warn('Lỗi tải cẩm nang sáng tạo:', err);
+  }
+}
+
+function renderHomeGuides() {
+  const container = document.getElementById('home-guides-list');
+  const countBadge = document.getElementById('guides-count-badge');
+  if (!container) return;
+
+  const list = AppState.guides || [];
+  if (countBadge) {
+    countBadge.textContent = list.length > 0 ? `${list.length} cẩm nang` : 'GAERU Creator';
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--gaeru-text-muted); font-size: 13px;">
+        Đang đồng bộ cẩm nang sáng tạo từ gaeru.com...
+      </div>
+    `;
+    return;
+  }
+
+  // Hiển thị 4 cẩm nang nổi bật nhất trên Trang chủ
+  const featured = list.slice(0, 4);
+  container.innerHTML = featured.map(g => {
+    const title = g.title || 'Cẩm nang sáng tạo GAERU';
+    const excerpt = g.excerpt || (g.body ? g.body.slice(0, 110) + '...' : '');
+    const tag = g.slug && g.slug.includes('tiktok') ? 'TikTok Marketing' : (g.slug && g.slug.includes('video') ? 'Video Marketing' : 'Kỹ thuật Mic');
+    const dateText = g.publishedAt ? new Date(g.publishedAt).toLocaleDateString('vi-VN') : 'Mới cập nhật';
+    const idSafe = encodeURIComponent(g.id || g.slug || '');
+
+    return `
+      <div class="guide-card" onclick="openGuideDetail('${idSafe}')">
+        <div class="guide-card-top">
+          <span class="guide-card-tag">${tag}</span>
+          <span class="guide-card-date">${dateText}</span>
+        </div>
+        <h4 class="guide-card-title">${title}</h4>
+        <p class="guide-card-excerpt">${excerpt}</p>
+        <div class="guide-card-action">
+          <span>Đọc cẩm nang</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openGuideDetail(idOrSlug) {
+  const guide = (AppState.guides || []).find(g => (g.id && encodeURIComponent(g.id) === idOrSlug) || (g.slug && encodeURIComponent(g.slug) === idOrSlug));
+  if (!guide) return;
+
+  const modal = document.getElementById('guide-detail-modal');
+  const titleEl = document.getElementById('guide-detail-title');
+  const catEl = document.getElementById('guide-detail-category');
+  const dateEl = document.getElementById('guide-detail-date');
+  const bodyEl = document.getElementById('guide-detail-body');
+  const linkEl = document.getElementById('guide-web-link');
+
+  if (titleEl) titleEl.textContent = guide.title || '';
+  if (catEl) {
+    catEl.textContent = guide.slug && guide.slug.includes('tiktok') ? 'TikTok Marketing' : (guide.slug && guide.slug.includes('video') ? 'Video Marketing' : 'GAERU Creator');
+  }
+  if (dateEl) {
+    dateEl.textContent = guide.publishedAt ? new Date(guide.publishedAt).toLocaleDateString('vi-VN') : 'Hôm nay';
+  }
+  if (bodyEl) {
+    bodyEl.textContent = guide.body || guide.excerpt || 'Đang cập nhật nội dung cẩm nang.';
+  }
+  if (linkEl) {
+    linkEl.href = guide.slug ? `https://gaeru.com/tin-tuc/${guide.slug}` : 'https://gaeru.com';
+  }
+
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeGuideDetail() {
+  const modal = document.getElementById('guide-detail-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+// Đồng bộ toàn bộ dữ liệu thời gian thực từ gaeru.com
+async function syncAllLiveContent() {
+  showToast('🔄 Đang đồng bộ dữ liệu từ gaeru.com...', 'info');
+  try {
+    if (window.GaeruAPI && window.GaeruAPI.syncNow) {
+      await window.GaeruAPI.syncNow();
+    }
+    await Promise.allSettled([
+      loadProducts(true),
+      loadGuides(),
+      checkLiveCustomerSession()
+    ]);
+    showToast('✅ Đã đồng bộ toàn bộ dữ liệu mới nhất từ gaeru.com', 'success');
+  } catch (e) {
+    showToast('⚠️ Đồng bộ chưa hoàn tất: ' + (e.message || 'Lỗi mạng'), 'error');
+  }
 }
 
 function getFilteredProducts() {
@@ -2598,4 +2780,8 @@ if (typeof window !== 'undefined') {
   window.copyOrderCode = copyOrderCode;
   window.SafeStorage = SafeStorage;
   window.handleImageError = handleImageError;
+  window.loadGuides = loadGuides;
+  window.openGuideDetail = openGuideDetail;
+  window.closeGuideDetail = closeGuideDetail;
+  window.syncAllLiveContent = syncAllLiveContent;
 }

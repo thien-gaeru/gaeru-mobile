@@ -59,6 +59,16 @@ try {
   }
 } catch (e) {}
 
+let guidesJson = '[]';
+try {
+  const guidesPath = path.join(WWW_DIR, 'data', 'guides.json');
+  if (fs.existsSync(guidesPath)) {
+    const raw = fs.readFileSync(guidesPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    guidesJson = JSON.stringify(parsed.guides || parsed || []);
+  }
+} catch (e) {}
+
 // Ghép nối HTML hoàn chỉnh bên trong iframe
 let innerAppHtml = indexHtml;
 
@@ -92,6 +102,7 @@ const inlinedJs = `
     // Dữ liệu đóng gói sẵn phòng khi sandbox webview chặn kết nối mạng
     window.__BUNDLED_PRODUCTS__ = ${productsJson};
     window.__BUNDLED_PROVINCES__ = ${provincesJson};
+    window.__BUNDLED_GUIDES__ = ${guidesJson};
     window.__BUNDLED_IMAGE_ASSETS__ = ${JSON.stringify(bundledImages)};
   </script>
   <script>
@@ -182,13 +193,16 @@ const previewSimulatorHtml = `<!DOCTYPE html>
           </button>
         </div>
 
-        <!-- Thao tác thử nghiệm đặt hàng & tra cứu -->
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-700/60">
-          <button class="px-3 py-2 text-xs bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1.5 shadow" onclick="simOpenOrder('gaeru-g1-ultra')">
-            ⚡ Thử Mở Đặt Hàng G1 ULTRA
+        <!-- Thao tác thử nghiệm đặt hàng, tra cứu & đồng bộ -->
+        <div class="grid grid-cols-3 gap-2 pt-1 border-t border-slate-700/60">
+          <button class="px-2 py-2 text-xs bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simOpenOrder('gaeru-g1-ultra')">
+            ⚡ Đặt hàng G1
           </button>
-          <button class="px-3 py-2 text-xs bg-sky-600/90 hover:bg-sky-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1.5 shadow" onclick="simTestCare('GR-20261105-0404344DB3')">
-            🔍 Thử Tra Cứu Bảo Hành Đơn Thật
+          <button class="px-2 py-2 text-xs bg-sky-600/90 hover:bg-sky-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simTestCare('GR-20261105-0404344DB3')">
+            🔍 Tra cứu BH
+          </button>
+          <button class="px-2 py-2 text-xs bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-lg font-semibold transition flex items-center justify-center gap-1 shadow" onclick="simSyncWeb()">
+            🔄 Đồng bộ Web
           </button>
         </div>
       </div>
@@ -327,6 +341,13 @@ const previewSimulatorHtml = `<!DOCTYPE html>
             btn.click();
           }
         }, 150);
+      }
+    }
+
+    function simSyncWeb() {
+      const win = getFrameWin();
+      if (win && win.syncAllLiveContent) {
+        win.syncAllLiveContent();
       }
     }
 

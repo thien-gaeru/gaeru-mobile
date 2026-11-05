@@ -61,25 +61,25 @@
           <div class="hero-content">
             <span class="hero-badge">FLAGSHIP 2026</span>
             <h2>GAERU G1 ULTRA</h2>
-            <p>Ghi trọn câu chuyện. Micro không dây chuyên nghiệp đa thiết bị.</p>
-            <div class="hero-price">1.490.000 ₫ <span class="old-price">1.850.000 ₫</span></div>
+            <p class="hero-desc">Mic không dây chuyên nghiệp đa thiết bị, hộp sạc thông minh.</p>
+            <div class="hero-price">2.100.000 ₫ <span class="old-price">2.450.000 ₫</span></div>
             <button class="hero-btn" onclick="openProductDetail('gaeru-g1-ultra')">Khám phá ngay →</button>
           </div>
           <div class="hero-image-wrap">
-            <img src="assets/products/g1-ultra-clean.webp" alt="GAERU G1 ULTRA">
+            <img src="assets/products/g1-ultra-clean.webp" alt="GAERU G1 ULTRA" onerror="handleImageError(this, 'assets/products/g1-ultra-clean.webp')">
           </div>
         </div>
 
         <div class="hero-card" data-slug="gaeru-p01">
           <div class="hero-content">
-            <span class="hero-badge">AI TRACKING</span>
+            <span class="hero-badge">AI TRACKING 360°</span>
             <h2>GAERU P01</h2>
-            <p>Bạn di chuyển. Khung hình theo bạn. Gimbal AI xoay 360°.</p>
-            <div class="hero-price">690.000 ₫ <span class="old-price">890.000 ₫</span></div>
+            <p class="hero-desc">Bạn di chuyển. Khung hình theo bạn. Gimbal AI xoay 360°.</p>
+            <div class="hero-price">650.000 ₫ <span class="old-price">850.000 ₫</span></div>
             <button class="hero-btn" onclick="openProductDetail('gaeru-p01')">Khám phá ngay →</button>
           </div>
           <div class="hero-image-wrap">
-            <img src="assets/products/p01.webp" alt="GAERU P01">
+            <img src="assets/products/p01.webp" alt="GAERU P01" onerror="handleImageError(this, 'assets/products/p01.webp')">
           </div>
         </div>
       </div>
@@ -100,6 +100,21 @@
 
       <div id="home-product-grid" class="product-grid">
         <!-- Render động từ JavaScript -->
+      </div>
+
+      <!-- CẨM NANG & HƯỚNG DẪN SÁNG TẠO TỪ GAERU.COM -->
+      <div class="section-title-wrap" style="margin-top: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div>
+            <h3>Cẩm nang & Kinh nghiệm sáng tạo</h3>
+            <span class="section-subtitle">Đồng bộ tự động từ website gaeru.com</span>
+          </div>
+          <span class="chip-sm blue" id="guides-count-badge">Cẩm nang</span>
+        </div>
+      </div>
+
+      <div id="home-guides-list" class="home-guides-container">
+        <!-- Render động từ dữ liệu đồng bộ gaeru.com -->
       </div>
 
       <!-- Cam kết thương hiệu GAERU -->
@@ -835,6 +850,40 @@
         <button type="button" class="btn" style="width: 100%; padding: 10px; background: transparent; color: var(--gaeru-text-muted); border: 1px solid var(--gaeru-border);" onclick="closeOrderSuccessModal()">
           Tiếp tục xem sản phẩm
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHI TIẾT CẨM NANG & HƯỚNG DẪN SÁNG TẠO -->
+  <div id="guide-detail-modal" class="modal-sheet hidden">
+    <div class="modal-backdrop" onclick="closeGuideDetail()"></div>
+    <div class="modal-content" style="max-height: 88vh; display: flex; flex-direction: column;">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close-btn" onclick="closeGuideDetail()">✕</button>
+
+      <div class="guide-modal-scroll" style="overflow-y: auto; padding: 16px 20px 30px;">
+        <div class="guide-header-strip" style="margin-bottom: 14px;">
+          <span id="guide-detail-category" class="chip-sm blue" style="display: inline-block; margin-bottom: 8px;">GAERU Cẩm nang</span>
+          <h2 id="guide-detail-title" style="font-size: 19px; line-height: 1.35; font-weight: 800; color: var(--gaeru-text); margin-bottom: 8px;">Tiêu đề cẩm nang</h2>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--gaeru-text-muted);">
+            <span>📅 Đồng bộ từ gaeru.com</span>
+            <span>•</span>
+            <span id="guide-detail-date">Hôm nay</span>
+          </div>
+        </div>
+
+        <div id="guide-detail-body" class="guide-prose" style="font-size: 14px; line-height: 1.7; color: var(--gaeru-text); white-space: pre-line;">
+          <!-- Nội dung hướng dẫn -->
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--gaeru-border); display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="closeGuideDetail(); switchTab('tab-products');">
+            🛒 Xem thiết bị áp dụng cẩm nang
+          </button>
+          <a id="guide-web-link" href="https://gaeru.com" target="_blank" class="btn" style="width: 100%; justify-content: center; background: var(--gaeru-input-bg); color: var(--gaeru-text); border: 1px solid var(--gaeru-border); text-decoration: none;">
+            🌐 Xem bài viết gốc trên gaeru.com ↗
+          </a>
+        </div>
       </div>
     </div>
   </div>

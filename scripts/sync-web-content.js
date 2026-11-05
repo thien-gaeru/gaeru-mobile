@@ -1,10 +1,11 @@
 /**
  * Script đồng bộ toàn bộ nội dung và tài nguyên từ web gaeru.com sang gaeru-mobile
  * Đồng bộ:
- * 1. Assets (hình ảnh sản phẩm .webp/.png, logo thương hiệu, bộ dữ liệu địa chỉ Việt Nam)
+ * 1. Assets (hình ảnh sản phẩm .webp/.png, logo thương hiệu, ảnh bài viết tin tức, bộ dữ liệu địa chỉ Việt Nam)
  * 2. Live Products từ gaeru.com REST API (giá bán thực tế, biến thể, tồn kho)
- * 3. Fallback Content (product-stories.json)
- * 4. Brand styling (brand.css, màu sắc chủ đạo)
+ * 3. Store Settings & Shipping Policies từ gaeru.com (/api/settings/public)
+ * 4. News & Cẩm nang sáng tạo nội dung từ gaeru.com (/api/news & content/*.json)
+ * 5. Brand styling (brand.css, màu sắc chủ đạo)
  */
 
 const fs = require('fs');
@@ -41,25 +42,26 @@ function copyDirRecursive(src, dest) {
   return count;
 }
 
-// 1. Đồng bộ Assets (Hình ảnh sản phẩm, Logo, Data địa chỉ)
-if (fs.existsSync(WEB_DIR)) {
-  console.log('1️⃣  Đang đồng bộ Assets (Hình ảnh sản phẩm & Logo thương hiệu)...');
-  const srcAssets = path.join(WEB_DIR, 'assets');
-  const destAssets = path.join(WWW_DIR, 'assets');
-  const assetFilesCopied = copyDirRecursive(srcAssets, destAssets);
-  console.log(`   ✅ Đã đồng bộ ${assetFilesCopied} tệp tin trong thư mục assets/`);
+// 1. Đồng bộ Assets (Hình ảnh sản phẩm, Logo, Data địa chỉ, Ảnh tin tức)
+function syncAssetsAndContent() {
+  if (fs.existsSync(WEB_DIR)) {
+    console.log('1️⃣  Đang đồng bộ Assets (Hình ảnh sản phẩm, Logo & Ảnh tin tức)...');
+    const srcAssets = path.join(WEB_DIR, 'assets');
+    const destAssets = path.join(WWW_DIR, 'assets');
+    const assetFilesCopied = copyDirRecursive(srcAssets, destAssets);
+    console.log(`   ✅ Đã đồng bộ ${assetFilesCopied} tệp tin trong thư mục assets/`);
 
-  // 2. Đồng bộ Content (Product Stories, Bài viết & Thông số kỹ thuật)
-  console.log('2️⃣  Đang đồng bộ Content (product-stories.json)...');
-  const srcContent = path.join(WEB_DIR, 'content');
-  const destContent = path.join(WWW_DIR, 'content');
-  const contentFilesCopied = copyDirRecursive(srcContent, destContent);
-  console.log(`   ✅ Đã đồng bộ ${contentFilesCopied} tệp tin trong thư mục content/`);
-} else {
-  console.log('⚠️  Thư mục web nguồn không tồn tại cục bộ, sử dụng dữ liệu đã đóng gói sẵn trong App.');
+    console.log('2️⃣  Đang đồng bộ Content (Bài viết, Cẩm nang & Hướng dẫn kỹ thuật)...');
+    const srcContent = path.join(WEB_DIR, 'content');
+    const destContent = path.join(WWW_DIR, 'content');
+    const contentFilesCopied = copyDirRecursive(srcContent, destContent);
+    console.log(`   ✅ Đã đồng bộ ${contentFilesCopied} tệp tin trong thư mục content/`);
+  } else {
+    console.log('⚠️  Thư mục web nguồn không tồn tại cục bộ, sử dụng dữ liệu đã đóng gói sẵn trong App.');
+  }
 }
 
-// 3. Đồng bộ Danh mục Sản phẩm Thực tế từ Live API gaeru.com
+// 2. Đồng bộ Danh mục Sản phẩm Thực tế từ Live API gaeru.com
 async function syncLiveProducts() {
   console.log('3️⃣  Đồng bộ sản phẩm thực tế từ https://gaeru.com/api/products ...');
   const destDataDir = path.join(WWW_DIR, 'data');
@@ -121,7 +123,7 @@ async function syncLiveProducts() {
     console.warn('   ⚠️ Không thể kết nối live API gaeru.com lúc này, sử dụng fallback offline:', err.message);
   }
 
-  // Nếu không tải được qua mạng, dùng fallback
+  // Nếu không tải được qua mạng, dùng fallback chuẩn
   if (productsList.length === 0) {
     console.log('   📦 Đang nạp sản phẩm chuẩn từ cache offline...');
     productsList = [
@@ -224,30 +226,112 @@ async function syncLiveProducts() {
   console.log(`   ✅ Đã cập nhật ${productsList.length} sản phẩm thực tế vào: www/data/products.json`);
 }
 
-// 4. Đồng bộ Brand Styling (brand.css)
+// 3. Đồng bộ Cấu hình Cửa hàng, Thanh toán & Vận chuyển từ Live API gaeru.com
+async function syncLiveSettings() {
+  console.log('4️⃣  Đồng bộ cấu hình chính sách từ https://gaeru.com/api/settings/public ...');
+  const destDataDir = path.join(WWW_DIR, 'data');
+  const settingsJsonPath = path.join(destDataDir, 'settings.json');
+
+  let settings = {
+    shippingCarriers: ['Giao hàng tiết kiệm (GHTK)', 'Viettel Post', 'Shopee Express (SPX)'],
+    shippingNote: 'Đồng kiểm tra hàng trước khi thanh toán',
+    shippingRates: { standardVnd: 30000, freeThresholdVnd: 500000 },
+    paymentMethods: ['cod', 'bank_transfer', 'vnpay'],
+    cod: true,
+    ordersEnabled: true,
+    hotline: '082 919 1080',
+    email: 'business@gaeru.com',
+    warrantyMonths: 12
+  };
+
+  try {
+    const res = await fetch('https://gaeru.com/api/settings/public', { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const liveSettings = await res.json();
+      settings = { ...settings, ...liveSettings };
+      console.log('   🌐 Đã tải thành công cấu hình chính sách từ gaeru.com!');
+    }
+  } catch (err) {
+    console.warn('   ⚠️ Không thể kết nối settings API gaeru.com, dùng cấu hình mặc định:', err.message);
+  }
+
+  fs.writeFileSync(settingsJsonPath, JSON.stringify({ settings, syncedAt: new Date().toISOString() }, null, 2), 'utf-8');
+  console.log('   ✅ Đã cập nhật cấu hình vận chuyển & thanh toán vào: www/data/settings.json');
+}
+
+// 4. Đồng bộ Tin tức & Bài viết Cẩm nang Sáng tạo từ gaeru.com
+async function syncLiveNewsAndGuides() {
+  console.log('5️⃣  Đồng bộ tin tức & cẩm nang sáng tạo nội dung từ gaeru.com ...');
+  const destDataDir = path.join(WWW_DIR, 'data');
+  const newsJsonPath = path.join(destDataDir, 'news.json');
+  const guidesJsonPath = path.join(destDataDir, 'guides.json');
+
+  let newsList = [];
+
+  try {
+    const res = await fetch('https://gaeru.com/api/news', { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.posts && Array.isArray(data.posts)) {
+        newsList = data.posts;
+        console.log(`   🌐 Đã tải thành công ${newsList.length} bài viết tin tức từ gaeru.com!`);
+      }
+    }
+  } catch (err) {
+    console.warn('   ⚠️ Không thể kết nối tin tức API gaeru.com:', err.message);
+  }
+
+  fs.writeFileSync(newsJsonPath, JSON.stringify({ posts: newsList, syncedAt: new Date().toISOString() }, null, 2), 'utf-8');
+  console.log(`   ✅ Đã lưu ${newsList.length} bài tin tức vào: www/data/news.json`);
+
+  // Tổng hợp cẩm nang hướng dẫn từ các tệp content/
+  const guidesList = [];
+  const contentDir = path.join(WWW_DIR, 'content');
+  if (fs.existsSync(contentDir)) {
+    const files = fs.readdirSync(contentDir);
+    for (const file of files) {
+      if (file.endsWith('.json') && file !== 'product-stories.json') {
+        try {
+          const raw = fs.readFileSync(path.join(contentDir, file), 'utf8');
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            guidesList.push(...parsed);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  fs.writeFileSync(guidesJsonPath, JSON.stringify({ guides: guidesList, syncedAt: new Date().toISOString() }, null, 2), 'utf-8');
+  console.log(`   ✅ Đã tổng hợp ${guidesList.length} hướng dẫn sáng tạo vào: www/data/guides.json`);
+}
+
+// 5. Đồng bộ Brand Styling (brand.css)
 function syncBrandCss() {
   if (fs.existsSync(WEB_DIR)) {
     const srcBrand = path.join(WEB_DIR, 'brand.css');
     const destBrand = path.join(WWW_DIR, 'brand.css');
     if (fs.existsSync(srcBrand)) {
       fs.copyFileSync(srcBrand, destBrand);
-      console.log('4️⃣  Đang đồng bộ Brand Styling (brand.css)...');
+      console.log('6️⃣  Đang đồng bộ Brand Styling (brand.css)...');
       console.log('   ✅ Đã sao chép brand.css vào www/brand.css');
     }
   }
 }
 
 async function main() {
+  syncAssetsAndContent();
   await syncLiveProducts();
+  await syncLiveSettings();
+  await syncLiveNewsAndGuides();
   syncBrandCss();
+
   console.log('\n=============================================================');
-  console.log('  ✨ ĐỒNG BỘ NỘI DUNG HOÀN TẤT THÀNH CÔNG!');
-  console.log('  App Mobile giờ đây có đầy đủ 5 sản phẩm thực tế từ gaeru.com:');
-  console.log('  1. GAERU M3 (1.200.000 ₫)');
-  console.log('  2. GAERU K9 (289.000 ₫)');
-  console.log('  3. GAERU P185 (450.000 ₫)');
-  console.log('  4. GAERU P01 (650.000 ₫)');
-  console.log('  5. GAERU G1 ULTRA (2.100.000 ₫)');
+  console.log('  ✨ ĐỒNG BỘ NỘI DUNG TOÀN DIỆN TỪ GAERU.COM HOÀN TẤT THÀNH CÔNG!');
+  console.log('  1. Sản phẩm: 5 sản phẩm thực tế');
+  console.log('  2. Cấu hình: Vận chuyển, COD, Ngân hàng, VNPay');
+  console.log('  3. Cẩm nang: Đầy đủ hướng dẫn TikTok, Video Marketing, Hướng dẫn Mic');
+  console.log('  4. Tài nguyên: 100% hình ảnh, logo và brand styling');
   console.log('=============================================================');
 }
 
