@@ -1472,18 +1472,94 @@ function showToast(message) {
 function initRealtimeSync() {
   if (!window.GaeruAPI || !window.GaeruAPI.subscribeRealtimeUpdates) return;
 
+  const pill = document.getElementById('network-pill');
+  const dotText = pill ? pill.querySelector('.network-text') : null;
+
+  // Cho phép chạm vào Network Pill để kiểm tra trạng thái Realtime ngay lập tức
+  if (pill) {
+    pill.style.cursor = 'pointer';
+    pill.onclick = async () => {
+      showToast('🔄 Đang kiểm tra liên kết realtime với gaeru.com...');
+      if (window.GaeruAPI.checkRealtimeHealth) {
+        const health = await window.GaeruAPI.checkRealtimeHealth();
+        if (health.ok) {
+          showToast(`⚡ Realtime kết nối tốt (${health.latencyMs}ms) • ETag: ${health.etag ? health.etag.slice(0, 12) + '...' : 'Khớp máy chủ'}`);
+        } else {
+          showToast(`⚠️ Không thể kết nối: ${health.error || 'Ngoại tuyến'}`);
+        }
+      }
+    };
+  }
+
+  // Đăng ký kênh Realtime Event Channel
   window.GaeruAPI.subscribeRealtimeUpdates((event) => {
     if (!event) return;
 
     if (event.type === 'connected') {
-      console.log('[Realtime] Đã kết nối kênh trực tiếp với gaeru.com');
+      const channelLabel = event.channel === 'sse' ? 'SSE Live' : 'Smart Sync';
+      console.log(`[Realtime] Đã kết nối kênh trực tiếp với gaeru.com (${channelLabel})`);
+      if (dotText) dotText.textContent = `Realtime (${channelLabel})`;
+      if (pill) {
+        pill.className = 'network-pill online';
+        pill.title = `Liên kết thời gian thực với gaeru.com qua ${channelLabel}`;
+      }
+    } else if (event.type === 'heartbeat') {
+      if (pill && event.latencyMs) {
+        pill.title = `Realtime gaeru.com • Độ trễ: ${event.latencyMs}ms • Cập nhật: ${new Date().toLocaleTimeString('vi-VN')}`;
+      }
+      const realtimeDesc = document.getElementById('account-realtime-status-desc');
+      if (realtimeDesc) {
+        const channelName = event.channel === 'sse' ? 'SSE' : 'Smart Sync';
+        realtimeDesc.textContent = `Đang kết nối (${channelName} · ${event.latencyMs ? event.latencyMs + 'ms' : '<5ms'})`;
+      }
+      const badge = document.getElementById('account-realtime-badge');
+      if (badge && event.latencyMs) {
+        badge.textContent = `${event.latencyMs}ms`;
+        badge.className = 'chip-sm green';
+      }
     } else if (event.type === 'product_change' || event.type === 'inventory_change') {
-      showToast('⚡ GAERU vừa cập nhật sản phẩm mới từ gaeru.com!');
+      showToast('⚡ GAERU vừa cập nhật dữ liệu mới từ gaeru.com!');
       loadProducts();
+      // Nếu đang mở modal chi tiết sản phẩm, cập nhật lại giá & thông số
+      if (AppState.selectedProduct) {
+        openProductDetail(AppState.selectedProduct.slug);
+      }
     } else if (event.type === 'notification' && event.message) {
       showToast(`📢 ${event.message}`);
     }
   });
+
+  // Gắn sự kiện nút "Kiểm tra liên kết Realtime" trong Tab Tài khoản
+  const btnCheckRealtime = document.getElementById('btn-check-realtime-connection');
+  if (btnCheckRealtime) {
+    btnCheckRealtime.onclick = async () => {
+      const badge = document.getElementById('account-realtime-badge');
+      const desc = document.getElementById('account-realtime-status-desc');
+      if (badge) badge.textContent = 'Đang đo...';
+      if (desc) desc.textContent = 'Đang kiểm tra độ trễ mạng tới gaeru.com...';
+
+      const health = await window.GaeruAPI.checkRealtimeHealth();
+      if (health.ok) {
+        if (badge) {
+          badge.textContent = `${health.latencyMs}ms`;
+          badge.className = 'chip-sm green';
+        }
+        if (desc) {
+          desc.textContent = `Kết nối tốt (${health.latencyMs}ms) • ETag: ${health.etag || 'Khớp máy chủ'}`;
+        }
+        showToast(`🟢 Liên kết Realtime hoạt động hoàn hảo (${health.latencyMs}ms)!`);
+      } else {
+        if (badge) {
+          badge.textContent = 'Mất kết nối';
+          badge.className = 'chip-sm red';
+        }
+        if (desc) {
+          desc.textContent = `Lỗi: ${health.error || 'Ngoại tuyến'}`;
+        }
+        showToast(`🔴 Không thể kết nối tới gaeru.com: ${health.error}`);
+      }
+    };
+  }
 }
 
 // ==================== TÍCH HỢP CAPACITOR NATIVE ====================

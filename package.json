@@ -8,6 +8,8 @@
     "dev": "node scripts/live-server.js",
     "sync:web": "node scripts/sync-web-content.js",
     "sync:data": "node scripts/sync-data.js",
+    "test:realtime": "node scripts/test-realtime-link.js",
+    "audit:connection": "node scripts/audit-real-connection.js",
     "build": "node scripts/sync-web-content.js && node scripts/build.js",
     "cap:sync": "cap sync",
     "cap:add:android": "cap add android",

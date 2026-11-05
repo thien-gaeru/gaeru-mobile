@@ -25,12 +25,24 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf'
 };
 
-// SSE clients for live reload
+// 1. SSE clients for browser live reload (khi code HTML/CSS/JS thay đổi)
 const sseClients = new Set();
-
-function notifyClients() {
+function notifyLiveReload() {
   for (const client of sseClients) {
-    client.write('data: reload\n\n');
+    try { client.write('data: reload\n\n'); } catch (e) { sseClients.delete(client); }
+  }
+}
+
+// 2. SSE clients for App Realtime Data Channel (đồng bộ sản phẩm & thông báo)
+const appRealtimeClients = new Set();
+function broadcastAppEvent(event) {
+  const payload = `data: ${JSON.stringify(event)}\n\n`;
+  for (const client of appRealtimeClients) {
+    try {
+      client.write(payload);
+    } catch (e) {
+      appRealtimeClients.delete(client);
+    }
   }
 }
 
@@ -41,12 +53,57 @@ try {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       console.log(`[LIVE RELOAD] Thay đổi tại: ${filename}`);
-      notifyClients();
+      notifyLiveReload();
+
+      // Nếu thay đổi liên quan đến sản phẩm, gửi sự kiện realtime tới app
+      if (filename && (filename.includes('products.json') || filename.includes('settings.json'))) {
+        broadcastAppEvent({
+          type: 'product_change',
+          source: 'local_file_change',
+          file: filename,
+          timestamp: Date.now()
+        });
+      }
     }, 150);
   });
 } catch (e) {
   console.warn('[WATCHER] Không thể watch tự động:', e.message);
 }
+
+// Heartbeat định kỳ gửi tới các kết nối realtime app (mỗi 15 giây)
+setInterval(() => {
+  if (appRealtimeClients.size > 0) {
+    broadcastAppEvent({
+      type: 'heartbeat',
+      timestamp: Date.now(),
+      connectedClients: appRealtimeClients.size
+    });
+  }
+}, 15000);
+
+// Theo dõi ngầm thay đổi ETag từ cloud gaeru.com (mỗi 25 giây)
+let lastCloudETag = null;
+setInterval(async () => {
+  try {
+    const res = await fetch(`${PROD_BACKEND}/api/products`, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000)
+    });
+    if (res.ok) {
+      const etag = res.headers.get('etag');
+      if (lastCloudETag && etag && lastCloudETag !== etag) {
+        console.log(`[CLOUD SYNC] Phát hiện thay đổi dữ liệu từ ${PROD_BACKEND}! ETag mới: ${etag}`);
+        broadcastAppEvent({
+          type: 'product_change',
+          source: 'gaeru_cloud_sync',
+          etag: etag,
+          timestamp: Date.now()
+        });
+      }
+      lastCloudETag = etag;
+    }
+  } catch (e) {}
+}, 25000);
 
 // Xác định backend: Mặc định kết nối thật tới https://gaeru.com
 async function getBackendUrl() {
@@ -65,7 +122,7 @@ const server = http.createServer(async (req, res) => {
   const reqUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = reqUrl.pathname;
 
-  // 1. SSE live-reload endpoint
+  // 1. SSE live-reload endpoint (cho trình duyệt tự refresh)
   if (pathname === '/live-reload') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
@@ -77,7 +134,47 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2. Proxy endpoint: kết nối API và nhúng web thật gaeru.com mà không bị CORS / X-Frame-Options
+  // 2. SSE App Realtime Data Stream endpoint (Kênh kết nối thời gian thực cho App)
+  if (pathname === '/api/live-stream' || pathname === '/proxy/api/live-stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
+
+    // Gửi sự kiện kết nối thành công ngay tức thì
+    const initialGreeting = {
+      type: 'connected',
+      channel: 'sse',
+      server: 'gaeru-live-server',
+      targetBackend: PROD_BACKEND,
+      timestamp: Date.now()
+    };
+    res.write(`data: ${JSON.stringify(initialGreeting)}\n\n`);
+
+    appRealtimeClients.add(res);
+    req.on('close', () => appRealtimeClients.delete(res));
+    return;
+  }
+
+  // 3. API Kiểm tra sức khoẻ liên kết Realtime (Healthcheck)
+  if (pathname === '/api/realtime/health') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify({
+      status: 'healthy',
+      sseActiveClients: appRealtimeClients.size,
+      cloudBackend: PROD_BACKEND,
+      cloudETag: lastCloudETag,
+      serverTime: new Date().toISOString()
+    }));
+    return;
+  }
+
+  // 4. Proxy endpoint: kết nối API và nhúng web thật gaeru.com mà không bị CORS / X-Frame-Options
   if (pathname.startsWith('/proxy') || pathname.startsWith('/api/') || pathname.startsWith('/catalog-images/')) {
     const backend = await getBackendUrl();
     const targetPath = pathname.startsWith('/proxy') ? (pathname.replace(/^\/proxy/, '') || '/') : pathname;
@@ -151,7 +248,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 3. Phục vụ static files từ thư mục www/
+  // 5. Phục vụ static files từ thư mục www/
   let filePath = path.join(WWW_DIR, pathname === '/' ? 'index.html' : pathname);
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     filePath = path.join(WWW_DIR, 'index.html');
@@ -220,6 +317,7 @@ server.listen(PORT, '0.0.0.0', async () => {
   console.log(`  🌐 Xem trên máy tính:    http://localhost:${PORT}`);
   console.log(`  📱 Xem trên điện thoại:  http://${lanIp}:${PORT}`);
   console.log(`  🔗 Kết nối nguồn dữ liệu: ${backend}`);
+  console.log(`  ⚡ Kênh Realtime SSE:     http://localhost:${PORT}/api/live-stream`);
   console.log('  ⚡ Tự động cập nhật (Live Reload) khi sửa file trong www/');
   console.log('=============================================================\n');
 });

@@ -182,22 +182,127 @@ const GaeruAPI = (function () {
     },
 
     /**
-     * Đăng ký kênh kết nối thời gian thực (Realtime Event Channel)
-     * Hỗ trợ: Server-Sent Events (SSE) + Fallback Smart Heartbeat Polling
+     * Kiểm tra trạng thái và chất lượng liên kết Realtime với gaeru.com
+     */
+    async checkRealtimeHealth() {
+      const start = performance.now();
+      try {
+        const res = await fetch(`${BASE_URL}/api/products`, {
+          method: 'HEAD',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(6000)
+        });
+        const latency = Math.round(performance.now() - start);
+        const etag = res.headers.get('etag');
+        return {
+          ok: res.ok,
+          status: res.status,
+          latencyMs: latency,
+          etag: etag,
+          backend: BASE_URL,
+          isOnline: navigator.onLine,
+          timestamp: Date.now()
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          error: err.message,
+          latencyMs: Math.round(performance.now() - start),
+          backend: BASE_URL,
+          isOnline: navigator.onLine,
+          timestamp: Date.now()
+        };
+      }
+    },
+
+    /**
+     * Đăng ký kênh kết nối thời gian thực (Dual-Engine Realtime Architecture)
+     * - Kênh 1: Server-Sent Events (SSE) stream (/api/live-stream).
+     * - Kênh 2: Adaptive Differential ETag Sync (nhận diện thay đổi giá/sản phẩm tức thì, 0-byte payload).
+     * - Tự động đánh thức tức thì khi người dùng mở lại app (Instant Focus Wakeup).
      */
     subscribeRealtimeUpdates(onEvent) {
       if (typeof window === 'undefined') return () => {};
 
       let eventSource = null;
-      let pollTimer = null;
+      let diffTimer = null;
+      let isStopped = false;
+      let lastKnownEtag = null;
+      let activeChannel = 'connecting';
 
-      // 1. Thử mở kết nối Server-Sent Events (SSE) trực tiếp với backend
+      // 1. Khởi chạy Differential ETag Engine (đo nhịp tim & phát hiện thay đổi tức thì)
+      async function checkDifferentialUpdate() {
+        if (isStopped || !navigator.onLine || document.hidden) return;
+        
+        const startTime = performance.now();
+        try {
+          const headRes = await fetch(`${BASE_URL}/api/products`, {
+            method: 'HEAD',
+            cache: 'no-store',
+            signal: AbortSignal.timeout(6000)
+          });
+
+          const latencyMs = Math.round(performance.now() - startTime);
+
+          if (headRes.ok) {
+            const currentEtag = headRes.headers.get('etag');
+
+            // Gửi sự kiện nhịp tim định kỳ kèm độ trễ mạng thực tế
+            if (onEvent) {
+              onEvent({
+                type: 'heartbeat',
+                channel: activeChannel,
+                latencyMs: latencyMs,
+                etag: currentEtag,
+                timestamp: Date.now()
+              });
+            }
+
+            // Nếu ETag thay đổi -> máy chủ gaeru.com vừa cập nhật sản phẩm/giá/tồn kho
+            if (lastKnownEtag && currentEtag && lastKnownEtag !== currentEtag) {
+              console.log(`[Realtime Sync] Phát hiện thay đổi dữ liệu từ gaeru.com! (ETag: ${currentEtag})`);
+              lastKnownEtag = currentEtag;
+              if (onEvent) {
+                onEvent({
+                  type: 'product_change',
+                  source: 'etag_differential',
+                  etag: currentEtag,
+                  latencyMs: latencyMs,
+                  timestamp: Date.now()
+                });
+              }
+            } else if (currentEtag) {
+              lastKnownEtag = currentEtag;
+            }
+          }
+        } catch (e) {
+          // Bỏ qua lỗi ngắt kết nối mạng tạm thời
+        }
+      }
+
+      function scheduleDiffPolling(intervalMs = 12000) {
+        if (diffTimer) clearInterval(diffTimer);
+        if (isStopped) return;
+        diffTimer = setInterval(checkDifferentialUpdate, intervalMs);
+      }
+
+      // 2. Thử mở kết nối Server-Sent Events (SSE)
       if (window.EventSource && navigator.onLine) {
         try {
           eventSource = new EventSource(`${BASE_URL}/api/live-stream`);
 
           eventSource.onopen = () => {
-            if (onEvent) onEvent({ type: 'connected', channel: 'sse' });
+            activeChannel = 'sse';
+            if (onEvent) {
+              onEvent({
+                type: 'connected',
+                channel: 'sse',
+                backend: BASE_URL,
+                timestamp: Date.now()
+              });
+            }
+            // Khi có luồng SSE liên tục, giãn tần suất differential polling xuống 30s
+            scheduleDiffPolling(30000);
           };
 
           eventSource.onmessage = (e) => {
@@ -205,50 +310,75 @@ const GaeruAPI = (function () {
               const payload = JSON.parse(e.data);
               if (onEvent) onEvent(payload);
             } catch (err) {
-              console.warn('[Realtime] Lỗi parse sự kiện:', err);
+              console.warn('[Realtime SSE] Lỗi parse dữ liệu:', err);
             }
           };
 
           eventSource.onerror = () => {
+            activeChannel = 'smart_polling';
             if (eventSource) {
               eventSource.close();
               eventSource = null;
             }
-            startPollingFallback();
+            // Kích hoạt Smart Differential Polling (12s) khi SSE máy chủ cloud đóng
+            if (onEvent) {
+              onEvent({
+                type: 'connected',
+                channel: 'smart_polling',
+                backend: BASE_URL,
+                timestamp: Date.now()
+              });
+            }
+            checkDifferentialUpdate();
+            scheduleDiffPolling(12000);
           };
         } catch (e) {
-          startPollingFallback();
+          activeChannel = 'smart_polling';
+          scheduleDiffPolling(12000);
         }
       } else {
-        startPollingFallback();
+        activeChannel = 'smart_polling';
+        scheduleDiffPolling(12000);
       }
 
-      // 2. Cơ chế Smart Heartbeat Polling (chạy mỗi 35 giây khi app đang mở và trực tuyến)
-      function startPollingFallback() {
-        if (pollTimer) return;
-        pollTimer = setInterval(async () => {
-          if (!navigator.onLine || document.hidden) return;
-          try {
-            const check = await fetch(`${BASE_URL}/api/products`, {
-              method: 'HEAD',
-              signal: AbortSignal.timeout(3500)
-            });
-            if (check.ok && onEvent) {
-              onEvent({ type: 'heartbeat', timestamp: Date.now() });
-            }
-          } catch (e) {}
-        }, 35000);
+      // 3. Cơ chế đánh thức tức thì khi người dùng quay lại màn hình hoặc có mạng (Instant Focus Wakeup)
+      const handleWakeup = () => {
+        if (isStopped) return;
+        if (!document.hidden && navigator.onLine) {
+          checkDifferentialUpdate();
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleWakeup);
+      window.addEventListener('online', handleWakeup);
+      window.addEventListener('focus', handleWakeup);
+
+      // Nếu chạy trên Capacitor Native (iOS / Android)
+      if (window.Capacitor && window.Capacitor.Plugins?.App) {
+        try {
+          window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
+            if (state.isActive) handleWakeup();
+          });
+        } catch (e) {}
       }
 
+      // Kích hoạt 1 lần kiểm tra ban đầu ngay khi gọi hàm
+      setTimeout(checkDifferentialUpdate, 600);
+
+      // Trả về hàm hủy đăng ký kết nối
       return function unsubscribe() {
+        isStopped = true;
         if (eventSource) {
           eventSource.close();
           eventSource = null;
         }
-        if (pollTimer) {
-          clearInterval(pollTimer);
-          pollTimer = null;
+        if (diffTimer) {
+          clearInterval(diffTimer);
+          diffTimer = null;
         }
+        document.removeEventListener('visibilitychange', handleWakeup);
+        window.removeEventListener('online', handleWakeup);
+        window.removeEventListener('focus', handleWakeup);
       };
     }
   };
