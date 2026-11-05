@@ -76,7 +76,7 @@
           "name": "Type C",
           "priceVnd": 1200000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 496,
+          "stockQuantity": 499,
           "active": true
         },
         {
@@ -85,7 +85,7 @@
           "name": "Type C + chuyển Micro usb",
           "priceVnd": 1200000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 500,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-05T12:59:39.430Z"
+  "syncedAt": "2026-11-05T14:54:19.468Z"
 }
