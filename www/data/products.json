@@ -76,7 +76,7 @@
           "name": "Type C",
           "priceVnd": 840000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 498,
           "active": true
         },
         {
@@ -187,7 +187,7 @@
           "name": "Chân Type C",
           "priceVnd": 202300,
           "originalPriceVnd": 289000,
-          "stockQuantity": 10000,
+          "stockQuantity": 9999,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-06T18:47:13.791Z"
+  "syncedAt": "2026-11-06T20:43:07.057Z"
 }
