@@ -232,7 +232,7 @@
           "name": "Chân Type C + Chuyển USB · Bộ 1 Micro",
           "priceVnd": 237300,
           "originalPriceVnd": 339000,
-          "stockQuantity": 9999,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-06T14:52:00.881Z"
+  "syncedAt": "2026-11-06T16:47:09.963Z"
 }
