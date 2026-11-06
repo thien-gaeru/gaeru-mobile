@@ -1,9 +1,9 @@
 {
   "settings": {
     "shippingCarriers": [],
-    "shippingNote": "Phí vận chuyển được tính theo tỉnh/thành phố đã chọn.",
+    "shippingNote": "Miễn phí vận chuyển toàn quốc",
     "shippingRates": {
-      "Toàn quốc": 0
+      "Toàn Quốc": 0
     },
     "paymentMethods": [
       "cod"
@@ -17,5 +17,5 @@
     "email": "business@gaeru.com",
     "warrantyMonths": 12
   },
-  "syncedAt": "2026-11-06T16:47:10.258Z"
+  "syncedAt": "2026-11-06T18:47:14.352Z"
 }
