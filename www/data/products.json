@@ -187,7 +187,7 @@
           "name": "Chân Type C",
           "priceVnd": 289000,
           "originalPriceVnd": 289000,
-          "stockQuantity": 9999,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-07T16:35:43.496Z"
+  "syncedAt": "2026-11-07T18:37:53.350Z"
 }
