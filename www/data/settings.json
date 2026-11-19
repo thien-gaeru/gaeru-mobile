@@ -1,25 +1,27 @@
 {
   "settings": {
     "shippingCarriers": [
-      "Giao hàng tiết kiệm (GHTK)",
-      "Viettel Post",
-      "Shopee Express (SPX)"
+      {
+        "id": "viettel",
+        "name": "Viettel Post"
+      }
     ],
-    "shippingNote": "Đồng kiểm tra hàng trước khi thanh toán",
+    "shippingNote": "Miễn phí vận chuyển toàn quốc",
     "shippingRates": {
-      "standardVnd": 30000,
-      "freeThresholdVnd": 500000
+      "Toàn quốc": 0
     },
     "paymentMethods": [
-      "cod",
-      "bank_transfer",
-      "vnpay"
+      "cod"
     ],
-    "cod": true,
+    "cod": {
+      "maxAmountVnd": 50000000,
+      "instructions": "Thanh toán tiền mặt trực tiếp cho bưu tá khi nhận hàng."
+    },
     "ordersEnabled": true,
     "hotline": "082 919 1080",
     "email": "business@gaeru.com",
-    "warrantyMonths": 12
+    "warrantyMonths": 12,
+    "gaMeasurementId": "G-52GTYN38M5"
   },
-  "syncedAt": "2026-11-19T18:55:48.838Z"
+  "syncedAt": "2026-11-19T20:50:07.792Z"
 }
