@@ -241,7 +241,7 @@
           "name": "Chân Type C · Bộ 1 Micro",
           "priceVnd": 202300,
           "originalPriceVnd": 289000,
-          "stockQuantity": 9999,
+          "stockQuantity": 9998,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-20T08:57:38.942Z"
+  "syncedAt": "2026-11-20T10:57:14.726Z"
 }
