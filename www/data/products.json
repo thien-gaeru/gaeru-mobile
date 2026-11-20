@@ -94,7 +94,7 @@
           "name": "Type C + chuyển USB",
           "priceVnd": 840000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 500,
           "active": true
         },
         {
@@ -169,7 +169,7 @@
           "name": "Chân Lightning · Bộ 1 Micro",
           "priceVnd": 202300,
           "originalPriceVnd": 289000,
-          "stockQuantity": 9999,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -241,7 +241,7 @@
           "name": "Chân Type C · Bộ 1 Micro",
           "priceVnd": 202300,
           "originalPriceVnd": 289000,
-          "stockQuantity": 9998,
+          "stockQuantity": 9999,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-20T13:02:18.208Z"
+  "syncedAt": "2026-11-20T14:52:39.568Z"
 }
