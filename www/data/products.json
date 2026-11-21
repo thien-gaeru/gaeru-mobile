@@ -76,7 +76,7 @@
           "name": "Type C",
           "priceVnd": 840000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 500,
           "active": true
         },
         {
@@ -205,7 +205,7 @@
           "name": "Chân Type C + Chuyển Micro USB · Bộ 1 Micro",
           "priceVnd": 237300,
           "originalPriceVnd": 339000,
-          "stockQuantity": 9998,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -214,7 +214,7 @@
           "name": "Chân Type C + Chuyển Micro USB · Bộ 2 Micro",
           "priceVnd": 321300,
           "originalPriceVnd": 459000,
-          "stockQuantity": 9999,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -241,7 +241,7 @@
           "name": "Chân Type C · Bộ 1 Micro",
           "priceVnd": 202300,
           "originalPriceVnd": 289000,
-          "stockQuantity": 9999,
+          "stockQuantity": 10000,
           "active": true
         },
         {
@@ -250,7 +250,7 @@
           "name": "Chân Type C · Bộ 2 Micro",
           "priceVnd": 286300,
           "originalPriceVnd": 409000,
-          "stockQuantity": 9998,
+          "stockQuantity": 9999,
           "active": true
         }
       ],
@@ -390,7 +390,7 @@
           "name": "Phiên bản tiêu chuẩn",
           "priceVnd": 315000,
           "originalPriceVnd": 450000,
-          "stockQuantity": 998,
+          "stockQuantity": 1000,
           "active": true
         }
       ],
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-21T02:47:52.921Z"
+  "syncedAt": "2026-11-21T04:52:43.603Z"
 }
