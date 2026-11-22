@@ -34,10 +34,10 @@
       "coverId": "cf8bed4f-29b1-560f-b7eb-a6c1b1c166c6",
       "imageAlt": "GAERU P01 để bàn bên trái và GAERU P185 đang đỡ điện thoại trên chân gập bên phải.",
       "status": "published",
-      "version": 2,
+      "version": 3,
       "publishedAt": "2026-11-17T15:11:29.073Z",
-      "updatedAt": "2026-11-20T10:48:35.844Z",
-      "imageUrl": "/api/news-images/cf8bed4f-29b1-560f-b7eb-a6c1b1c166c6?v=1795171715"
+      "updatedAt": "2026-11-22T01:04:13.807Z",
+      "imageUrl": "/api/news-images/cf8bed4f-29b1-560f-b7eb-a6c1b1c166c6?v=1795309453"
     },
     {
       "id": "aeb59a55-7845-42b2-a545-a08761c25968",
@@ -157,5 +157,5 @@
       "imageUrl": "/api/news-images/a0000000-0000-4000-8000-000000000043?v=1793871697"
     }
   ],
-  "syncedAt": "2026-11-21T22:58:14.089Z"
+  "syncedAt": "2026-11-22T06:10:38.226Z"
 }
