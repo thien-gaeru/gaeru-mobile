@@ -85,7 +85,7 @@
           "name": "Type C + chuyển Micro usb",
           "priceVnd": 840000,
           "originalPriceVnd": 1200000,
-          "stockQuantity": 499,
+          "stockQuantity": 500,
           "active": true
         },
         {
@@ -471,5 +471,5 @@
       "active": true
     }
   ],
-  "syncedAt": "2026-11-25T02:08:52.922Z"
+  "syncedAt": "2026-11-25T14:04:49.983Z"
 }
